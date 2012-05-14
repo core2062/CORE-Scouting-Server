@@ -1,27 +1,37 @@
+import pymongo
+import uuid
+
+c = pymongo.Connection()
+db = c.csd
+
+
 class user:
 	"""
 		this class deals with all user data and authentication of the user
 	"""
-
+	"""
 	def __getitem__(self, key):
 		print '(get)', ' key:', key
-		#return self.value
+		return self.key
 
 	def __setitem__(self, key, value):
 		print '(set)', ' key:', key, ' value:', value
-		#self.value = value
+
+		#code to update mongo goes here
+
+		self.key = value
 
 	def __delitem__(self, key):
 		print '(delete)', ' key:', key
-		#del self
-
-	data = { #initialized with defaults (for guest user)
+		del self.key
+	"""
+	data = {  # initialized with defaults (for guest user)
 		'_id': 'guest',
 		'account': {
-			'pword': '',
+			'password': '',
 			'email': '',
 		},
-		'permission': [ #list of permissions that user has
+		'permission': [  # list of permissions that user has
 			'input',
 		],
 		'info': {
@@ -33,14 +43,14 @@ class user:
 			'fade': True,
 			'verbose': True,
 		},
-		'opt': { #optional info
+		'opt': {  # optional info
 			'zip': '',
 			'browser': '',
 			'gender': '',
 		},
-		'status': { #info about current session
+		'status': {  # info about current session
 			'ip': '',
-			'logintime': '', #time when last logged in (when token was issued)
+			'logintime': '',  # time when last logged in (when token was issued)
 			'token': '',
 		},
 	}
@@ -54,8 +64,6 @@ class user:
 
 		#check ip
 
-		#check permissions (not banned, which is no permissions)
-
 		#consider using random id for normal usernames (login with only email) and special username for admin / guest
 		return 'check not finished'
 
@@ -65,7 +73,28 @@ class user:
 			used when user is not yet logged in (has no token)
 			can login with either email or username
 		"""
-		return 'login not finished'
+
+		if username != '':
+			query = {'_id': username}
+		elif email != '':
+			query = {'account.email': email}
+		else:
+			raise Exception('need to supply either username or email, none were given')
+
+		#put it in a temporary variable in case it is incorrect - shouldn't load the user until they are correctly logged in
+		tmpUser = db.user.find_one(query)
+
+		if tmpUser == None:  # means nothing was returned from mongo query
+			raise Exception('incorrect username')  # maybe better to only say "incorrect info" to increase security
+
+		if tmpUser['account']['password'] != password:
+			raise Exception('incorrect password')  # maybe better to only say "incorrect info" to increase security
+
+		self.data = tmpUser  # inputs are correct, put user object in correct place
+
+		self.data.token = uuid.uuid4()
+
+		print 'login not finished'
 
 	def logout(self):
 		"""logs out current user by removing ip & token from db"""
@@ -79,8 +108,12 @@ class user:
 		"""validates user.data - intended to be used for signup and user info changes to determine if user data is acceptable"""
 		return 'validateData not finished'
 
+"""
 abc = user()
-abc['permission'] = 'the stuff'
-abc['permission']['ff'] = 'the stuff'
+abc.data['permission'] = 'the stuff'
+abc.data['account'] = {'pword': 'the stuff'}
+print abc.data['account']['pword']
+abc.data['account']['pword'] = 'fffdf'
+print abc.data['account']['pword']
 print abc.can('input')
-print abc
+"""
