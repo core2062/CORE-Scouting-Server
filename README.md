@@ -26,3 +26,6 @@ directory structure:
 			favicon.ico
 
 The CSD itself acts as a web service and is separated from the client. It only returns machine readable data (in json) and other resources like csv exports from the database. The client acts as a viewer for this data and presents it in a human readable form. By keeping this separation, the CSD maintains an API that can be easily used by other programs while still being human readable (unlike the FIRST FMS which is neither human-readable nor machine-readable).
+
+NOTES
+ - use random _id for normal usernames (login with only email) and special username for admin / guest
