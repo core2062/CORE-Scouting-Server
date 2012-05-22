@@ -1,15 +1,15 @@
 import web
 import os
 import pymongo
-import json
+import simplejson as json
 import model.user
-import errorHandler
+#import model.errorHandler
 from threading import Timer
 
 urls = (
 	'/', 'index',
 	'/favicon.ico', 'favicon',
-	'/user(?:/(.*))?', 'userRequest'
+	'/user(?:/(.*))?', 'userRequest',
 )
 app = web.application(urls, globals())
 
@@ -32,18 +32,20 @@ def loadhook():
 	web.ctx.user = model.user.user()
 	web.ctx.dev = (web.input(dev='False').dev == 'True')  # if ?dev=True then dev will be set to True, otherwise it defaults to False
 
-	inputs = web.input()
 	inputs = web.input(username='', token='')
-	try:
+	#only run user.check if username and token are defined... still allow use of default guest account
+	if inputs.username != '' and inputs.token != '':
+		#try:
 		web.ctx.user.check(username=inputs.username, token=inputs.token)  # validate user token if username and token are supplied
-	except:
-		errorHandler()
+		#except:
+		#	errorHandler()
+
+app.add_processor(web.loadhook(loadhook))
 
 
 def unloadhook():
 	web.ctx.user.save()  # save incase any changes have been made to user
 
-app.add_processor(web.loadhook(loadhook))
 app.add_processor(web.unloadhook(unloadhook))
 
 
@@ -56,7 +58,7 @@ class userRequest:
 	def GET(self, name=''):
 		"""handles requests for user data, logins, and signups"""
 		if name == None or name == '':
-			return json.dumps(web.ctx.user.data)
+			return json.dumps(web.ctx.user.safeData(), sort_keys=True, indent=4) if web.ctx.dev else json.dumps(web.ctx.user.safeData())
 		elif name == 'login':
 			#CONSIDER: add a delay to prevent multiple attempts
 
