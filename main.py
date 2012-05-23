@@ -1,8 +1,7 @@
 import web
 import os
-import pymongo
 import simplejson as json
-import model.user
+import model.user as user
 #import model.errorHandler
 from threading import Timer
 
@@ -10,12 +9,10 @@ urls = (
 	'/', 'index',
 	'/favicon.ico', 'favicon',
 	'/user(?:/(.*))?', 'userRequest',
+	#TODO: add mongs like db browser, with option to only return json (read only?)
+	#TODO: add a last resort url handler that searches through static and returns what matches or 404s out
 )
 app = web.application(urls, globals())
-
-#connect to mongo
-c = pymongo.Connection()
-db = c.csd
 
 
 def cron():
@@ -29,7 +26,7 @@ cron()
 
 def loadhook():
 	"""load hook for setting contextual vars"""
-	web.ctx.user = model.user.user()
+	web.ctx.user = user.instance()
 	web.ctx.dev = (web.input(dev='False').dev == 'True')  # if ?dev=True then dev will be set to True, otherwise it defaults to False
 
 	inputs = web.input(username='', token='')
