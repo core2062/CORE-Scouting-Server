@@ -2,6 +2,8 @@ import uuid
 import time
 import web
 import model.db as db
+import copy
+import re
 
 """
 	this module deals with all user data and authentication of the user
@@ -44,7 +46,7 @@ class instance(object):
 			'fade': True,
 			'verbose': True,
 		},
-		'opt': {  # should not be sent to client, optional info
+		'opt': {  # should not be sent to client, optional info ... probably wouldn't matter if it was sent to client
 			'zip': '',
 			'browser': '',
 			'gender': '',
@@ -113,7 +115,7 @@ class instance(object):
 			},
 		)
 
-		self.data['session']['token'] = str(uuid.uuid4())
+		self.data['session']['token'] = re.sub('-', '', str(uuid.uuid4()))  # make a unique id & remove the dashes (they are useless)
 		self.data['session']['ip'] = web.ctx.ip
 		self.data['session']['startTime'] = time.time()
 
@@ -127,8 +129,7 @@ class instance(object):
 
 	def safeData(self):
 		"""returns data about user that is safe to give to client (it has passwords and unneeded info filtered out)"""
-		safeData = self.data
-		print safeData
+		safeData = copy.deepcopy(self.data)  # needs copy because it cuts stuff out
 		del safeData['account']
 		del safeData['opt']
 		del safeData['session']['ip']
