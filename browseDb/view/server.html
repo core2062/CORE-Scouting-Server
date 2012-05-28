@@ -1,0 +1,11 @@
+$def with (servers)
+
+<table>
+	<tr class="big server listing">
+		<th><span>Servers</span></th>
+		<td>
+			$for name in servers:
+				<a href="/$name/">$name</a><br />
+		</td>
+	</tr>
+</table>

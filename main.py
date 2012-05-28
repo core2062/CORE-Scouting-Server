@@ -8,10 +8,12 @@ import web
 import model.user as user
 import model.helper as helper
 from threading import Timer
+import browseDb
 
 urls = (
 	'/', 'Index',
 	'/user(?:/(.*))?', 'UserRequest',
+	'/db(?:/(.*))?', browseDb.main,
 	#TODO: add mongs like db browser, with option to only return json (read only?) (restricted - not able to read user collection)
 	'/(.*)', 'Static',
 )
