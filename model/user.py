@@ -4,6 +4,7 @@ import web
 import model.db as db
 import copy
 import re
+import model.helper as helper
 
 """
 	this module deals with all user data and authentication of the user
@@ -25,7 +26,7 @@ import re
 # 	del self.key
 
 
-class instance(object):
+class Instance(object):
 	""" this class is used to create a new instance of the user object (each object represents a single user) """
 
 	data = {  # initialized with defaults (for guest user)
@@ -127,7 +128,7 @@ class instance(object):
 		"""determines if user has permission to do a particular action (returns true or false)"""
 		return action in self.data['permission']
 
-	def safeData(self):
+	def safe_data(self):
 		"""returns data about user that is safe to give to client (it has passwords and unneeded info filtered out)"""
 		safeData = copy.deepcopy(self.data)  # needs copy because it cuts stuff out
 		del safeData['account']
@@ -136,7 +137,21 @@ class instance(object):
 		del safeData['session']['startTime']
 		return safeData
 
-	def validateData(self):
+	def update(self, newData):
+		"""
+			merges newData into the user data and validates it
+			this is also used for signup, because signing up is conceptually the same as an update
+		"""
+
+		if '_id' in newData:  # stop username updates from overwriting other users
+			if newData['_id'] == self.data['_id']:
+				del newData['_id']  # not changing the _id, so it can just be omitted
+			elif db.csd.user.find_one({'_id': newData['_id']}) != None:  # another user exists with this username
+				raise Exception('the username specified is already in use by another user')
+
+		self.data = helper.restrictive_merge(newData, self.data)  # CONSIDER: add error reporting to tell if any part of merge fails
+
+	def validate_data(self):
 		"""validates user.data - intended to be used for signup and user info changes to determine if user data is acceptable"""
 		return 'validateData not finished'
 

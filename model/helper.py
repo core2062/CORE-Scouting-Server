@@ -12,62 +12,19 @@ def json_dump(variable):
 
 def error_dump(exception):
 	"""returns an exception formatted in json so it can be returned to the client"""
-	return json_dump({'error': exception.args[0]})
+	return {'error': exception.args[0]}
 
 
-def subtract_dict(a, b):
-	"""Remove the keys in b from a"""
-	for k in b:
-		if k in a:
-			if isinstance(b[k], dict):
-				subtract_dict(a[k], b[k])
-			else:
-				del a[k]
-
-data = {
-	'_id': 'guest',
-	'account': {
-		'password': '',
-		'email': '',
-	},
-	'prefs': {
-		'fade': True,
-		'verbose': True,
-	},
-}
-
-data2 = {
-	'_id': 'tomato',
-	'account': {
-		'password': '',
-		'email': '',
-	},
-	'permission': [
-		'input',
-	],
-	'info': {
-		'fName': '',
-		'lName': '',
-		'team': 0,
-	},
-	'prefs': {
-		'fade': False,
-		'verbose': True,
-	},
-	'opt': {
-		'zip': '',
-		'browser': '',
-		'gender': '',
-	},
-	'session': {
-		'ip': '',
-		'startTime': '',
-		'token': '',
-	},
-	'log': {},
-}
-
-subtract_dict(data, data2)
-
-print data2
-print data
+def restrictive_merge(data, structure):
+	"""
+		merges data into structure without adding or removing any keys in structure or changing any data types
+		this can be used to provide a basic validation of the structure / type of user provided data
+	"""
+	if type(data) is dict and type(structure) is dict:
+		for k in structure:
+			if k in data:
+				if type(structure[k]) is dict:
+					structure[k] = restrictive_merge(data[k], structure[k])
+				elif type(data[k]) is type(structure[k]):
+					structure[k] = data[k]
+	return structure
