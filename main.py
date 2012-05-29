@@ -8,12 +8,12 @@ import web
 import model.user as user
 import model.helper as helper
 from threading import Timer
-import browseDb
+import browseDb.main as browseDb
 
 urls = (
 	'/', 'Index',
 	'/user(?:/(.*))?', 'UserRequest',
-	'/db(?:/(.*))?', browseDb.main,
+	'/db', browseDb.app,
 	#TODO: add mongs like db browser, with option to only return json (read only?) (restricted - not able to read user collection)
 	'/(.*)', 'Static',
 )
@@ -45,7 +45,7 @@ def processor(handler):
 
 	response = handler()
 
-	if type(response) != str:
+	if type(response) in (dict, tuple, list):
 		response = helper.json_dump(response)  # format the response in json if it is a variable (not html being returned)
 
 	return response
