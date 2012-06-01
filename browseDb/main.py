@@ -1,7 +1,9 @@
 import web
-import mongs
+#import mongs
 import pymongo
 import os
+
+cwd = os.path.dirname(__file__)  # get current working directory
 
 urls = (
 	'(?:/)?', 'Server',
@@ -13,12 +15,14 @@ urls = (
 )
 app = web.application(urls, globals())
 
+render = ''  # just to show that it is declared globally
+
 
 def loadhook():
-	"""set up template rendering before request because web.ctx.home is not defined when the server starts up"""
+	"""set up template rendering before request because sadly web.ctx.home is not defined when the server starts up"""
 	global render
 	render = web.template.render(
-		os.path.dirname(__file__) + '/view/',
+		cwd + 'view/',
 		base='base',
 		globals={'homeUrl': web.ctx.home},
 	)
