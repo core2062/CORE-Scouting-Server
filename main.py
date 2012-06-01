@@ -1,7 +1,9 @@
 import os
 
+cwd = os.path.dirname(__file__)  # get current working directory
+
 #bootstrap / activate virtual environment
-activate_this = os.path.dirname(__file__) + '/virtualenv/bin/activate_this.py'
+activate_this = cwd + 'virtualenv/bin/activate_this.py'
 execfile(activate_this, dict(__file__=activate_this))
 
 import web
@@ -92,7 +94,7 @@ class Static:
 			this allows files in /static to be accessed as if they were in /
 		"""
 		try:
-			return open(os.path.dirname(__file__) + '/static/' + filename, 'r').read()
+			return open(cwd + 'static/' + filename, 'r').read()
 		except:
 			web.application.notfound(app)  # file not found
 
