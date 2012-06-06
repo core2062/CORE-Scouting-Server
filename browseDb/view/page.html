@@ -1,0 +1,51 @@
+$def with (server, database, collection)
+
+<style>
+	.note EM {
+		font-style: normal;
+		background: #FFFE98;
+	}
+</style>
+<table>
+	<tr class="big server">
+		<th><a href="$homeUrl" title="Click for All Servers">Server</a></th>
+		<td>$server</td>
+	</tr>
+	<tr class="big database">
+		<th><a href="$homeUrl/$server" title="Click for All Databases">Database</a></th>
+		<td>$database</td>
+	</tr>
+	<tr class="big collection">
+		<th><a href="$homeUrl/$server/$database" title="Click for All Collections">Collection</a></th>
+		<td>$collection</td>
+	</tr>
+	<tr class="big document">
+		<th>
+			$if filtered: <span><a href="$homeUrl/$server/$database/$collection" title="Click for All Documents">Document</a></span>
+			$else: <span>Document</span>
+			<span class="note">highlight = <em>indexed</em></span>
+		</th>
+		<td>
+			$if single: <a href="./">$_id</a>
+			$else:
+				$if prev: <a class="prev" href="$homeUrl/$server/$database/$collection/$prev">prev</a>
+				$else: prev\
+				 | \
+				$page of $mongs.commaize(ndocs, places=0)
+				 | \
+				 $if next: <a href="$homeUrl/$server/$database/$collection/$next">next</a>
+				 $else: next  $# change this to not say next
+		</td>
+	</tr>
+	$for pair in pairs:
+		<tr class="attribute">
+			<th><span><span class="inner $pair.sort\
+			$if pair.is_indexed: indexed\
+			$if pair.is_filtered: filtered\
+			">pair.k</span></span></th>
+			<td>\
+				$if pair.link: <a href="$homeUrl/$pair.link">$pair.v</a>\
+				$else: pair.v\
+			</td>
+		</tr>
+</table>

@@ -1,6 +1,6 @@
 import os
 
-cwd = os.path.dirname(__file__)  # get current working directory
+cwd = os.path.dirname(__file__) + '/'  # get current working directory
 
 #bootstrap / activate virtual environment
 activate_this = cwd + 'virtualenv/bin/activate_this.py'
@@ -14,10 +14,10 @@ import browseDb.main as browseDb
 
 urls = (
 	'/', 'Index',
-	'/user(?:/(.*))?', 'UserRequest',
+	r'/user(?:/(.*))?', 'UserRequest',
 	'/db', browseDb.app,
 	#TODO: add mongs like db browser, with option to only return json (read only?) (restricted - not able to read user collection)
-	'/(.*)', 'Static',
+	r'/(.*)', 'Static',
 )
 app = web.application(urls, globals())
 

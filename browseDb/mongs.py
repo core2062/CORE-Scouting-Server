@@ -1,27 +1,9 @@
-"""Helper functions for Mongs.
-"""
+"""Helper functions for Mongs"""
 import datetime
 import math
 
 import pymongo
 from bson.objectid import ObjectId, InvalidId
-
-
-def commaize(n, places=1):
-	"""Given a number, return a string with commas and a decimal -- 1,000.0.
-	"""
-	out = ("%%.0%df" % places) % n
-	try:
-		whole, fraction = out.split('.')
-	except ValueError:
-		whole, fraction = (out, '')
-	_whole = []
-	for i, digit in enumerate(reversed(whole), start=1):
-		_whole.insert(0, digit)
-		if i % 3 == 0:
-			_whole.insert(0, ',')
-	out = ''.join(_whole + ['.', fraction]).lstrip(',').rstrip('.')
-	return out
 
 
 def get_value(server, database, collection, _id, key):
