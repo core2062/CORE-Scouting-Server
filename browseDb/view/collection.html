@@ -43,7 +43,7 @@ $def with (database, server, rows, dbsize, dbsize_str)
 </style>
 <table>
 	<tr class="big server">
-		<th><a href="$homeUrl" title="Click for All Servers">Server</a></th>
+		<th><a href="$homeUrl/" title="Click for All Servers">Server</a></th>
 		<td class="name">$server</td>
 		$if rows:
 			<td class="storage_size">storageSize</td>
@@ -51,7 +51,7 @@ $def with (database, server, rows, dbsize, dbsize_str)
 		<td class="empty"></td>
 	</tr>
 	<tr class="big database">
-		<th><a href="$homeUrl/$server" title="Click for All Databases">Database</a></th>
+		<th><a href="$homeUrl/$server/" title="Click for All Databases">Database</a></th>
 		<td class="name">$database</td>
 		$if rows:
 			<td class="storage_size">$dbsize_str MB&nbsp;&nbsp;%&nbsp;&nbsp;</td>
@@ -79,7 +79,7 @@ $def with (database, server, rows, dbsize, dbsize_str)
 				<td class="name\
 				$if i > 0: notfirst\
 				">
-					$if not row.is_index: <a href="$homeUrl/$server/$database/$row.name">\
+					$if not row.is_index: <a href="$homeUrl/$server/$database/$row.name/">\
 					$row.name\
 					$if not row.is_index: </a>\
 				</td>

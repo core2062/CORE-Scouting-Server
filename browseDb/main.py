@@ -59,9 +59,6 @@ def loadhook():
 	else:
 		raise Exception('unsupported content type requested (garbage at end of url)')
 
-	print web.ctx.path
-	print web.ctx.contentType
-
 app.add_processor(web.loadhook(loadhook))
 
 
@@ -285,8 +282,7 @@ class Page:
 			# Have I ever done this before? I don't think I have.
 
 			class NamespacePair(Pair):
-				"""Represent the single pair of values for a system.namespaces entry.
-				"""
+				"""Represent the single pair of values for a system.namespaces entry"""
 				def __init__(self, base, _id, k, v):
 					parts = v.split('.$')
 					if len(parts) == 1:
@@ -305,7 +301,7 @@ class Page:
 			return NamespacePair
 
 		single = page is None
-		#filtered = single
+		filtered = single
 
 		# Pair class
 		# If we are on system.namespaces we want to link to collections.
@@ -330,7 +326,7 @@ class Page:
 			base = '../..'
 			filter = urllib.unquote_plus(filter).strip()
 			if filter:
-				#filtered = True
+				filtered = True
 				if not filter.startswith('{'):
 					filter = filter.decode('base64')
 				filter = json.loads(filter)
@@ -435,8 +431,7 @@ class Page:
 			_id = document.get('_id', '')
 
 			def generate_pairs(document):
-				"""Yield key/value pairs for document.
-				"""
+				"""Yield key/value pairs for document"""
 				for k, v in sorted(document.iteritems()):
 					pair = Pair(base, _id, k, v)
 					pair.is_filtered = False
@@ -454,7 +449,8 @@ class Page:
 				# generator here means that we don't display _id again with the
 				# rest of the key/values.
 				pairs.next()
-		return render.server(['localhost'])
+		totalDocs = web.commify(round(ndocs, 1))  # , places=0
+		return render.server(server, database, collection, pairs, prev, next, filtered, totalDocs)
 
 
 class Value:

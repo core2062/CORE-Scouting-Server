@@ -1,12 +1,12 @@
 $def with (server, databases)
 
 <table>
-    <tr class="big server"><th><a href="$homeUrl" title="Click for All Servers">Server</a></th><td>$server</td></tr>
+    <tr class="big server"><th><a href="$homeUrl/" title="Click for All Servers">Server</a></th><td>$server</td></tr>
     <tr class="big database listing">
         <th><span>Databases</span></th>
         <td>
             $for database in databases:
-            	<a href="$homeUrl/$server/$database">$database</a><br />
+            	<a href="$homeUrl/$server/$database/">$database</a><br />
         </td>
     </tr>
 </table>
