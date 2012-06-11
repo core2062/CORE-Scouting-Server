@@ -2,10 +2,6 @@ import os
 
 cwd = os.path.dirname(__file__) + '/'  # get current working directory
 
-#bootstrap / activate virtual environment
-activate_this = cwd + 'virtualenv/bin/activate_this.py'
-execfile(activate_this, dict(__file__=activate_this))
-
 import web
 import model.user as user
 import model.helper as helper
