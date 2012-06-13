@@ -1,6 +1,5 @@
 import uuid
 import time
-import web
 import model.db as db
 import copy
 import re
@@ -60,7 +59,7 @@ class Instance(object):
 		'log': {},  # should be sent to client (but perhaps truncated to certain length)
 	}
 
-	def check(self, username, token):
+	def check(self, username, token, ip):
 		"""
 			checks username & token and if correct, puts the user object in data
 			used to authenticate user is already logged in (has a token)
@@ -68,7 +67,7 @@ class Instance(object):
 		"""
 
 		#put it in a temporary variable in case it is incorrect - shouldn't load the user until they are correctly logged in
-		tmpUser = db.csd.user.find_one({'_id': username, 'session.token': token, 'session.ip': web.ctx.ip})
+		tmpUser = db.csd.user.find_one({'_id': username, 'session.token': token, 'session.ip': ip})
 
 		if tmpUser == None:  # means nothing was returned from mongo query
 			raise Exception('incorrect info')  # username & token & ip combo are not correct
@@ -76,7 +75,7 @@ class Instance(object):
 
 		self.data = tmpUser  # inputs are correct, put user object in correct place
 
-	def login(self, password, username='', email=''):
+	def login(self, password, ip, username='', email=''):
 		"""
 			checks username / email & password and if correct, generates token and puts user object in data
 			used when user is not yet logged in (has no token)
@@ -117,7 +116,7 @@ class Instance(object):
 		)
 
 		self.data['session']['token'] = re.sub('-', '', str(uuid.uuid4()))  # make a unique id & remove the dashes (they are useless)
-		self.data['session']['ip'] = web.ctx.ip
+		self.data['session']['ip'] = ip
 		self.data['session']['startTime'] = time.time()
 
 	def logout(self):
