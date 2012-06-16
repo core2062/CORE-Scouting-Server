@@ -1,5 +1,3 @@
-
-
 def error_dump(exception):
 	"""returns an exception formatted in json so it can be returned to the client"""
 	return {'error': exception.args[0]}
@@ -15,6 +13,6 @@ def restrictive_merge(data, structure):
 			if k in data:
 				if type(structure[k]) is dict:
 					structure[k] = restrictive_merge(data[k], structure[k])
-				elif type(data[k]) is type(structure[k]):
+				elif type(data[k]) is type(structure[k]):  # ensure that types match
 					structure[k] = data[k]
 	return structure
