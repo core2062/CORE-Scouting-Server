@@ -1,12 +1,3 @@
-import simplejson as json
-
-
-def json_dump(variable):
-	"""returns the representation of "variable" in json"""
-	# if dev:  # pretty print json in dev mode, else dump compressed json
-	# 	return json.dumps(variable, sort_keys=True, indent=4)
-	# else:
-	# 	return json.dumps(variable, separators=(',', ':'))
 
 
 def error_dump(exception):
