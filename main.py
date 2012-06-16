@@ -11,11 +11,19 @@ app = Flask(__name__,)
 
 @app.before_request
 def before_request():
+	g.notify = []  # an array that holds notifications (like non-fatal errors or important messages)
+
+	# a variable that holds an error... if there is one (there should be 1 or 0 errors returned)
+	# a error is formatted as ('title','discription')
+	#	title: one word name for the error
+	#	discription: text givent to the user to tell what happened/how to fix
+	g.error = ()
+
 	g.user = user.Instance()  # starts out as guest user, store user object in g (thread safe context)
 
 	try:  # try to authenticate
-		g.user.check(username=request.args.username, token=request.args.token, ip=request.remote_addr)  # validate user token if username and token are supplied
-	except AttributeError:
+		g.user.check(username=request.args['username'], token=request.args['token'], ip=request['remote_addr'])  # validate user token if username and token are supplied
+	except KeyError:
 		pass  # one or more of the attributes was/were not defined, proceed with guest status
 	except Exception as error:
 		return helper.error_dump(error)
@@ -78,10 +86,6 @@ def json():
 # cron()
 
 
-# def processor(handler):
-# 	"""for authenticating the user and """
-# 	g.notify = []  # an array that holds notifications (like non-fatal errors or important messages)
-
 # 	inputs = web.input(username='', token='')
 # 	#only run user.check if username and token are defined... still allows use of default guest account
 
@@ -90,20 +94,27 @@ def json():
 
 
 @app.route('/user/<action>')
-def user_request(self, action):
+def user_request(action):
 	""" handles requests for user data, logins, and signups """
 	print action
+
 	if action == 'data':
 		return g.user.safe_data()
 	elif action == 'login':
 		#CONSIDER: add a delay to prevent excessive attempts
 
-		try:
-			g.user.login(username=request.args.username, email=request.args.email, password=request.args.password)
-		except AttributeError:
-			return {'error': 'one or more of the required variable(s) (username, email, and password) was/were not defined in your request'}
+		try:  # first try with email and password
+			g.user.login(email=request.args['email'], password=request.args['password'], ip=request.remote_addr)
+		except KeyError:
+			try:  # otherwise try with username and password
+				g.user.login(username=request.args['username'], password=request.args['password'], ip=request.remote_addr)
+			except KeyError:
+				return {'error': 'one or more of the required variables (username / email, and password) was/were not defined in your request'}
+			except Exception as error:
+				return helper.error_dump(error)  # bad info supplied
 		except Exception as error:
-			return helper.error_dump(error)
+			print error.args
+			return helper.error_dump(error)  # bad info supplied
 
 		return {'token': g.user.data['session']['token']}
 
@@ -111,7 +122,7 @@ def user_request(self, action):
 	elif action == 'signup' or action == 'update':
 		try:
 			g.user.update(request.args.data)
-		except AttributeError:
+		except KeyError:
 			return {'error': 'the data variable was not defined in your request'}
 		except Exception as error:
 			return helper.error_dump(error)
