@@ -63,7 +63,7 @@ def reset():
 	csd.create_collection('sourceEventInfo')
 
 	csd.user.insert(
-		{  # initialized with defaults (for guest user)
+		{
 			'_id': 'admin',
 			'account': {
 				'password': 'superpass',
