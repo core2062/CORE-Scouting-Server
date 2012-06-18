@@ -1,7 +1,7 @@
 import uuid
 import time
-import model.db as db
-import copy
+import db as db
+from copy import deepcopy
 import re
 import model.helper as helper
 
@@ -28,7 +28,7 @@ import model.helper as helper
 class Instance(object):
 	""" this class is used to create a new instance of the user object (each object represents a single user) """
 
-	data = {  # initialized with defaults (for guest user)
+	defaults = {  # initialized with defaults (for guest user)
 		'_id': 'guest',
 		'account': {  # cannot be sent to client
 			'password': '',
@@ -73,32 +73,25 @@ class Instance(object):
 			raise Exception('incorrect info')  # username & token & ip combo are not correct
 			#CONSIDER: add explanation for why check failed (if it was ip or token or username)
 
-		self.data = tmpUser  # inputs are correct, put user object in correct place
+		self.load(tmpUser)  # inputs are correct, put user object in correct place
 
-	def login(self, password, ip, username='', email=''):
+	def login(self, username, password, ip):
 		"""
-			checks username / email & password and if correct, generates token and puts user object in data
+			checks username & password and if correct, generates a token and puts user object in data
 			used when user is not yet logged in (has no token)
-			can login with either email or username
 			users cannot be logged in on multiple ip addresses and multiple users cannot be on same ip
 		"""
 
-		if username != '':
-			query = {'_id': username}
-		elif email != '':
-			query = {'account.email': email}
-		else:
-			raise Exception('need to supply either username or email, none were given')
-
-		query['account.password'] = password  # add password part to query
-
-		#put it in a temporary variable in case it is incorrect - shouldn't load the user until they are correctly logged in
-		tmpUser = db.csd.user.find_one(query)
+		#put user data in a temp variable in case it is incorrect - shouldn't load the user until they are correctly logged in
+		tmpUser = db.csd.user.find_one({
+			'_id': username,
+			'account.password': password,
+		})
 
 		if tmpUser == None:  # means nothing was returned from mongo query
-			raise Exception('incorrect info')  # maybe better to only say "incorrect info" to increase security
+			raise Exception('incorrect info')  # better to only say "incorrect info" to increase security
 
-		self.data = tmpUser  # inputs are correct, put user object in correct place
+		self.load(tmpUser)  # inputs are correct, put user object in correct place
 
 		#CONSIDER: check if currently logged in and run logout if true?
 
@@ -119,36 +112,42 @@ class Instance(object):
 		self.data['session']['ip'] = ip
 		self.data['session']['startTime'] = time.time()
 
+		self.save()  # save session data
+
 	def logout(self):
 		"""logs out current user by removing ip & token from db"""
-		return 'logout not finished'
+		return 'logout code not finished'
 
 	def can(self, action):
 		"""determines if user has permission to do a particular action (returns true or false)"""
 		return action in self.data['permission']
 
+	def load(self, user_data):
+		"""merges user_data with defaults and puts it in the correct place"""
+		self.data = dict(deepcopy(self.defaults).items() + user_data.items())
+
 	def safe_data(self):
 		"""returns data about user that is safe to give to client (it has passwords and unneeded info filtered out)"""
-		safeData = copy.deepcopy(self.data)  # needs copy because it cuts stuff out
+		safeData = deepcopy(self.data)  # needs copy because it cuts stuff out
 		del safeData['account']
 		del safeData['opt']
 		del safeData['session']['ip']
 		del safeData['session']['startTime']
 		return safeData
 
-	def update(self, newData):
+	def update(self, new_data):
 		"""
-			merges newData into the user data and validates it
+			merges new_data into the user data and validates it
 			this is also used for signup, because signing up is conceptually the same as an update
 		"""
 
-		if '_id' in newData:  # stop username updates from overwriting other users
-			if newData['_id'] == self.data['_id']:
-				del newData['_id']  # not changing the _id, so it can just be omitted
-			elif db.csd.user.find_one({'_id': newData['_id']}) != None:  # another user exists with this username
+		if '_id' in new_data:  # stop username updates from overwriting other users
+			if new_data['_id'] == self.data['_id']:
+				del new_data['_id']  # not changing the _id, so it can just be omitted
+			elif db.csd.user.find_one({'_id': new_data['_id']}) != None:  # another user exists with this username
 				raise Exception('the username specified is already in use by another user')
 
-		self.data = helper.restrictive_merge(newData, self.data)  # CONSIDER: add error reporting to tell if any part of merge fails
+		self.data = helper.restrictive_merge(new_data, self.data)  # CONSIDER: add error reporting to tell if any part of merge fails
 
 	def validate_data(self):
 		"""validates user.data - intended to be used for signup and user info changes to determine if user data is acceptable"""
@@ -160,7 +159,17 @@ class Instance(object):
 			consider switching to a transparent method of writing to the db
 		"""
 		if self.data['_id'] != 'guest':  # shouldn't save guest account to db because guest isn't a real user
-			db.csd.user.save(self.data)
+			print ''
+			print ''
+			print 'data:'
+			print self.data
+			print ''
+			print 'defaults:'
+			print self.defaults
+			print ''
+			print 'result:'
+			print helper.remove_defaults(self.data, self.defaults)
+			db.csd.user.save(helper.remove_defaults(self.data, self.defaults))  # save with defaults cut out
 
 	# abc = user()
 	# abc.data['permission'] = 'the stuff'

@@ -3,10 +3,13 @@ import model.helper as helper
 #from threading import Timer
 import os
 import model.user as user
+import db as db
 from override_flask import Flask
 from flask import request, send_from_directory, abort, g
 
 app = Flask(__name__,)
+
+db.check()  # make sure mongo is setup
 
 
 @app.before_request
@@ -22,7 +25,7 @@ def before_request():
 	g.user = user.Instance()  # starts out as guest user, store user object in g (thread safe context)
 
 	try:  # try to authenticate
-		g.user.check(username=request.args['username'], token=request.args['token'], ip=request['remote_addr'])  # validate user token if username and token are supplied
+		g.user.check(username=request.args['username'], token=request.args['token'], ip=request.remote_addr)  # validate user token if username and token are supplied
 	except KeyError:
 		pass  # one or more of the attributes was/were not defined, proceed with guest status
 	except Exception as error:
@@ -31,6 +34,9 @@ def before_request():
 
 @app.after_view
 def after_view(rv):
+	if not type(rv) in (dict, list):  # check to see that it's json, if not then return
+		return
+	#put stuff from g in response
 	return
 
 
@@ -95,25 +101,26 @@ def json():
 
 @app.route('/user/<action>')
 def user_request(action):
-	""" handles requests for user data, logins, and signups """
-	print action
+	"""
+		handles requests for:
+			data - returns client-safe data
+			logins - returns token
+			signups
+	"""
 
 	if action == 'data':
 		return g.user.safe_data()
 	elif action == 'login':
 		#CONSIDER: add a delay to prevent excessive attempts
 
-		try:  # first try with email and password
-			g.user.login(email=request.args['email'], password=request.args['password'], ip=request.remote_addr)
-		except KeyError:
-			try:  # otherwise try with username and password
-				g.user.login(username=request.args['username'], password=request.args['password'], ip=request.remote_addr)
-			except KeyError:
-				return {'error': 'one or more of the required variables (username / email, and password) was/were not defined in your request'}
-			except Exception as error:
-				return helper.error_dump(error)  # bad info supplied
+		try:
+			helper.check_args(('username', 'password'), request.args)
 		except Exception as error:
-			print error.args
+			return helper.error_dump(error)
+
+		try:
+			g.user.login(username=request.args['username'], password=request.args['password'], ip=request.remote_addr)
+		except Exception as error:
 			return helper.error_dump(error)  # bad info supplied
 
 		return {'token': g.user.data['session']['token']}
@@ -121,24 +128,33 @@ def user_request(action):
 	# signup and update are actually the same thing, just seperated in case I need to change something in the future
 	elif action == 'signup' or action == 'update':
 		try:
-			g.user.update(request.args.data)
-		except KeyError:
-			return {'error': 'the data variable was not defined in your request'}
+			helper.check_args(('data'), request.args)
 		except Exception as error:
 			return helper.error_dump(error)
-		return {'notify': 'update successful'}
+
+		try:
+			g.user.update(request.args['data'])
+		except Exception as error:
+			return helper.error_dump(error)
+
+		return {'notify': action + ' successful'}
 
 	else:
-		return abort(404)  # this means it is not one of the defined methods for interacting w/ the server
+		return abort(404)  # not one of the defined methods for interacting w/ the server
 
 
 @app.route('/admin/task/<task>')
-def admin_task(self, task):
+def admin_task(task):
 	"""used for running admin tasks manually (they can also be triggered by cron/timed tasks)"""
-	if g.user.can('run_admin_task'):
-		#TODO: add code here
-		return
 
+	if not g.user.can('run_admin_task'):
+		return {'error': 'invalid permissions'}
+
+	if task == 'reset':
+		db.reset()
+		return {'notify': 'reset successful'}
+	else:
+		return abort(404)  # not one of the defined methods for interacting w/ the server
 
 if __name__ == "__main__":
 	app.run(debug=True)
