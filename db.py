@@ -6,6 +6,7 @@ import os
 """
 	this module establishes the connection to mongo and deals with all db interaction
 	it is in the top level directory to make it easy to write backups to the backups folder
+	TODO: move into model after CWD of main.py is made into global config value
 """
 
 cwd = os.path.dirname(__file__) + '/'  # get current working directory
@@ -41,8 +42,8 @@ def reset():
 	c.drop_database('csd')
 
 	#make collections
-	csd.create_collection('user')
-	csd.create_collection('log')
+	csd.create_collection('user')  # holds all the users
+	csd.create_collection('log')  # logging info
 	csd.create_collection('error')  # holds error logs for database collections, such as data that is incorrect (not programming errors)
 	csd.create_collection('config')  # holds configuration variables for the site
 
@@ -57,10 +58,10 @@ def reset():
 	csd.create_collection('semi-compiledScouting')
 
 	#source collections (holds nearly raw data)
-	csd.create_collection('sourceScouting')
-	csd.create_collection('sourceFMS')
-	csd.create_collection('sourceTeamInfo')
-	csd.create_collection('sourceEventInfo')
+	csd.create_collection('sourceScouting')  # data from the scouting part of the db
+	csd.create_collection('sourceTeam')  # scraped data on teams from the FIRST FMS
+	csd.create_collection('sourceEvent')  # scraped data on events
+	csd.create_collection('sourceMatch')  # scraped data on matches
 
 	csd.user.insert(
 		{

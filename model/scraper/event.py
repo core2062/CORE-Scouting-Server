@@ -2,12 +2,6 @@ from datetime import datetime
 from BeautifulSoup import BeautifulSoup
 import re
 import urllib2
-
-import sys
-# Add the ptdraft folder path to the sys.path list
-sys.path.append('/home/slang/web/csdServer/')
-
-
 import model.log as log
 
 """this script provides functions to scrape the FIRST FMS database"""
@@ -22,6 +16,8 @@ REGIONAL_EVENT_TYPES = [
 	"District Event",
 	"District Championship",
 ]
+
+STARTING_YEAR = 2003  # the FIRST FMS database only lists events back till 2003
 
 # The URL for the event list:
 REGIONAL_EVENTS_URL = "https://my.usfirst.org/myarea/index.lasso?event_type=FRC&season_FRC=%s"
@@ -51,7 +47,7 @@ def scrape_duration(start_date, end_date):
 	"""scrape all the events that started within a specified duration"""
 
 
-def getSessionKey(year=2012):
+def getSessionKey(year):
 	"""
 	Grab a page from FIRST so we can get a session key out of URLs on it.
 	This session key is needed to construct working event detail information URLs.
@@ -128,7 +124,7 @@ def getEventList(year):
 	return events
 
 
-def getEvent(eid, year=2012):
+def getEvent(eid, year):
 	"""Return an Event object for a particular FIRST "event id" aka "eid"""
 
 	session_key = getSessionKey(year)
@@ -146,7 +142,7 @@ def getEvent(eid, year=2012):
 	return event
 
 
-def getEventRegistration(eid, year=2012):
+def getEventRegistration(eid, year):
 	"""Returns a list of team_numbers attending a particular Event"""
 
 	session_key = getSessionKey(year)
@@ -160,9 +156,6 @@ def getEventRegistration(eid, year=2012):
 
 	teams = parseEventRegistration(result.read())
 	return teams
-
-
-# -------
 
 
 def parseEvent(html):
@@ -269,5 +262,3 @@ def parseEventRegistration(html):
 		teams.append(team)
 
 	return teams
-
-print getEventList(2012)

@@ -75,9 +75,10 @@ def index():
 	"""
 
 
-@app.route('/json')
+@app.route('/test')
 def json():
-	return {'test': 42}
+	import model.scraper.event as event
+	return event.getEventList(request.args['year'])
 
 
 #TODO: add mongs like db browser, with option to only return json (read only?) (restricted - not able to read user collection)
