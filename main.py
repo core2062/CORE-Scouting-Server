@@ -75,8 +75,9 @@ def index():
 
 @app.route('/test')
 def test():
-	import task.task as task
-	return task.scrape_event_names(request.args['year'])
+	import model.scraper.scraper as scraper
+	scraper.scrape_event_names(request.args['year'])
+	return scraper.scrape_events(request.args['year'])
 
 
 #TODO: add mongs like db browser, with option to only return json (read only?) (restricted - not able to read user collection)

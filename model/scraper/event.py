@@ -106,7 +106,7 @@ def get_event_list(year):
 		event["first_eid"] = tds[1].a["href"][24:28]
 		event["name"] = ''.join(tds[1].a.findAll(text=True))  # <em>s in event names fix
 
-		if event.get("event_type", None) in REGIONAL_EVENT_TYPES:
+		if event.get("event_type", None) in REGIONAL_EVENT_TYPES:  # actually this url shouldn't return kickoffs anyway, probably not needed
 			events.append(event)
 
 	return events
