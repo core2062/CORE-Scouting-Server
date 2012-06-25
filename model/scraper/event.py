@@ -6,7 +6,7 @@ import model.log as log
 
 """
 this script provides functions to scrape the FIRST FMS database
-all functions in this script are database indepentant, database-depentant functions are in scraper.py
+all functions in this script are database independent, database-dependent functions are in scraper.py
 """
 
 # The types of events listed in the event list:
@@ -31,7 +31,7 @@ EVENT_REGISTRATION_URL_PATTERN = "https://my.usfirst.org/myarea/index.lasso?page
 
 
 # MASSIVE FIXME:
-# Just discovered that FIRST session keys are season-dependent. A session key you retreived from a 2011
+# Just discovered that FIRST session keys are season-dependent. A session key you retrieved from a 2011
 # page does not work to get information about 2012 events. Therefore every request must also know what year
 # it is for. Have not fully made changes to be aware of this, as it ripples very far downstream in terms of
 # changing the API to require (eid, year) and not just eid. Right now, this means updating data on any event
@@ -86,7 +86,7 @@ def getEventList(year):
 	try:
 		result = urllib2.urlopen(url, timeout=60)
 	except urllib2.URLError, e:
-		log.error('Unable to retreive url: ' + url + ' Reason:' + e.reason)
+		log.error('Unable to retrieve url: ' + url + ' Reason:' + e.reason)
 		return
 
 	html = result.read()
@@ -97,24 +97,14 @@ def getEventList(year):
 		convertEntities=BeautifulSoup.HTML_ENTITIES
 	)
 
-	for tr in soup.findAll('tr'):  # Events are in table rows
+	for tr in soup.findAll('tr'):  # events are in table rows
 		event = {}
 
 		try:
 			tds = tr.findAll('td')
-			#event.official = True
 			event["event_type"] = unicode(tds[0].string)
 			event["first_eid"] = tds[1].a["href"][24:28]
 			event["name"] = ''.join(tds[1].a.findAll(text=True))  # <em>s in event names fix
-			#event.venue = unicode(tds[2].string)
-			#event.location = unicode(tds[3].string)
-
-			#try:
-			#    event_dates = str(tds[4].string).strip()
-			#    event.start_date, event.stop_date = parseEventDates(event_dates)
-			#    event.year = int(event_dates[-4:])
-			#except Exception, detail:
-			#    logging.error('Date Parse Failed: ' + str(detail))
 
 			if event.get("event_type", None) in REGIONAL_EVENT_TYPES:
 				events.append(event)
@@ -125,8 +115,8 @@ def getEventList(year):
 	return events
 
 
-def getEvent(eid, year):
-	"""Return an Event object for a particular FIRST "event id" aka "eid"""
+def getEvent(year, eid):
+	"""populate an event object with other data form different parts of the FIRST FMS DB, including event registration"""
 
 	session_key = getSessionKey(year)
 	url = EVENT_URL_PATTERN % (eid, session_key)
@@ -134,11 +124,10 @@ def getEvent(eid, year):
 	try:
 		result = urllib2.urlopen(url, timeout=60)
 	except urllib2.URLError, e:
-		log.error('Unable to retreive url: ' + url + ' Reason:' + e.reason)
+		log.error('Unable to retrieve url: ' + url + ' Reason:' + e.reason)
 		return
 
 	event = parseEvent(result.read())
-	event['eid'] = eid
 	event['official'] = True  # wtf is this???
 	event['teams'] = getEventRegistration(eid, year)
 	return event
@@ -161,7 +150,7 @@ def parseEvent(html):
 			if field == "Event":
 				event_dict["name"] = unicode(''.join(tds[1].findAll(text=True))).strip()
 			if field == "Event Subtype":
-				event_dict["event_type"] = unicode(tds[1].string)
+				event_dict["type"] = unicode(tds[1].string)
 			if field == "When":
 				try:
 					event_dates = str(tds[1].string).strip()
@@ -178,18 +167,16 @@ def parseEvent(html):
 			if field == "Match Results":
 				#http://www2.usfirst.org/2010comp/Events/SDC/matchresults.html
 				m = re.match(r"http://www2\.usfirst\.org/%scomp/Events/([a-zA-Z0-9]*)/matchresults\.html" % event_dict["year"], tds[1].a["href"])
-				event_dict["event_short"] = m.group(1).lower()
+				event_dict["short_name"] = m.group(1).lower()
 
 	event = {
-		'key_name': str(event_dict["year"]) + str.lower(str(event_dict["event_short"])),
 		'name': event_dict.get("name", None),
-		'event_type': event_dict.get("event_type", None),
+		'type': event_dict.get("type", None),
 		'start_date': event_dict.get("start_date", None),
 		'end_date': event_dict.get("end_date", None),
-		'year': event_dict.get("year", None),
 		'venue_address': event_dict.get("venue_address", None),
 		'website': event_dict.get("website", None),
-		'event_short': event_dict.get("event_short", None)
+		'short_name': event_dict.get("event_short", None)
 	}
 
 	return event
@@ -239,7 +226,7 @@ def getEventRegistration(eid, year):
 	try:
 		result = urllib2.urlopen(url, timeout=60)
 	except urllib2.URLError, e:
-		log.error('Unable to retreive url: ' + url + ' Reason:' + e.reason)
+		log.error('Unable to retrieve url: ' + url + ' Reason:' + e.reason)
 		return
 
 	teams = parseEventRegistration(result.read())
