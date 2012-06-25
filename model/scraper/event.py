@@ -4,7 +4,10 @@ import re
 import urllib2
 import model.log as log
 
-"""this script provides functions to scrape the FIRST FMS database"""
+"""
+this script provides functions to scrape the FIRST FMS database
+all functions in this script are database indepentant, database-depentant functions are in scraper.py
+"""
 
 # The types of events listed in the event list:
 REGIONAL_EVENT_TYPES = [
@@ -16,8 +19,6 @@ REGIONAL_EVENT_TYPES = [
 	"District Event",
 	"District Championship",
 ]
-
-STARTING_YEAR = 2003  # the FIRST FMS database only lists events back till 2003
 
 # The URL for the event list:
 REGIONAL_EVENTS_URL = "https://my.usfirst.org/myarea/index.lasso?event_type=FRC&season_FRC=%s"
@@ -41,8 +42,8 @@ EVENT_REGISTRATION_URL_PATTERN = "https://my.usfirst.org/myarea/index.lasso?page
 # -gregmarra 15 Jan 2012
 
 
-def scrape_duration(start_date, end_date):
-	"""scrape all the events that started within a specified duration"""
+# def scrape_duration(start_date, end_date):
+# 	"""scrape all the events that started within a specified duration"""
 
 
 # a URL that gives us a result with urls that have session keys in them (response only shows 25 results from FMS DB... pretty small request)
