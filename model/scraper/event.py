@@ -2,7 +2,6 @@ from datetime import datetime
 from BeautifulSoup import BeautifulSoup
 import re
 import urllib2
-import model.log as log
 
 """
 this script provides functions to scrape the FIRST FMS database
@@ -86,7 +85,7 @@ def get_event_list(year):
 	try:
 		result = urllib2.urlopen(url, timeout=60)
 	except urllib2.URLError, e:
-		log.error('Unable to retrieve url: ' + url + ' Reason:' + e.reason)
+		raise Exception('Unable to retrieve url: ' + url + ' Reason:' + e.reason)
 		return
 
 	html = result.read()
@@ -97,20 +96,18 @@ def get_event_list(year):
 		convertEntities=BeautifulSoup.HTML_ENTITIES
 	)
 
-	for tr in soup.findAll('tr'):  # events are in table rows
+	content = soup.p.table.table.findAll('tr')[3:-2]  # get to the actual content, past all the shitty layout tables and headers / footers
+
+	for tr in content:
 		event = {}
 
-		try:
-			tds = tr.findAll('td')
-			event["event_type"] = unicode(tds[0].string)
-			event["first_eid"] = tds[1].a["href"][24:28]
-			event["name"] = ''.join(tds[1].a.findAll(text=True))  # <em>s in event names fix
+		tds = tr.findAll('td')
+		event["event_type"] = unicode(tds[0].string)
+		event["first_eid"] = tds[1].a["href"][24:28]
+		event["name"] = ''.join(tds[1].a.findAll(text=True))  # <em>s in event names fix
 
-			if event.get("event_type", None) in REGIONAL_EVENT_TYPES:
-				events.append(event)
-
-		except Exception, detail:
-			log.error('Event parsing failed: ' + str(detail))
+		if event.get("event_type", None) in REGIONAL_EVENT_TYPES:
+			events.append(event)
 
 	return events
 
@@ -124,8 +121,7 @@ def get_event(year, eid):
 	try:
 		result = urllib2.urlopen(url, timeout=60)
 	except urllib2.URLError, e:
-		log.error('Unable to retrieve url: ' + url + ' Reason:' + e.reason)
-		return
+		raise Exception('Unable to retrieve url: ' + url + ' Reason:' + e.reason)
 
 	event = parse_event(result.read())
 	event['official'] = True  # wtf is this???
@@ -157,7 +153,7 @@ def parse_event(html):
 					event_dict["start_date"], event_dict["end_date"] = parse_event_dates(event_dates)
 					event_dict["year"] = int(event_dates[-4:])
 				except Exception, detail:
-					log.error('Date Parse Failed: ' + str(detail))
+					raise Exception('Date Parse Failed: ' + str(detail))
 			if field == "Where":
 				# TODO: This next line is awful. Make this suck less.
 				# I think \t tabs mess it up or something. -greg 5/20/2010
@@ -226,8 +222,7 @@ def get_event_registration(eid, year):
 	try:
 		result = urllib2.urlopen(url, timeout=60)
 	except urllib2.URLError, e:
-		log.error('Unable to retrieve url: ' + url + ' Reason:' + e.reason)
-		return
+		raise Exception('Unable to retrieve url: ' + url + ' Reason:' + e.reason)
 
 	teams = parse_event_registration(result.read())
 	return teams
