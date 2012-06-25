@@ -9,8 +9,6 @@ from flask import request, send_from_directory, abort, g
 
 app = Flask(__name__,)
 
-db.check()  # make sure mongo is setup
-
 
 @app.before_request
 def before_request():
@@ -76,9 +74,9 @@ def index():
 
 
 @app.route('/test')
-def json():
-	import model.scraper.event as event
-	return event.getEventList(request.args['year'])
+def test():
+	import task.task as task
+	return task.scrape_event_names(request.args['year'])
 
 
 #TODO: add mongs like db browser, with option to only return json (read only?) (restricted - not able to read user collection)
@@ -91,13 +89,6 @@ def json():
 # 	t.start()
 
 # cron()
-
-
-# 	inputs = web.input(username='', token='')
-# 	#only run user.check if username and token are defined... still allows use of default guest account
-
-
-# app.add_processor(processor)
 
 
 @app.route('/user/<action>')

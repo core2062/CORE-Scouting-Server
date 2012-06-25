@@ -17,11 +17,11 @@ csd = c.csd  # variable used in the rest of the code to access the db (for now)
 #this might hold some invisible db decorators later
 
 
-def check():
-	"""checks that the db is setup, if not runs setup"""
-	if csd.user.find_one({'_id': 'admin'}) == None:  # checks if there is an admin user
-		print 'setting up mongoDB'
-		reset()
+# def check():
+# 	"""checks that the db is setup, if not runs setup"""
+# 	if csd.user.find_one({'_id': 'admin'}) == None:  # checks if there is an admin user
+# 		print 'setting up mongoDB'
+# 		reset()
 
 
 def reset():
@@ -32,6 +32,7 @@ def reset():
 	"""
 
 	# backup db
+	# TODO: check this part... might have caused error
 	subprocess.call([
 		"mongodump",
 		"out " + cwd + 'backup/' + str(time()),
