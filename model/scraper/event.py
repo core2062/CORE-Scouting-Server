@@ -50,7 +50,7 @@ EVENT_REGISTRATION_URL_PATTERN = "https://my.usfirst.org/myarea/index.lasso?page
 SESSION_KEY_GENERATING_PATTERN = "https://my.usfirst.org/myarea/index.lasso?page=searchresults&programs=FRC&reports=teams&omit_searchform=1&season_FRC=%s"
 
 
-def getSessionKey(year):
+def get_session_key(year):
 	"""
 	Grab a page from FIRST so we can get a session key out of URLs on it.
 	This session key is needed to construct working event detail information URLs.
@@ -61,7 +61,7 @@ def getSessionKey(year):
 	try:
 		result = urllib2.urlopen(url, timeout=60)
 	except urllib2.URLError, e:  # raise a better error
-		raise Exception('unable to retreive url (for session key): ' + url + ' reason:' + str(e.reason))
+		raise Exception('unable to retrieve url (for session key): ' + url + ' reason:' + str(e.reason))
 
 	regex_results = re.search(sessionRe, result.read())
 	if regex_results is not None:
@@ -73,7 +73,7 @@ def getSessionKey(year):
 	raise Exception('unable to extract session key from result')
 
 
-def getEventList(year):
+def get_event_list(year):
 	"""
 	get a list of Event objects from the FIRST event listing page and parse the list of events
 	This provides us with basic information about events and is how we first discover them.
@@ -115,10 +115,10 @@ def getEventList(year):
 	return events
 
 
-def getEvent(year, eid):
+def get_event(year, eid):
 	"""populate an event object with other data form different parts of the FIRST FMS DB, including event registration"""
 
-	session_key = getSessionKey(year)
+	session_key = get_session_key(year)
 	url = EVENT_URL_PATTERN % (eid, session_key)
 
 	try:
@@ -127,13 +127,13 @@ def getEvent(year, eid):
 		log.error('Unable to retrieve url: ' + url + ' Reason:' + e.reason)
 		return
 
-	event = parseEvent(result.read())
+	event = parse_event(result.read())
 	event['official'] = True  # wtf is this???
-	event['teams'] = getEventRegistration(eid, year)
+	event['teams'] = get_event_registration(eid, year)
 	return event
 
 
-def parseEvent(html):
+def parse_event(html):
 	"""
 	Parse an event's specific page HTML from USFIRST into the individual
 	fields of an Event object. This updates events and gets us fuller
@@ -154,7 +154,7 @@ def parseEvent(html):
 			if field == "When":
 				try:
 					event_dates = str(tds[1].string).strip()
-					event_dict["start_date"], event_dict["end_date"] = parseEventDates(event_dates)
+					event_dict["start_date"], event_dict["end_date"] = parse_event_dates(event_dates)
 					event_dict["year"] = int(event_dates[-4:])
 				except Exception, detail:
 					log.error('Date Parse Failed: ' + str(detail))
@@ -182,7 +182,7 @@ def parseEvent(html):
 	return event
 
 
-def parseEventDates(datestring):
+def parse_event_dates(datestring):
 	"""
 		Parses the date string provided by USFirst into actual event start and stop DateTimes.
 		FIRST date strings look like "01-Apr - 03-Apr-2010".
@@ -217,10 +217,10 @@ def parseEventDates(datestring):
 	return (start_date, stop_date)
 
 
-def getEventRegistration(eid, year):
+def get_event_registration(eid, year):
 	"""Returns a list of team_numbers attending a particular Event"""
 
-	session_key = getSessionKey(year)
+	session_key = get_session_key(year)
 	url = EVENT_REGISTRATION_URL_PATTERN % (eid, session_key)
 
 	try:
@@ -229,11 +229,11 @@ def getEventRegistration(eid, year):
 		log.error('Unable to retrieve url: ' + url + ' Reason:' + e.reason)
 		return
 
-	teams = parseEventRegistration(result.read())
+	teams = parse_event_registration(result.read())
 	return teams
 
 
-def parseEventRegistration(html):
+def parse_event_registration(html):
 	"""Find what Teams are attending an Event, and return their team_numbers."""
 
 	# This code is based on TeamTpidHelper, and show probably be refactored.
