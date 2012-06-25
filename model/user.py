@@ -159,16 +159,6 @@ class Instance(object):
 			consider switching to a transparent method of writing to the db
 		"""
 		if self.data['_id'] != 'guest':  # shouldn't save guest account to db because guest isn't a real user
-			print ''
-			print ''
-			print 'data:'
-			print self.data
-			print ''
-			print 'defaults:'
-			print self.defaults
-			print ''
-			print 'result:'
-			print helper.remove_defaults(self.data, self.defaults)
 			db.csd.user.save(helper.remove_defaults(self.data, self.defaults))  # save with defaults cut out
 
 	# abc = user()
