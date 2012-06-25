@@ -138,25 +138,10 @@ def getEvent(eid, year):
 		return
 
 	event = parseEvent(result.read())
-	event.first_eid = eid
-	event.official = True
+	event['eid'] = eid
+	event['official'] = True  # wtf is this???
+	event['teams'] = getEventRegistration(eid, year)
 	return event
-
-
-def getEventRegistration(eid, year):
-	"""Returns a list of team_numbers attending a particular Event"""
-
-	session_key = getSessionKey(year)
-	url = EVENT_REGISTRATION_URL_PATTERN % (eid, session_key)
-
-	try:
-		result = urllib2.urlopen(url, timeout=60)
-	except urllib2.URLError, e:
-		log.error('Unable to retreive url: ' + url + ' Reason:' + e.reason)
-		return
-
-	teams = parseEventRegistration(result.read())
-	return teams
 
 
 def parseEvent(html):
@@ -243,6 +228,22 @@ def parseEventDates(datestring):
 	stop_date = datetime(stop_year, stop_month, stop_day)
 
 	return (start_date, stop_date)
+
+
+def getEventRegistration(eid, year):
+	"""Returns a list of team_numbers attending a particular Event"""
+
+	session_key = getSessionKey(year)
+	url = EVENT_REGISTRATION_URL_PATTERN % (eid, session_key)
+
+	try:
+		result = urllib2.urlopen(url, timeout=60)
+	except urllib2.URLError, e:
+		log.error('Unable to retreive url: ' + url + ' Reason:' + e.reason)
+		return
+
+	teams = parseEventRegistration(result.read())
+	return teams
 
 
 def parseEventRegistration(html):
