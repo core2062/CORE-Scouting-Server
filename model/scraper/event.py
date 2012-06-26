@@ -10,6 +10,7 @@ all functions in this script are database independent, database-dependent functi
 
 # The types of events listed in the event list:
 REGIONAL_EVENT_TYPES = [
+	"Championship",
 	"Regional",
 	"MI FRC State Championship",
 	"MI District",
@@ -85,7 +86,7 @@ def get_event_list(year):
 	try:
 		result = urllib2.urlopen(url, timeout=60)
 	except urllib2.URLError, e:
-		raise Exception('Unable to retrieve url: ' + url + ' Reason:' + e.reason)
+		raise Exception('Unable to retrieve url: ' + url + ' Reason:' + str(e.reason))
 		return
 
 	html = result.read()
@@ -121,7 +122,7 @@ def get_event(year, eid):
 	try:
 		result = urllib2.urlopen(url, timeout=60)
 	except urllib2.URLError, e:
-		raise Exception('Unable to retrieve url: ' + url + ' Reason:' + e.reason)
+		raise Exception('Unable to retrieve url: ' + url + ' Reason:' + str(e.reason))
 
 	event = parse_event(result.read())
 	event['official'] = True  # wtf is this???
@@ -222,8 +223,7 @@ def get_event_registration(eid, year):
 	try:
 		result = urllib2.urlopen(url, timeout=60)
 	except urllib2.URLError, e:
-		raise Exception('Unable to retrieve url: ' + url + ' Reason:' + e.reason)
-
+		raise Exception('Unable to retrieve url: ' + url + ' Reason:' + str(e.reason))
 	teams = parse_event_registration(result.read())
 	return teams
 
@@ -236,13 +236,10 @@ def parse_event_registration(html):
 
 	teamRe = re.compile(r'tpid=[A-Za-z0-9=&;\-:]*?">\d+')
 	teamNumberRe = re.compile(r'\d+$')
-	tpidRe = re.compile(r'\d+')
 
 	teams = []
 	for teamResult in teamRe.findall(html):
-		team = {}
-		team["number"] = teamNumberRe.findall(teamResult)[0]
-		team["tpid"] = tpidRe.findall(teamResult)[0]
+		team = teamNumberRe.findall(teamResult)[0]
 		teams.append(team)
 
 	return teams
