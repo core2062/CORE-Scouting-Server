@@ -1,4 +1,5 @@
 from datetime import datetime
+from calendar import timegm
 from BeautifulSoup import BeautifulSoup
 import re
 import urllib2
@@ -132,7 +133,7 @@ def get_event(year, eid):
 
 def parse_event(html):
 	"""
-	Parse an event's specific page HTML from USFIRST into the individual
+	Parse an event's specific page HTML from FIRST into the individual
 	fields of an Event object. This updates events and gets us fuller
 	information once we know about this.
 	"""
@@ -144,36 +145,36 @@ def parse_event(html):
 		tds = tr.findAll('td')
 		if len(tds) > 1:
 			field = str(tds[0].string)
-			if field == "Event":
-				event_dict["name"] = unicode(''.join(tds[1].findAll(text=True))).strip()
+
+#			if field == "Event":
+#				event_dict["name"] = unicode(''.join(tds[1].findAll(text=True))).strip()
 			if field == "Event Subtype":
 				event_dict["type"] = unicode(tds[1].string)
-			if field == "When":
+			elif field == "When":
 				try:
 					event_dates = str(tds[1].string).strip()
 					event_dict["start_date"], event_dict["end_date"] = parse_event_dates(event_dates)
 					event_dict["year"] = int(event_dates[-4:])
 				except Exception, detail:
 					raise Exception('Date Parse Failed: ' + str(detail))
-			if field == "Where":
+			elif field == "Where":
 				# TODO: This next line is awful. Make this suck less.
 				# I think \t tabs mess it up or something. -greg 5/20/2010
 				event_dict["venue_address"] = unicode(''.join(tds[1].findAll(text=True))).encode('ascii', 'ignore').strip().replace("\t", "").replace("\r\n\r\n", "\r\n")
-			if field == "Event Info":
+			elif field == "Event Info":
 				event_dict["website"] = unicode(tds[1].a['href'])
-			if field == "Match Results":
-				#http://www2.usfirst.org/2010comp/Events/SDC/matchresults.html
+			elif field == "Match Results":
+				#example: http://www2.usfirst.org/2010comp/Events/SDC/matchresults.html
 				m = re.match(r"http://www2\.usfirst\.org/%scomp/Events/([a-zA-Z0-9]*)/matchresults\.html" % event_dict["year"], tds[1].a["href"])
 				event_dict["short_name"] = m.group(1).lower()
 
 	event = {
-		'name': event_dict.get("name", None),
+		'short_name': event_dict.get("short_name", None),
 		'type': event_dict.get("type", None),
 		'start_date': event_dict.get("start_date", None),
 		'end_date': event_dict.get("end_date", None),
 		'venue_address': event_dict.get("venue_address", None),
 		'website': event_dict.get("website", None),
-		'short_name': event_dict.get("event_short", None)
 	}
 
 	return event
@@ -181,7 +182,7 @@ def parse_event(html):
 
 def parse_event_dates(datestring):
 	"""
-		Parses the date string provided by USFirst into actual event start and stop DateTimes.
+		Parses the date string provided by First into actual event start and stop DateTimes and then outputs as unix timestamps
 		FIRST date strings look like "01-Apr - 03-Apr-2010".
 	"""
 	month_dict = {
@@ -199,7 +200,6 @@ def parse_event_dates(datestring):
 		"Dec": 12,
 	}
 
-	# "01-Apr - 03-Apr-2010"
 	start_day = int(datestring[0:2])
 	start_month = month_dict[datestring[3:6]]
 	start_year = int(datestring[-4:])
@@ -211,7 +211,7 @@ def parse_event_dates(datestring):
 	start_date = datetime(start_year, start_month, start_day)
 	stop_date = datetime(stop_year, stop_month, stop_day)
 
-	return (start_date, stop_date)
+	return (timegm(start_date.utctimetuple()), timegm(stop_date.utctimetuple()))
 
 
 def get_event_registration(eid, year):
@@ -231,7 +231,7 @@ def get_event_registration(eid, year):
 def parse_event_registration(html):
 	"""Find what Teams are attending an Event, and return their team_numbers."""
 
-	# This code is based on TeamTpidHelper, and show probably be refactored.
+	# This code is based on TeamTpidHelper, and should probably be refactored.
 	# -gregmarra 5 Dec 2010
 
 	teamRe = re.compile(r'tpid=[A-Za-z0-9=&;\-:]*?">\d+')
@@ -239,7 +239,6 @@ def parse_event_registration(html):
 
 	teams = []
 	for teamResult in teamRe.findall(html):
-		team = teamNumberRe.findall(teamResult)[0]
-		teams.append(team)
+		teams.append(teamNumberRe.findall(teamResult)[0])  # add team to list
 
 	return teams
