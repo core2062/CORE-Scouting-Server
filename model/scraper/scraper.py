@@ -1,7 +1,8 @@
 from datetime import datetime
 import db
-import model.scraper.event as event_scraper
-import model.scraper.match as match_scraper
+import event as event_scraper
+import match as match_scraper
+import team as team_scraper
 
 """
 this script defines tasks such as scraping and analysis which are used to run the CSD
@@ -26,18 +27,7 @@ def event_names(year=datetime.now().year):
 
 	for event in event_list:
 		if db.csd.sourceEvent.find_one({'name': event['name'], 'year': year}) == None:
-
-			#change name of key (better/shorter name)
-			event['type'] = event['event_type']
-			del event['event_type']
-
-			#change name of key (better/shorter name) and make it an int
-			event['eid'] = int(event['first_eid'])
-			del event['first_eid']
-
-			#set year value
-			event['year'] = year
-
+			event['year'] = year  # set year value
 			db.csd.sourceEvent.save(event)
 
 
@@ -48,7 +38,7 @@ def event_details(year=datetime.now().year):
 	this should be run more often than scrape_event_names() because events change details like attendance more often than they are created
 	"""
 
-	#NOTICE: year must be an int
+	year = int(year)  # make sure it is an int
 
 	event_list = db.csd.sourceEvent.find({'year': year})
 	for event in event_list:
@@ -72,7 +62,8 @@ def match(event_short_name, year=datetime.now().year):
 	this should be run often during a competition to get new match results
 	"""
 
-	#NOTICE: year must be an int
+	year = int(year)  # make sure it is an int
+
 	print 'getting matches from ' + event_short_name
 
 	matches = match_scraper.get_matches(year, event_short_name)
@@ -92,3 +83,47 @@ def match(event_short_name, year=datetime.now().year):
 			match,
 			upsert=True,
 		)
+
+
+def tpids(year=datetime.now().year):
+	"""
+	get tpids for all teams in a certain year
+	this function adds tpid info to team objects
+	"""
+	print 'getting tpid list'
+
+	year = int(year)  # make sure it is an int
+
+	tpid_list = team_scraper.get_tpids(year)
+
+	for tpid in tpid_list:
+		db.csd.sourceTeam.update(
+			{
+				'team': tpid['team']
+			},
+			{
+				'$set': {
+					'tpid.' + str(year): tpid['tpid']
+				}
+			},
+			upsert=True,
+		)
+
+
+def team_details():
+	"""this code is written with the assumption that only the most recent info should be gotten about the teams"""
+
+	for team in db.csd.sourceTeam.find({}):
+		tpid = None
+		year = datetime.now().year
+
+		while tpid == None:  # loop till it finds the most recent tpid
+			try:
+				tpid = team['tpid'][str(year)]
+			except:
+				year += -1
+
+		print 'scraping team %s with tpid from %s' % (team['team'], year)
+
+		team.update(team_scraper.get_team_details(tpid, year))
+		db.csd.sourceTeam.update({'_id': team['_id']}, team)

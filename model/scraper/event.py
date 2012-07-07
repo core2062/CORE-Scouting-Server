@@ -3,6 +3,7 @@ from calendar import timegm
 from BeautifulSoup import BeautifulSoup
 import re
 import urllib2
+import helper
 
 """
 this script provides functions to scrape the FIRST FMS database
@@ -31,47 +32,8 @@ EVENT_URL_PATTERN = "https://my.usfirst.org/myarea/index.lasso?page=event_detail
 EVENT_REGISTRATION_URL_PATTERN = "https://my.usfirst.org/myarea/index.lasso?page=event_teamlist&results_size=250&eid=%s&-session=myarea:%s"
 
 
-# MASSIVE FIXME:
-# Just discovered that FIRST session keys are season-dependent. A session key you retrieved from a 2011
-# page does not work to get information about 2012 events. Therefore every request must also know what year
-# it is for. Have not fully made changes to be aware of this, as it ripples very far downstream in terms of
-# changing the API to require (eid, year) and not just eid. Right now, this means updating data on any event
-# prior to 2012 will fail. Need to ripple these changes through everything that gets data from my.usfirst.org
-#
-# Every function call with year=2012 should change to year required.
-#
-# -gregmarra 15 Jan 2012
-
-
 # def scrape_duration(start_date, end_date):
 # 	"""scrape all the events that started within a specified duration"""
-
-
-# a URL that gives us a result with urls that have session keys in them (response only shows 25 results from FMS DB... pretty small request)
-SESSION_KEY_GENERATING_PATTERN = "https://my.usfirst.org/myarea/index.lasso?page=searchresults&programs=FRC&reports=teams&omit_searchform=1&season_FRC=%s"
-
-
-def get_session_key(year):
-	"""
-	Grab a page from FIRST so we can get a session key out of URLs on it.
-	This session key is needed to construct working event detail information URLs.
-	"""
-	sessionRe = re.compile(r'myarea:([A-Za-z0-9]*)')
-	url = SESSION_KEY_GENERATING_PATTERN % year
-
-	try:
-		result = urllib2.urlopen(url, timeout=60)
-	except urllib2.URLError, e:  # raise a better error
-		raise Exception('unable to retrieve url (for session key): ' + url + ' reason:' + str(e.reason))
-
-	regex_results = re.search(sessionRe, result.read())
-	if regex_results is not None:
-		session_key = regex_results.group(1)  # first parenthetical group
-		if session_key is not None:
-			return session_key
-
-	#else: (if above didn't return)
-	raise Exception('unable to extract session key from result')
 
 
 def get_event_list(year):
@@ -88,7 +50,6 @@ def get_event_list(year):
 		result = urllib2.urlopen(url, timeout=60)
 	except urllib2.URLError, e:
 		raise Exception('Unable to retrieve url: ' + url + ' Reason:' + str(e.reason))
-		return
 
 	html = result.read()
 
@@ -104,8 +65,8 @@ def get_event_list(year):
 		event = {}
 
 		tds = tr.findAll('td')
-		event["event_type"] = unicode(tds[0].string)
-		event["first_eid"] = tds[1].a["href"][24:28]
+		event["type"] = unicode(tds[0].string)
+		event["eid"] = int(tds[1].a["href"][24:28])
 		event["name"] = ''.join(tds[1].a.findAll(text=True))  # <em>s in event names fix
 
 		if event.get("event_type", None) in REGIONAL_EVENT_TYPES:  # actually this url shouldn't return kickoffs anyway, probably not needed
@@ -117,7 +78,7 @@ def get_event_list(year):
 def get_event(year, eid):
 	"""populate an event object with other data form different parts of the FIRST FMS DB, including event registration"""
 
-	session_key = get_session_key(year)
+	session_key = helper.get_session_key(year)
 	url = EVENT_URL_PATTERN % (eid, session_key)
 
 	try:
@@ -137,9 +98,11 @@ def parse_event(html):
 	fields of an Event object. This updates events and gets us fuller
 	information once we know about this.
 	"""
-	event_dict = dict()
-	soup = BeautifulSoup(html,
-			convertEntities=BeautifulSoup.HTML_ENTITIES)
+	event_dict = {}
+	soup = BeautifulSoup(
+		html,
+		convertEntities=BeautifulSoup.HTML_ENTITIES,
+	)
 
 	for tr in soup.findAll('tr'):
 		tds = tr.findAll('td')
@@ -217,7 +180,7 @@ def parse_event_dates(datestring):
 def get_event_registration(eid, year):
 	"""Returns a list of team_numbers attending a particular Event"""
 
-	session_key = get_session_key(year)
+	session_key = helper.get_session_key(year)
 	url = EVENT_REGISTRATION_URL_PATTERN % (eid, session_key)
 
 	try:

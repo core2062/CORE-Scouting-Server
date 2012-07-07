@@ -76,9 +76,9 @@ def index():
 @app.route('/test')
 def test():
 	import model.scraper.scraper as scraper
-	#scraper.event_names(request.args['year'])
+	scraper.team_details()
 	#scraper.event_details(request.args['year'])
-	scraper.all_matches(int(request.args['year']))
+	#scraper.all_matches(int(request.args['year']))
 	return 'done'
 
 
