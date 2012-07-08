@@ -76,11 +76,15 @@ def index():
 @app.route('/test')
 def test():
 	import model.scraper.scraper as scraper
-	scraper.team_details()
-	#scraper.event_details(request.args['year'])
-	#scraper.all_matches(int(request.args['year']))
+	scraper.event_names(request.args.get('year'))
 	return 'done'
 
+
+@app.route('/reset')
+def reset():
+	import setup as setup
+	setup.setup()
+	return 'done'
 
 #TODO: add mongs like db browser, with option to only return json (read only?) (restricted - not able to read user collection)
 
@@ -152,4 +156,7 @@ def admin_task(task):
 		return abort(404)  # not one of the defined methods for interacting w/ the server
 
 if __name__ == "__main__":
-	app.run(debug=True)
+	app.run(
+		debug=True,
+		host='0.0.0.0',  # make dev server public
+	)

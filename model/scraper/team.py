@@ -168,5 +168,3 @@ def get_tpids(year):
 			})
 
 		skip += 250  # increase skip and loop to get another page
-
-print get_team_details(61605, 2012)

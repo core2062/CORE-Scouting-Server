@@ -69,7 +69,7 @@ def get_event_list(year):
 		event["eid"] = int(tds[1].a["href"][24:28])
 		event["name"] = ''.join(tds[1].a.findAll(text=True))  # <em>s in event names fix
 
-		if event.get("event_type", None) in REGIONAL_EVENT_TYPES:  # actually this url shouldn't return kickoffs anyway, probably not needed
+		if event["type"] in REGIONAL_EVENT_TYPES:  # actually this url shouldn't return kickoffs anyway, probably not needed
 			events.append(event)
 
 	return events
@@ -128,7 +128,8 @@ def parse_event(html):
 				event_dict["website"] = unicode(tds[1].a['href'])
 			elif field == "Match Results":
 				#example: http://www2.usfirst.org/2010comp/Events/SDC/matchresults.html
-				m = re.match(r"http://www2\.usfirst\.org/%scomp/Events/([a-zA-Z0-9]*)/matchresults\.html" % event_dict["year"], tds[1].a["href"])
+				#the below line may cause Y10K issues (assumes 4 digit year)
+				m = re.match(r"http://www2\.usfirst\.org/[0-9][0-9][0-9][0-9]comp/Events/([a-zA-Z0-9]*)/matchresults\.html", tds[1].a["href"])
 				event_dict["short_name"] = m.group(1).lower()
 
 	event = {

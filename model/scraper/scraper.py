@@ -19,7 +19,7 @@ def event_names(year=datetime.now().year):
 	this function will not overwrite entries that are already in the db, it only adds new ones (so other scraping functions can add data to the documents and it won't be lost)
 	"""
 
-	print 'getting event list'
+	print 'getting event list for ' + str(year)
 
 	year = int(year)  # make sure it is an int
 
@@ -49,6 +49,10 @@ def event_details(year=datetime.now().year):
 
 def all_matches(year=datetime.now().year):
 	"""this function scrapes all matches for a entire year"""
+
+	year = int(year)  # make sure it is an int
+
+	print 'getting all matches from ' + str(year)
 
 	event_list = db.csd.sourceEvent.find({'year': year})
 	for event in event_list:
@@ -90,7 +94,7 @@ def tpids(year=datetime.now().year):
 	get tpids for all teams in a certain year
 	this function adds tpid info to team objects
 	"""
-	print 'getting tpid list'
+	print 'getting tpid list for ' + str(year)
 
 	year = int(year)  # make sure it is an int
 

@@ -33,6 +33,7 @@ def reset():
 
 	# backup db
 	# TODO: check this part... might have caused error
+	# TODO: prevent this part from printing
 	subprocess.call([
 		"mongodump",
 		"out " + cwd + 'backup/' + str(time()),
