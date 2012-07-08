@@ -103,20 +103,20 @@ def parse_team_details(html):
 				#except Exception:
 				#	raise Exception('Team website is invalid for team %s.' % team['number'])
 			elif field == 'Team History':
+
 				team['events'] = []
 				for row in tds[1].findAll('tr')[1:]:
-					tds = row.findAll('td')
+					event = row.findAll('td')
 
 					awards = []
-					unfiltered_awards = tds[2].string
-					if unfiltered_awards != None:
-						unfiltered_awards = tds[2].string.splitlines()
-						for award in unfiltered_awards:
-							if award == '(2000 and prior award listings may be incomplete)': awards.append(award)
+					unfiltered_awards = event[2].contents
+					for award in unfiltered_awards:
+						if award.__class__.__name__ == 'NavigableString' and award.strip() != '':  # filter out all the tags n' whitespace n' shit
+							awards.append(award.strip())  # it is really an award, add to the list
 
 					team['events'].append({
-						'year': int(tds[0].string),
-						'event': tds[1].string[5:],
+						'year': int(event[0].string),
+						'event': event[1].string[5:],
 						'awards': awards
 					})
 
@@ -168,3 +168,5 @@ def get_tpids(year):
 			})
 
 		skip += 250  # increase skip and loop to get another page
+
+print get_team_details(61605, 2012)
