@@ -91,8 +91,8 @@ def get_event(year, eid):
 	event['teams'] = get_event_registration(eid, year)
 	return event
 
-# it used to be called "matchsum" in 2003
-EVENT_SHORT_NAME_RE = re.compile(r"http://www2\.usfirst\.org/[0-9]*comp/Events/([a-zA-Z0-9]*)/match(:?results|sum)\.html")
+# it used to be called "matchsum" in 2003 and "matches" in 2004
+EVENT_SHORT_NAME_RE = re.compile(r"http://www2\.usfirst\.org/[0-9]*comp/Events/([a-zA-Z0-9]*)/match(:?results|sum|es)\.html")
 
 
 def parse_event(html):
@@ -173,9 +173,15 @@ def parse_event_dates(datestring):
 	start_month = month_dict[datestring[3:6]]
 	start_year = int(datestring[-4:])
 
-	stop_day = int(datestring[9:11])
-	stop_month = month_dict[datestring[12:15]]
-	stop_year = int(datestring[-4:])
+	if len(datestring) == 11:  # check if the date string only gives one date like 09-Mar-2005 (assume one day event?)
+		#make stop date the same as start
+		stop_day = start_day
+		stop_month = start_month
+		stop_year = start_month
+	else:  # regular 2 part date string
+		stop_day = int(datestring[9:11])
+		stop_month = month_dict[datestring[12:15]]
+		stop_year = start_year  # there are no events near new-years and datestrings only give one year
 
 	start_date = datetime(start_year, start_month, start_day)
 	stop_date = datetime(stop_year, stop_month, stop_day)

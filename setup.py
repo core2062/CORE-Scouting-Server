@@ -1,4 +1,4 @@
-# import db
+import db
 from datetime import datetime
 import model.scraper.scraper as scraper  # TODO: switch to tasks to distribute load
 
@@ -9,7 +9,7 @@ def setup():
 		don't call this if the db is already running... it will reset the db entirely
 	"""
 
-	# db.reset()  # setup mongo
+	db.reset()  # setup mongo
 
 	#scraping setup
 

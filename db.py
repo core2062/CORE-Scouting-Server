@@ -34,14 +34,7 @@ def reset():
 		a backup will be made of the current database
 	"""
 
-	# backup db
-	# TODO: check this part... might have caused error
-	# TODO: prevent this part from printing
-	subprocess.call([
-		"mongodump",
-		"out " + cwd + 'backup/' + str(time()),
-		'db csd'
-	])
+	backup(cwd + 'backup')  # backup db
 
 	#clear out db
 	c.drop_database('csd')
@@ -92,6 +85,8 @@ def backup(filename):
 	this doesn't backup gridFS files
 	this is used instead of the command mongodump to improve flexibility, and make it easier to call from within a python script
 	"""
+	filename = filename + '.tar.bz2'
+
 	backup_file = tarfile.open(filename, mode='w:bz2')
 
 	for collection in csd.collection_names():
@@ -110,5 +105,3 @@ def backup(filename):
 			backup_file.addfile(tarinfo=info, fileobj=collection_file)  # add file to tar
 
 	backup_file.close()
-
-backup(cwd + 'backup')

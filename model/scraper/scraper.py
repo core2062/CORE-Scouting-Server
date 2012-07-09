@@ -52,7 +52,7 @@ def all_matches(year=datetime.now().year):
 
 	year = int(year)  # make sure it is an int
 
-	if year == 2003: return  # the parser for 2003 matches is not finished yet, remove this when it is
+	if year == 2003 or year == 2004 or year == 2005: return  # the parser for 2003/2004/2005 matches is not finished yet, remove this when it is
 
 	print 'getting all matches from ' + str(year)
 
