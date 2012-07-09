@@ -2,6 +2,8 @@ import pymongo
 import subprocess
 from time import time
 import os
+from simplejson import dumps
+import tarfile
 
 """
 	this module establishes the connection to mongo and deals with all db interaction
@@ -77,3 +79,29 @@ def reset():
 			],
 		}
 	)
+
+
+def backup(filename):
+	"""
+	the specified file should be not exist, if not the function will overwrite it
+	the filename arg is the full file path that the backup should be saved to
+	the output is a tar archive which contains files representing the database
+	each collection will has its own file and in these files each document will be represented with a line of json
+	this doesn't backup gridFS files
+	this is used instead of the command mongodump to improve flexibility
+	"""
+	backup_file = tarfile.open(filename, mode='w:gz')
+
+	for collection in csd.collection_names():
+		if collection != 'system.indexes':  # auto-generated stuff... don't backup
+			backup_file.addfile(tarfile.TarInfo(collection))
+			collection_file = backup_file.getmember(collection)  # make a file in the archive to hold the collection
+
+			for document in csd[collection].find({}):
+				document["_id"] = str(document['_id'])  # regular document _ids aren't able to be converted to json, so make it a string
+				collection_file.write(dumps(document, separators=(',', ':')) + '\n')
+
+
+	backup_file.close()
+
+backup(cwd + 'backup')

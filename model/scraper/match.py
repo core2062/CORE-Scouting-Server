@@ -13,7 +13,7 @@ EVENT_SHORT_EXCEPTIONS = {
 	"new": "Newton",
 }
 
-MATCH_RESULTS_URL_PATTERN = "http://www2.usfirst.org/%scomp/events/%s/matchresults.html"  # % (year, event_short)
+MATCH_RESULTS_URL_PATTERN = "http://www2.usfirst.org/%scomp/events/%s/match%s.html"  # % (year, event_short, results or sum)
 MATCH_SCHEDULE_QUAL_URL_PATTERN = "http://www2.usfirst.org/%scomp/events/%s/schedulequal.html"
 MATCH_SCHEDULE_ELIMS_URL_PATTERN = "http://www2.usfirst.org/%scomp/events/%s/scheduleelim.html"
 
@@ -21,14 +21,24 @@ MATCH_SCHEDULE_ELIMS_URL_PATTERN = "http://www2.usfirst.org/%scomp/events/%s/sch
 def get_matches(year, event_short_name):
 	"""Return a list of Matches based on the FIRST match results page"""
 
-	url = MATCH_RESULTS_URL_PATTERN % (year, EVENT_SHORT_EXCEPTIONS.get(event_short_name, event_short_name))
+	if year == 2003:
+		page_name = 'sum'  # in 2003 the name of the page was different
+	else:
+		page_name = 'results'
+
+	url = MATCH_RESULTS_URL_PATTERN % (year, EVENT_SHORT_EXCEPTIONS.get(event_short_name, event_short_name), page_name)
 
 	try:
 		result = urllib2.urlopen(url, timeout=60)
 	except urllib2.URLError, e:  # raise a better error
-		raise Exception('unable to retrieve url (for session key): ' + url + ' reason:' + str(e.reason))
+		raise Exception('unable to retrieve url: ' + url + ' reason:' + str(e.reason))
 
 	return parse_match_results_list(result.read())
+
+
+def parse2003match(html):
+	"""2003 matches are stored in a different format, so this function must be used to parse them"""
+	# TODO: finish this function
 
 
 def parse_match_results_list(html):

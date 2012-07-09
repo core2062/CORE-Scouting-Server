@@ -91,6 +91,9 @@ def get_event(year, eid):
 	event['teams'] = get_event_registration(eid, year)
 	return event
 
+# it used to be called "matchsum" in 2003
+EVENT_SHORT_NAME_RE = re.compile(r"http://www2\.usfirst\.org/[0-9]*comp/Events/([a-zA-Z0-9]*)/match(:?results|sum)\.html")
+
 
 def parse_event(html):
 	"""
@@ -128,9 +131,11 @@ def parse_event(html):
 				event_dict["website"] = unicode(tds[1].a['href'])
 			elif field == "Match Results":
 				#example: http://www2.usfirst.org/2010comp/Events/SDC/matchresults.html
-				#the below line may cause Y10K issues (assumes 4 digit year)
-				m = re.match(r"http://www2\.usfirst\.org/[0-9][0-9][0-9][0-9]comp/Events/([a-zA-Z0-9]*)/matchresults\.html", tds[1].a["href"])
-				event_dict["short_name"] = m.group(1).lower()
+				event_dict["short_name"] = []  # championship events have multiple short_names (1 for each division)
+
+				standings_links = tds[1].findAll('a')
+				for link in standings_links:
+					event_dict["short_name"].append(re.match(EVENT_SHORT_NAME_RE, link["href"]).group(1).lower())  # lowercase just looks nicer and more consistant
 
 	event = {
 		'short_name': event_dict.get("short_name", None),

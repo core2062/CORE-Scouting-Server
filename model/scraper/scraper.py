@@ -52,11 +52,14 @@ def all_matches(year=datetime.now().year):
 
 	year = int(year)  # make sure it is an int
 
+	if year == 2003: return  # the parser for 2003 matches is not finished yet, remove this when it is
+
 	print 'getting all matches from ' + str(year)
 
 	event_list = db.csd.sourceEvent.find({'year': year})
 	for event in event_list:
-		match(event['short_name'], year)
+		for short_name in event['short_name']:
+			match(short_name, year)
 
 
 def match(event_short_name, year=datetime.now().year):
