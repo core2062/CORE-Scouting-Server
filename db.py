@@ -4,6 +4,7 @@ from time import time
 import os
 from simplejson import dumps
 import tarfile
+import cStringIO as StringIO
 
 """
 	this module establishes the connection to mongo and deals with all db interaction
@@ -83,24 +84,30 @@ def reset():
 
 def backup(filename):
 	"""
-	the specified file should be not exist, if not the function will overwrite it
-	the filename arg is the full file path that the backup should be saved to
-	the output is a tar archive which contains files representing the database
-	each collection will has its own file and in these files each document will be represented with a line of json
+	the filename arg is the full file path that the backup should be saved to, the extension ".tar.bz2" will be automatically added
+	the specified file should be not exist, if it does, the function will overwrite it
+
+	the output is a bzipped tar archive which contains files representing the database
+	each collection has its own file and in these files each document is represented as 1 line of json
 	this doesn't backup gridFS files
-	this is used instead of the command mongodump to improve flexibility
+	this is used instead of the command mongodump to improve flexibility, and make it easier to call from within a python script
 	"""
-	backup_file = tarfile.open(filename, mode='w:gz')
+	backup_file = tarfile.open(filename, mode='w:bz2')
 
 	for collection in csd.collection_names():
 		if collection != 'system.indexes':  # auto-generated stuff... don't backup
-			backup_file.addfile(tarfile.TarInfo(collection))
-			collection_file = backup_file.getmember(collection)  # make a file in the archive to hold the collection
+			collection_file = StringIO.StringIO()  # make a file in the archive to hold the collection
 
 			for document in csd[collection].find({}):
 				document["_id"] = str(document['_id'])  # regular document _ids aren't able to be converted to json, so make it a string
 				collection_file.write(dumps(document, separators=(',', ':')) + '\n')
 
+			info = tarfile.TarInfo(name=collection)
+			info.mtime = time()  # set time stamp
+			collection_file.seek(0, os.SEEK_END)  # go to end of file
+			info.size = collection_file.tell()  # get size of file based on where end is
+			collection_file.seek(0)  # tar needs file to be back at beginning
+			backup_file.addfile(tarinfo=info, fileobj=collection_file)  # add file to tar
 
 	backup_file.close()
 
