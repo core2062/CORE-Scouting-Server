@@ -2,7 +2,6 @@ from datetime import datetime
 from calendar import timegm
 from BeautifulSoup import BeautifulSoup
 import re
-import urllib2
 import helper
 
 """
@@ -44,21 +43,15 @@ def get_event_list(year):
 
 	if there are more than 250 events then this function will break because the site splits the return into pages w/ 250 on each page
 	"""
-	url = REGIONAL_EVENTS_URL % year
 
-	try:
-		result = urllib2.urlopen(url, timeout=60)
-	except urllib2.URLError, e:
-		raise Exception('Unable to retrieve url: ' + url + ' Reason:' + str(e.reason))
+	html = helper.url_fetch(REGIONAL_EVENTS_URL % year)
 
-	html = result.read()
-
-	events = []
 	soup = BeautifulSoup(
 		html,
 		convertEntities=BeautifulSoup.HTML_ENTITIES
 	)
 
+	events = []
 	content = soup.p.table.table.findAll('tr')[3:-2]  # get to the actual content, past all the shitty layout tables and headers / footers
 
 	for tr in content:
@@ -79,16 +72,10 @@ def get_event(year, eid):
 	"""populate an event object with other data form different parts of the FIRST FMS DB, including event registration"""
 
 	session_key = helper.get_session_key(year)
-	url = EVENT_URL_PATTERN % (eid, session_key)
-
-	try:
-		result = urllib2.urlopen(url, timeout=60)
-	except urllib2.URLError, e:
-		raise Exception('Unable to retrieve url: ' + url + ' Reason:' + str(e.reason))
-
-	event = parse_event(result.read())
+	event = parse_event(helper.url_fetch(EVENT_URL_PATTERN % (eid, session_key)))
 	event['official'] = True  # wtf is this???
 	event['teams'] = get_event_registration(eid, year)
+
 	return event
 
 # it used to be called "matchsum" in 2003 and "matches" in 2004
@@ -101,6 +88,7 @@ def parse_event(html):
 	fields of an Event object. This updates events and gets us fuller
 	information once we know about this.
 	"""
+
 	event_dict = {}
 	soup = BeautifulSoup(
 		html,
@@ -117,12 +105,10 @@ def parse_event(html):
 			if field == "Event Subtype":
 				event_dict["type"] = unicode(tds[1].string)
 			elif field == "When":
-				try:
-					event_dates = str(tds[1].string).strip()
-					event_dict["start_date"], event_dict["end_date"] = parse_event_dates(event_dates)
-					event_dict["year"] = int(event_dates[-4:])
-				except Exception, detail:
-					raise Exception('Date Parse Failed: ' + str(detail))
+				event_dates = str(tds[1].string).strip()
+				event_dict["start_date"], event_dict["end_date"] = parse_event_dates(event_dates)
+				event_dict["year"] = int(event_dates[-4:])
+
 			elif field == "Where":
 				# TODO: This next line is awful. Make this suck less.
 				# I think \t tabs mess it up or something. -greg 5/20/2010
@@ -193,13 +179,7 @@ def get_event_registration(eid, year):
 	"""Returns a list of team_numbers attending a particular Event"""
 
 	session_key = helper.get_session_key(year)
-	url = EVENT_REGISTRATION_URL_PATTERN % (eid, session_key)
-
-	try:
-		result = urllib2.urlopen(url, timeout=60)
-	except urllib2.URLError, e:
-		raise Exception('Unable to retrieve url: ' + url + ' Reason:' + str(e.reason))
-	teams = parse_event_registration(result.read())
+	teams = parse_event_registration(helper.url_fetch(EVENT_REGISTRATION_URL_PATTERN % (eid, session_key)))
 	return teams
 
 

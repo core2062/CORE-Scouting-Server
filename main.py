@@ -1,11 +1,15 @@
-import model.helper as helper
 #import browseDb.main as browseDb
 #from threading import Timer
 import os
+import model.helper as helper
 import model.user as user
+import config
 import db as db
 from override_flask import Flask
 from flask import request, send_from_directory, abort, g
+
+if config.ENABLE_DB_SETUP_CHECK:
+	db.check()  # make sure mongo is setup... this can be dangerous if you remove the admin user; not having it will trigger a db reset
 
 app = Flask(__name__,)
 
@@ -17,7 +21,7 @@ def before_request():
 	# a variable that holds an error... if there is one (there should be 1 or 0 errors returned)
 	# a error is formatted as ('title','discription')
 	#	title: one word name for the error
-	#	discription: text givent to the user to tell what happened/how to fix
+	#	description: text given to the user to tell what happened / how to fix
 	g.error = ()
 
 	g.user = user.Instance()  # starts out as guest user, store user object in g (thread safe context)

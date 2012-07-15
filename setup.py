@@ -7,6 +7,7 @@ def setup():
 	"""
 		this function runs setup for the db and runs the scraper to get history for past years
 		don't call this if the db is already running... it will reset the db entirely
+		THIS FUNCTION IS NOT USED, AND WON"T BE USED
 	"""
 
 	db.reset()  # setup mongo
