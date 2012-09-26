@@ -1,4 +1,4 @@
-import config
+from config import DB_NAME, BACKUP_DIR
 import pymongo
 from time import time
 import os
@@ -13,14 +13,14 @@ TODO: move into model after CWD of main.py is made into global config value
 """
 
 c = pymongo.Connection()
-csd = c[config.DB_NAME]  # variable used in the rest of the code to access the db (for now)
+database = c[DB_NAME]  # variable used in the rest of the code to access the db
 
 #this might hold some invisible db decorators later
 
 
 def check():
 	"""checks that the db is setup, if not runs setup"""
-	if csd.user.find_one({'_id': 'admin'}) == None:  # checks if there is an admin user
+	if database.user.find_one({'_id': 'admin'}) == None:  # checks if there is an admin user
 		print 'setting up db in mongoDB'
 		reset()
 
@@ -32,34 +32,34 @@ def reset():
 		a backup will be made of the current database
 	"""
 
-	backup(config.DB_NAME, config.BACKUP_DIR + str(time()))  # backup db
+	backup(DB_NAME, BACKUP_DIR + str(time()))  # backup db
 
 	#clear out db
-	c.drop_database(config.DB_NAME)
+	c.drop_database(DB_NAME)
 
 	#make collections
-	csd.create_collection('user')  # holds all the users
-	csd.create_collection('log')  # logging info
-	csd.create_collection('error')  # holds error logs for database collections, such as data that is incorrect (not programming errors)
-	csd.create_collection('config')  # holds configuration variables for the site
+	database.create_collection('user')  # holds all the users
+	database.create_collection('log')  # logging info
+	database.create_collection('error')  # holds error logs for database collections, such as data that is incorrect (not programming errors)
+	database.create_collection('config')  # holds configuration variables for the site
 
 #	globalVar('analysisScoutingErrors', [])  # error log for analysisScouting
 #	globalVar('analysisQueryLimits', [])  #limit what is carried into analysisScouting
 
 	#compiled collections (holds fully compiled data and is rebuilt because data relies on multiple sources)
-	csd.create_collection('compiledEvent')
-	csd.create_collection('compiledTeam')
+	database.create_collection('compiledEvent')
+	database.create_collection('compiledTeam')
 
 	#analysis collections (holds semi-compiled data and is updated rather than rebuilt, to improve performance)
-	csd.create_collection('semi-compiledScouting')
+	database.create_collection('semi-compiledScouting')
 
 	#source collections (holds nearly raw data)
-	csd.create_collection('sourceScouting')  # data from the scouting part of the db
-	csd.create_collection('sourceTeam')  # scraped data on teams from the FIRST FMS
-	csd.create_collection('sourceEvent')  # scraped data on events
-	csd.create_collection('sourceMatch')  # scraped data on matches
+	database.create_collection('sourceScouting')  # data from the scouting part of the db
+	database.create_collection('sourceTeam')  # scraped data on teams from the FIRST FMS
+	database.create_collection('sourceEvent')  # scraped data on events
+	database.create_collection('sourceMatch')  # scraped data on matches
 
-	csd.user.insert(
+	database.user.insert(
 		{
 			'_id': 'admin',
 			'account': {

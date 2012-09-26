@@ -1,6 +1,6 @@
 import uuid
 import time
-import db as db
+from db import database as db
 from copy import deepcopy
 import re
 import model.helper as helper
@@ -67,7 +67,7 @@ class Instance(object):
 		"""
 
 		#put it in a temporary variable in case it is incorrect - shouldn't load the user until they are correctly logged in
-		tmpUser = db.csd.user.find_one({'_id': username, 'session.token': token, 'session.ip': ip})
+		tmpUser = db.user.find_one({'_id': username, 'session.token': token, 'session.ip': ip})
 
 		if tmpUser == None:  # means nothing was returned from mongo query
 			raise Exception('incorrect info')  # username & token & ip combo are not correct
@@ -83,7 +83,7 @@ class Instance(object):
 		"""
 
 		#put user data in a temp variable in case it is incorrect - shouldn't load the user until they are correctly logged in
-		tmpUser = db.csd.user.find_one({
+		tmpUser = db.user.find_one({
 			'_id': username,
 			'account.password': password,
 		})
@@ -96,7 +96,7 @@ class Instance(object):
 		#CONSIDER: check if currently logged in and run logout if true?
 
 		#zero out ip & token for users w/ same ip
-		db.csd.user.update(
+		db.user.update(
 			{
 				'ip': self.data['session']['ip']
 			},
@@ -144,7 +144,7 @@ class Instance(object):
 		if '_id' in new_data:  # stop username updates from overwriting other users
 			if new_data['_id'] == self.data['_id']:
 				del new_data['_id']  # not changing the _id, so it can just be omitted
-			elif db.csd.user.find_one({'_id': new_data['_id']}) != None:  # another user exists with this username
+			elif db.user.find_one({'_id': new_data['_id']}) != None:  # another user exists with this username
 				raise Exception('the username specified is already in use by another user')
 
 		self.data = helper.restrictive_merge(new_data, self.data)  # CONSIDER: add error reporting to tell if any part of merge fails
@@ -159,7 +159,7 @@ class Instance(object):
 			consider switching to a transparent method of writing to the db
 		"""
 		if self.data['_id'] != 'guest':  # shouldn't save guest account to db because guest isn't a real user
-			db.csd.user.save(helper.remove_defaults(self.data, self.defaults))  # save with defaults cut out
+			db.user.save(helper.remove_defaults(self.data, self.defaults))  # save with defaults cut out
 
 	# abc = user()
 	# abc.data['permission'] = 'the stuff'

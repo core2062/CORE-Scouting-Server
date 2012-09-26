@@ -1,6 +1,6 @@
 #from celery.decorators import task
 from datetime import datetime
-import db
+from db import database as db
 import scraper.event
 
 """
@@ -19,7 +19,7 @@ def scrape_event_names(year=datetime.now().year):
 	event_list = scraper.event.getEventList(year)
 
 	for event in event_list:
-		if db.csd.sourceEvent.find_one({'name': event['name'], 'year': year}) == None:
+		if db.sourceEvent.find_one({'name': event['name'], 'year': year}) == None:
 
 			#change name of key (better/shorter name)
 			event['type'] = event['event_type']
@@ -32,4 +32,4 @@ def scrape_event_names(year=datetime.now().year):
 			#set year value
 			event['year'] = year
 
-			db.csd.sourceEvent.save(event)
+			db.sourceEvent.save(event)

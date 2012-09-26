@@ -3,12 +3,12 @@
 import os
 import model.helper as helper
 import model.user as user
-import config
-import db as db
+from config import ENABLE_DB_SETUP_CHECK
+import db
 from override_flask import Flask
 from flask import request, send_from_directory, abort, g
 
-if config.ENABLE_DB_SETUP_CHECK:
+if ENABLE_DB_SETUP_CHECK:
 	db.check()  # make sure mongo is setup... this can be dangerous if you remove the admin user; not having it will trigger a db reset
 
 app = Flask(__name__,)
