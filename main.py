@@ -80,62 +80,56 @@ def reset():
 # cron()
 
 
-@app.route('/user/<action>')
-def user_request(action):
-	"""
-		handles requests for:
-			data - returns client-safe data
-			logins - returns token
-			signups
-	"""
-
-	if action == 'data':
-		return g.user.safe_data()
-	elif action == 'login':
-		#CONSIDER: add a delay to prevent excessive attempts
-
-		try:
-			helper.check_args(('username', 'password'), request.args)
-		except Exception as error:
-			return helper.error_dump(error)
-
-		try:
-			g.user.login(username=request.args['username'], password=request.args['password'], ip=request.remote_addr)
-		except Exception as error:
-			return helper.error_dump(error)  # bad info supplied
-
-		return {'token': g.user.data['session']['token']}
-
-	# signup and update are actually the same thing, just seperated in case I need to change something in the future
-	elif action == 'signup' or action == 'update':
-		try:
-			helper.check_args(('data'), request.args)
-		except Exception as error:
-			return helper.error_dump(error)
-
-		try:
-			g.user.update(request.args['data'])
-		except Exception as error:
-			return helper.error_dump(error)
-
-		return {'notify': action + ' successful'}
-
-	else:
-		return abort(404)  # not one of the defined methods for interacting w/ the server
+@app.route('/user/account')
+def user_account():
+	return g.user.safe_data()
 
 
-@app.route('/admin/task/<task>')
-def admin_task(task):
-	"""used for running admin tasks manually (they can also be triggered by cron/timed tasks)"""
+@app.route('/user/login')
+def user_login():
+	#CONSIDER: add a delay to prevent excessive attempts
+
+	try:
+		helper.check_args(('username', 'password'), request.args)
+	except Exception as error:
+		return helper.error_dump(error)
+
+	try:
+		g.user.login(username=request.args['username'], password=request.args['password'], ip=request.remote_addr)
+	except Exception as error:
+		return helper.error_dump(error)  # bad info supplied
+
+	return {'token': g.user.data['session']['token']}
+
+
+@app.route('/user/update')
+@app.route('/user/signup')
+def user_update():
+	# signups are really just updates on a non-existant user (for now)
+	# the urls are seperated in case something needs to be changed
+
+	try:
+		helper.check_args(('data'), request.args)
+	except Exception as error:
+		return helper.error_dump(error)
+
+	try:
+		g.user.update(request.args['data'])
+	except Exception as error:
+		return helper.error_dump(error)
+
+	return {'notify': 'update/signup successful'}
+
+
+@app.route('/admin/task/reset')
+def reset_db():
 
 	if not g.user.can('run_admin_task'):
 		return {'error': 'invalid permissions'}
 
-	if task == 'reset':
-		db.reset()
-		return {'notify': 'reset successful'}
-	else:
-		return abort(404)  # not one of the defined methods for interacting w/ the server
+	db.reset()
+	return {'notify': 'reset successful'}
+
 
 if __name__ == "__main__":
 	app.run(
