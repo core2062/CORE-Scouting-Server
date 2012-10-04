@@ -1,170 +1,163 @@
+from config import ALLOW_TOKENS_TO_CHANGE_IP
 import uuid
+import hashlib
 import time
 from db import database as db
 from copy import deepcopy
 import re
-import model.helper as helper
+from helper import restrictive_merge
 
 """
 	this module deals with all user data and authentication of the user
 """
 
-# def __getitem__(self, key):
-# 	print '(get)', ' key:', key
-# 	return self.key
+# TODO: add guest user to setup script (same with admin)
 
-# def __setitem__(self, key, value):
-# 	print '(set)', ' key:', key, ' value:', value
-
-# 	#code to update mongo goes here
-
-# 	self.key = value
-
-# def __delitem__(self, key):
-# 	print '(delete)', ' key:', key
-# 	del self.key
+EMAIL_RE = re.compile(r"[^@]+@[^@]+\.[^@]+")
 
 
 class Instance(object):
 	""" this class is used to create a new instance of the user object (each object represents a single user) """
 
-	defaults = {  # initialized with defaults (for guest user)
-		'_id': 'guest',
-		'account': {  # cannot be sent to client
-			'password': '',
-			'email': '',
+	def __init__(self, ip, username=None, password=None, token=None):
+		"""
+		used to authenticate user
+		checks username & password or token and if correct, puts the user object in data
+		if an error occurs in this part, the client must run its logout function
+		"""
+		if username != None and password != None:
+			# authenticate user and make a token
+			self.data = db.user.find_one({'_id': username})
+
+			if self.data == None:  # means nothing was returned from mongo query
+				raise Exception('incorrect password or username')  # better to not say it was the username, to increase security
+
+			# check password
+			if self.get_hash(password) != self.data.authentication.hash:
+				del self.data  # shouldn't keep data if login was wrong
+				raise Exception('incorrect password or username')  # better to not say it was the password, to increase security
+
+			#check if currently logged in and run logout if true
+
+			# store session data
+			self.data['session']['token'] = re.sub('-', '', str(uuid.uuid4()))  # make a unique id & remove the dashes (they are useless)
+			self.data['session']['ip'] = ip
+			self.data['session']['start_time'] = time.time()
+			self.save()  # save session data
+
+		elif token != None:
+			# check token to authenticate user
+			query = {'session.token': token}  # base query (check token)
+
+			if not ALLOW_TOKENS_TO_CHANGE_IP:
+				query['session.ip'] = ip  # must match ip too
+
+			self.data = db.user.find_one(query)
+
+			if self.data == None:  # means nothing was returned from mongo query
+				if ALLOW_TOKENS_TO_CHANGE_IP:
+					raise Exception('incorrect info: token is incorrect')
+				else:
+					raise Exception('incorrect info: token is incorrect or was moved to a new IP address')
+
+		else:
+			raise Exception('not enough data provided to authenticate. a token or a username & password are required')
+
+	# TODO: write in json schema
+	defaults = {
+		'_id': '',  # unique id (so it never changes)
+		'authentication': {  # cannot be sent to client
+			'salt': '',
+			'hash': '',
 		},
 		'permission': [  # must be sent to client (used to determine what options client can present), permissions that user has
 			'input',
 		],
-		'info': {  # must be sent to client, basic info about user
-			'fName': '',
-			'lName': '',
-			'team': 0,
+		'session': {  # info about current session
+			'ip': '',  # should not be sent to client
+			'start_time': '',  # should not be sent to client, time when when token was issued
+			'token': '',  # must be sent to client
 		},
-		'prefs': {  # must be sent to client, used to store preferances
+		'prefs': {  # must be sent to client, used to store preferences
 			'fade': True,
 			'verbose': True,
 		},
-		'opt': {  # should not be sent to client, optional info ... probably wouldn't matter if it was sent to client
-			'zip': '',
-			'browser': '',
-			'gender': '',
-		},
-		'session': {  # info about current session
-			'ip': '',  # should not be sent to client
-			'startTime': '',  # should not be sent to client, time when when token was issued
-			'token': '',  # must be sent to client
-		},
+		# must be sent to client, basic info about user
+		'first_name': '',
+		'last_name': '',
+		'username': '',  # should be same as email, except for guest and admin
+		'email': '',
+		'team': 0,
+		# should not be sent to client, optional info ... probably wouldn't matter if it was sent to client
+		'zip': '',
+		'browser': '',
+		'gender': '',
 		'log': {},  # should be sent to client (but perhaps truncated to certain length)
 	}
 
-	def check(self, username, token, ip):
-		"""
-			checks username & token and if correct, puts the user object in data
-			used to authenticate user is already logged in (has a token)
-			if an error occurs in this part, the client must run its logout function
-		"""
-
-		#put it in a temporary variable in case it is incorrect - shouldn't load the user until they are correctly logged in
-		tmpUser = db.user.find_one({'_id': username, 'session.token': token, 'session.ip': ip})
-
-		if tmpUser == None:  # means nothing was returned from mongo query
-			raise Exception('incorrect info')  # username & token & ip combo are not correct
-			#CONSIDER: add explanation for why check failed (if it was ip or token or username)
-
-		self.load(tmpUser)  # inputs are correct, put user object in correct place
-
-	def login(self, username, password, ip):
-		"""
-			checks username & password and if correct, generates a token and puts user object in data
-			used when user is not yet logged in (has no token)
-			users cannot be logged in on multiple ip addresses and multiple users cannot be on same ip
-		"""
-
-		#put user data in a temp variable in case it is incorrect - shouldn't load the user until they are correctly logged in
-		tmpUser = db.user.find_one({
-			'_id': username,
-			'account.password': password,
-		})
-
-		if tmpUser == None:  # means nothing was returned from mongo query
-			raise Exception('incorrect info')  # better to only say "incorrect info" to increase security
-
-		self.load(tmpUser)  # inputs are correct, put user object in correct place
-
-		#CONSIDER: check if currently logged in and run logout if true?
-
-		#zero out ip & token for users w/ same ip
-		db.user.update(
-			{
-				'ip': self.data['session']['ip']
-			},
-			{
-				'$unset': {
-					'session.ip': 1,
-					'session.token': 1,
-				}
-			},
-		)
-
-		self.data['session']['token'] = re.sub('-', '', str(uuid.uuid4()))  # make a unique id & remove the dashes (they are useless)
-		self.data['session']['ip'] = ip
-		self.data['session']['startTime'] = time.time()
-
-		self.save()  # save session data
+	def get_hash(self, password):
+		"""small function for getting a hash from a password & salt (the salt is read from the user's data)"""
+		return hashlib.sha512(password + self.data.authentication.salt).hexdigest()
 
 	def logout(self):
 		"""logs out current user by removing ip & token from db"""
-		return 'logout code not finished'
+		del self.data.session
+
+		#move old session data into log
+
+		self.save()
 
 	def can(self, action):
-		"""determines if user has permission to do a particular action (returns true or false)"""
-		return action in self.data['permission']
-
-	def load(self, user_data):
-		"""merges user_data with defaults and puts it in the correct place"""
-		self.data = dict(deepcopy(self.defaults).items() + user_data.items())
+		"""
+			determines if user has permission to do a particular action
+			this raises an error if the user doesn't have this permission
+		"""
+		if not action in self.data['permission']:
+			raise Exception('user does not have permission to ' + action)
 
 	def safe_data(self):
 		"""returns data about user that is safe to give to client (it has passwords and unneeded info filtered out)"""
-		safeData = deepcopy(self.data)  # needs copy because it cuts stuff out
-		del safeData['account']
-		del safeData['opt']
-		del safeData['session']['ip']
-		del safeData['session']['startTime']
-		return safeData
+		safe_data = deepcopy(self.data)  # needs copy because it cuts stuff out
+		del safe_data['username']  # client already knows username
+		del safe_data['authentication']
+		del safe_data['opt']
+		del safe_data['session']['ip']
+		del safe_data['session']['start_time']
+		return safe_data
 
 	def update(self, new_data):
 		"""
 			merges new_data into the user data and validates it
-			this is also used for signup, because signing up is conceptually the same as an update
+			this is also used for signup, because signing up is conceptually the same as an update plus changing the username
+			also, if a password is put user.authentication.password it handles the generation of a new hash and salt (because passwords cannot be updated directly, the same way normal data is)
 		"""
+		if '_id' in new_data:
+			raise Exception('_id cannot be changed, it is a unique id ')
 
-		if '_id' in new_data:  # stop username updates from overwriting other users
-			if new_data['_id'] == self.data['_id']:
-				del new_data['_id']  # not changing the _id, so it can just be omitted
-			elif db.user.find_one({'_id': new_data['_id']}) != None:  # another user exists with this username
-				raise Exception('the username specified is already in use by another user')
+		if 'username' in new_data:
+			# maybe option to change usernames could be added later
+			raise Exception('usernames cannot be changed directly, they are based on a user\'s email or assigned for special purposes like the guest account')
 
-		self.data = helper.restrictive_merge(new_data, self.data)  # CONSIDER: add error reporting to tell if any part of merge fails
+		if 'email' in new_data:
+			# even guest and admin accounts can set an email. they need to during signup and their changes are not saved to the database anyway
 
-	def validate_data(self):
-		"""validates user.data - intended to be used for signup and user info changes to determine if user data is acceptable"""
-		return 'validateData not finished'
+			# stop email updates from changing to same email as another user
+			if new_data['email'] == self.data['email']:
+				del new_data['email']  # not changing the email, so it can just be omitted (although it shouldn't really be sent in the first place if it is not changing)
+			elif db.csd.user.find_one({'email': new_data['email']}) != None:
+				raise Exception('the email specified is already in use by another user')
+			else:  # validate email
+				if EMAIL_RE.match(new_data['email']) == None:
+					raise Exception('the email specified is not a valid email address')
+				#NOTE: email is not currently checked to actually be real (by sending a confirmation email)... might want to add this
+
+		self.data = restrictive_merge(new_data, self.data)  # TODO: add error reporting to tell if any part of merge fails
 
 	def save(self):
 		"""
-			update the representation of the user object in mongo - this is called at the end of the script
-			consider switching to a transparent method of writing to the db
+			update the representation of the user object in mongo
+			this is called at the end of the script????
+			CONSIDER: switch to a transparent method of writing to the db
 		"""
-		if self.data['_id'] != 'guest':  # shouldn't save guest account to db because guest isn't a real user
-			db.user.save(helper.remove_defaults(self.data, self.defaults))  # save with defaults cut out
-
-	# abc = user()
-	# abc.data['permission'] = 'the stuff'
-	# abc.data['account'] = {'pword': 'the stuff'}
-	# print abc.data['account']['pword']
-	# abc.data['account']['pword'] = 'fffdf'
-	# print abc.data['account']['pword']
-	# print abc.can('input')
+		self.can('modify_account_data')  # guest account cannot be changed
+		db.user.save(self.data)
