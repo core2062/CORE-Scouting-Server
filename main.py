@@ -1,13 +1,9 @@
 #from threading import Timer
 import model.helper as helper
 import model.user as user
-from config import ENABLE_DB_SETUP_CHECK
 import db
 from override_flask import Flask
-from flask import request, abort, g
-
-if ENABLE_DB_SETUP_CHECK:
-	db.check()  # make sure mongo is setup... this can be dangerous if you remove the admin user; not having it will trigger a db reset
+from flask import request, g
 
 app = Flask(__name__,)
 
@@ -26,9 +22,9 @@ def before_request():
 
 	try:  # try to authenticate
 		g.user.check(username=request.args['username'], token=request.args['token'], ip=request.remote_addr)  # validate user token if username and token are supplied
-	except KeyError:
-		pass  # one or more of the attributes was/were not defined, proceed with guest status
 	except Exception as error:
+		# the username / token didn't validate or one was not supplied - return the error
+		# users must login with something to be able to access the database (even if it is the limited public "guest" account)
 		return helper.error_dump(error)
 
 

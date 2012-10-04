@@ -10,7 +10,3 @@ BACKUP_DIR = CWD + 'backup/'  # where db backups are put
 
 #MongoDB
 DB_NAME = 'csd'
-
-
-# check that mongo is setup during startup... this can be dangerous if you remove the admin user; not having "admin" will trigger a db reset if this check runs so you may want to disable this in production. it is enabled by default because the db will need to be setup during the first run.
-ENABLE_DB_SETUP_CHECK = True
