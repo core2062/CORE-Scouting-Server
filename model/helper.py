@@ -3,6 +3,16 @@ def error_dump(exception):
 	return {'error': exception.args[0]}
 
 
+def check_args(supplied_data, *required_args):
+	"""
+		checks that the required arguments (specified in a tuple or list) exist in the supplied data
+		if they don't exist, then an exception is returned
+	"""
+	for arg in required_args:
+		if arg not in supplied_data:
+			raise Exception('the argument "' + arg + '" was not supplied in your request')
+
+
 def restrictive_merge(data, structure):
 	"""
 		merges data into structure without adding or removing any keys in structure or changing any data types
@@ -33,13 +43,3 @@ def remove_defaults(data, defaults):
 			else:
 				compressed[k] = data[k]
 	return compressed
-
-
-def check_args(required_args, supplied_data):
-	"""
-		checks that the required arguments (specified in a tuple or list) exist in the supplied data
-		if they don't exist, then an exception is returned
-	"""
-	for arg in required_args:
-		if arg not in supplied_data:
-			raise Exception('the argument "' + arg + '" was not supplied in your request')
