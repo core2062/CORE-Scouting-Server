@@ -117,8 +117,14 @@ def user_login():
 	}
 
 
-@app.route('/user/update')
+@app.route('/user/logout')
 @permission_required()
+def user_logout():
+	g.user.logout()
+
+
+@app.route('/user/update')
+@permission_required('modify_account_data')  # guest account cannot be changed (except for making sessions / logging)
 def user_update():
 	try:
 		check_args(request.args, 'data')
