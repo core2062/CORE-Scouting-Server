@@ -1,5 +1,6 @@
 #from threading import Timer
-import model.helper as helper
+from functools import wraps
+from model.helper import error_dump, check_args
 import model.user as user
 import db
 from override_flask import Flask
@@ -7,9 +8,14 @@ from flask import request, g
 
 app = Flask(__name__,)
 
+# users must login with something to be able to access anything that uses a user object (including signup)
+# the limited public "guest" account is automatically used (by client) for most stuff that doesn't require much permission
+
 
 @app.before_request
 def before_request():
+	# below stuff (g.notify & g.error) isn't really used... consider removing
+
 	g.notify = []  # an array that holds notifications (like non-fatal errors or important messages)
 
 	# a variable that holds an error... if there is one (there should be 1 or 0 errors returned)
@@ -18,15 +24,6 @@ def before_request():
 	#	description: text given to the user to tell what happened / how to fix
 	g.error = ()
 
-	g.user = user.Instance()  # starts out as guest user, store user object in g (thread safe context)
-
-	try:  # try to authenticate
-		g.user.check(username=request.args['username'], token=request.args['token'], ip=request.remote_addr)  # validate user token if username and token are supplied
-	except Exception as error:
-		# the username / token didn't validate or one was not supplied - return the error
-		# users must login with something to be able to access the database (even if it is the limited public "guest" account)
-		return helper.error_dump(error)
-
 
 @app.after_view
 def after_view(rv):
@@ -34,6 +31,33 @@ def after_view(rv):
 		return
 	#put stuff from g in response
 	return
+
+
+def permission_required(*permissions):
+	"""
+		defines a decorator for checking a user's token
+		permissions may also be checked by passing all required permissions as args
+		the user object handles a lot of its own authentication, but this decorator makes it easier to check permissions on other things like admin tasks or submitting data
+	"""
+	def decorator(f):
+		@wraps(f)
+		def decorated_function(*args, **kwargs):
+			try:  # try to authenticate
+				check_args(request.args, 'token')
+
+				# store user object in g (thread safe context)
+				# users may only authenticate with a token, this is to prevent users from transmitting their username & password with every request
+				g.user = user.Instance(token=request.args['token'], ip=request.remote_addr)
+
+				for permission in permissions:
+					g.user.can(permission)
+
+			except Exception as error:
+				return error_dump(error)  # return error if authentication failed
+
+			return f(*args, **kwargs)
+		return decorated_function
+	return decorator
 
 
 @app.route('/')
@@ -51,18 +75,11 @@ def index():
 	"""
 
 
-@app.route('/test')
-def test():
-	import model.scraper.scraper as scraper
-	scraper.event_names(request.args.get('year'))
-	return 'done'
-
-
-@app.route('/reset')
-def reset():
-	import setup as setup
-	setup.setup()
-	return 'done'
+#@app.route('/test')
+#def test():
+#	import model.scraper.scraper as scraper
+#	scraper.event_names(request.args.get('year'))
+#	return 'done'
 
 #TODO: add mongs like db browser, with option to only return json (read only?) (restricted - not able to read user collection)
 
@@ -77,52 +94,61 @@ def reset():
 
 
 @app.route('/user/account')
+@permission_required()
 def user_account():
 	return g.user.safe_data()
 
 
 @app.route('/user/login')
 def user_login():
-	#CONSIDER: add a delay to prevent excessive attempts
+	"""get a token to use for authentication throughout the rest of the site"""
+	#NOTE: no permission required for this part because it uses an alternative login method (username & password rather than token) and declares the user object on its own
+	#CONSIDER: add a delay for password based login to prevent excessive attempts
 
 	try:
-		helper.check_args(('username', 'password'), request.args)
-	except Exception as error:
-		return helper.error_dump(error)
-
-	try:
+		check_args(request.args, 'username', 'password')
 		g.user.login(username=request.args['username'], password=request.args['password'], ip=request.remote_addr)
 	except Exception as error:
-		return helper.error_dump(error)  # bad info supplied
+		return error_dump(error)  # bad info supplied
 
-	return {'token': g.user.data['session']['token']}
+	return {
+		'token': g.user.data['session']['token'],
+		'notice': 'login successful',
+	}
 
 
 @app.route('/user/update')
-@app.route('/user/signup')
+@permission_required()
 def user_update():
-	# signups are really just updates on a non-existant user (for now)
-	# the urls are seperated in case something needs to be changed
-
 	try:
-		helper.check_args(('data'), request.args)
-	except Exception as error:
-		return helper.error_dump(error)
-
-	try:
+		check_args(request.args, 'data')
 		g.user.update(request.args['data'])
+		g.user.save()
 	except Exception as error:
-		return helper.error_dump(error)
+		return error_dump(error)
 
-	return {'notify': 'update/signup successful'}
+	return {'notify': 'update successful'}
+
+
+@app.route('/user/signup')
+@permission_required()  # guest account must be loaded - this account performs the signup
+def signup():
+	try:
+		check_args(request.args, 'data')
+		g.user.update(request.args['data'])
+
+		#reset permissions
+		#remove _id to make new account
+		#save to db
+	except Exception as error:
+		return error_dump(error)
+
+	return {'notify': 'signup successful'}
 
 
 @app.route('/admin/task/reset')
+@permission_required('reset_db')
 def reset_db():
-
-	if not g.user.can('run_admin_task'):
-		return {'error': 'invalid permissions'}
-
 	db.reset()
 	return {'notify': 'reset successful'}
 
