@@ -1,7 +1,7 @@
 from config import ALLOW_TOKENS_TO_CHANGE_IP
 import uuid
 import hashlib
-import time
+from time import time
 from db import database as db
 from copy import deepcopy
 import re
@@ -14,6 +14,10 @@ from helper import restrictive_merge
 # TODO: add guest user to setup script (same with admin)
 
 EMAIL_RE = re.compile(r"[^@]+@[^@]+\.[^@]+")
+
+STANDARD_PERMISIONS = []
+GUEST_PERMISIONS = []
+ADMIN_PERMISIONS = []
 
 
 class Instance(object):
@@ -42,7 +46,7 @@ class Instance(object):
 			# store session data
 			self.data['session']['token'] = re.sub('-', '', str(uuid.uuid4()))  # make a unique id & remove the dashes (they are useless)
 			self.data['session']['ip'] = ip
-			self.data['session']['start_time'] = time.time()
+			self.data['session']['start_time'] = time()
 			self.save()  # save session data
 
 		elif token != None:
@@ -64,47 +68,47 @@ class Instance(object):
 			raise Exception('not enough data provided to authenticate. a token or a username & password are required')
 
 	# TODO: write in json schema
-	defaults = {
-		'_id': '',  # unique id (so it never changes)
-		'authentication': {  # cannot be sent to client
-			'salt': '',
-			'hash': '',
-		},
-		'permission': [  # must be sent to client (used to determine what options client can present), permissions that user has
-			'input',
-		],
-		'session': {  # info about current session
-			'ip': '',  # should not be sent to client
-			'start_time': '',  # should not be sent to client, time when when token was issued
-			'token': '',  # must be sent to client
-		},
-		'prefs': {  # must be sent to client, used to store preferences
-			'fade': True,
-			'verbose': True,
-		},
-		# must be sent to client, basic info about user
-		'first_name': '',
-		'last_name': '',
-		'username': '',  # should be same as email, except for guest and admin
-		'email': '',
-		'team': 0,
-		# should not be sent to client, optional info ... probably wouldn't matter if it was sent to client
-		'zip': '',
-		'browser': '',
-		'gender': '',
-		'log': {},  # should be sent to client (but perhaps truncated to certain length)
-	}
+
+	# defaults = {
+	# 	'_id': '',  # unique id (so it never changes)
+	# 	'authentication': {  # cannot be sent to client
+	# 		'salt': '',
+	# 		'hash': '',
+	# 	},
+	# 	'permission': [  # must be sent to client (used to determine what options client can present), permissions that user has
+	# 		'input',
+	# 	],
+	# 	'session': {  # info about current session
+	# 		'ip': '',  # should not be sent to client
+	# 		'start_time': '',  # should not be sent to client, time when when token was issued
+	# 		'token': '',  # must be sent to client
+	# 	},
+	# 	'prefs': {  # must be sent to client, used to store preferences
+	# 		'fade': True,
+	# 		'verbose': True,
+	# 	},
+	# 	# must be sent to client, basic info about user
+	# 	'first_name': '',
+	# 	'last_name': '',
+	# 	'username': '',  # should be same as email, except for guest and admin
+	# 	'email': '',
+	# 	'team': 0,
+	# 	# should not be sent to client, optional info ... probably wouldn't matter if it was sent to client
+	# 	'zip': '',
+	# 	'browser': '',
+	# 	'gender': '',
+	# 	'log': [],  # should be sent to client (but perhaps truncated to certain length)
+	#}
 
 	def get_hash(self, password):
 		"""small function for getting a hash from a password & salt (the salt is read from the user's data)"""
 		return hashlib.sha512(password + self.data.authentication.salt).hexdigest()
 
 	def logout(self):
-		"""logs out current user by removing ip & token from db"""
+		"""logs out current user by removing session from db"""
+
+		self.log('logout', self.data.session)
 		del self.data.session
-
-		#move old session data into log
-
 		self.save()
 
 	def can(self, action):
@@ -130,9 +134,13 @@ class Instance(object):
 			merges new_data into the user data and validates it
 			this is also used for signup, because signing up is conceptually the same as an update plus changing the username
 			also, if a password is put user.authentication.password it handles the generation of a new hash and salt (because passwords cannot be updated directly, the same way normal data is)
+			this does not save to the db (since it is used for signup, which uses the guest account and needs to save on its own) - call self.save() after all updating
 		"""
 		if '_id' in new_data:
-			raise Exception('_id cannot be changed, it is a unique id ')
+			# _id is a unique value that is used by the database to connect actions and other stuff to user accounts, changing it would break a lot of stuff
+			raise Exception('_id cannot be changed')
+
+		#CONSIDER: replace check for username and _id with limit by JSON schema
 
 		if 'username' in new_data:
 			# maybe option to change usernames could be added later
@@ -151,6 +159,11 @@ class Instance(object):
 					raise Exception('the email specified is not a valid email address')
 				#NOTE: email is not currently checked to actually be real (by sending a confirmation email)... might want to add this
 
+				# change the username to match the new email
+				new_data['username'] = new_data['email']
+
+		# validate other data aginst schema
+
 		self.data = restrictive_merge(new_data, self.data)  # TODO: add error reporting to tell if any part of merge fails
 
 	def save(self):
@@ -161,3 +174,10 @@ class Instance(object):
 		"""
 		self.can('modify_account_data')  # guest account cannot be changed
 		db.user.save(self.data)
+
+	def log(self, event, data):
+		self.data.append({
+			'event': event,
+			'data': data,
+			'time': time(),
+		})
