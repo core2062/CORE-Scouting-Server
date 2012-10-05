@@ -1,5 +1,5 @@
-from config import ALLOW_TOKENS_TO_CHANGE_IP
-import uuid
+from config import ALLOW_TOKENS_TO_CHANGE_IP, TOKEN_LENGTH, SALT_LENGTH
+from os import urandom
 import hashlib
 from time import time
 from db import database as db
@@ -15,13 +15,22 @@ from helper import restrictive_merge
 
 EMAIL_RE = re.compile(r"[^@]+@[^@]+\.[^@]+")
 
-STANDARD_PERMISIONS = []
-GUEST_PERMISIONS = []
-ADMIN_PERMISIONS = []
+GUEST_PERMISSIONS = [
+	'multiple_login',  # allow multiple users to login to same account - needed because many people need to use guest
+]
+
+STANDARD_PERMISSIONS = [
+	'input',
+	'modify_account_data',
+]
+
+ADMIN_PERMISSIONS = STANDARD_PERMISSIONS + [
+	'reset_db',
+]
 
 
 class Instance(object):
-	""" this class is used to create a new instance of the user object (each object represents a single user) """
+	"""this class is used to create a new instance of the user object (each object represents a single user)"""
 
 	def __init__(self, ip, username=None, password=None, token=None):
 		"""
@@ -42,11 +51,23 @@ class Instance(object):
 				raise Exception('incorrect password or username')  # better to not say it was the password, to increase security
 
 			#check if currently logged in and run logout if true
+			if not self.has_permission('multiple_login'):
+				# user can only have one open session at a time
+				# remove any / all sessions before adding a new one
+				for session_key in self.data['session'].iteritems():
+					self.logout(session_key)
 
 			# store session data
-			self.data['session']['token'] = re.sub('-', '', str(uuid.uuid4()))  # make a unique id & remove the dashes (they are useless)
-			self.data['session']['ip'] = ip
-			self.data['session']['start_time'] = time()
+			# make a cryptographically secure random token - token is key for session (to make searching easier)
+			new_token = urandom(TOKEN_LENGTH)
+
+			self.data['session'][new_token] = {
+				'ip': ip,
+				'start_time': time(),
+			}
+
+			self.session = self.data['session'][new_token]  # alias to current session
+
 			self.save()  # save session data
 
 		elif token != None:
@@ -104,8 +125,8 @@ class Instance(object):
 		"""small function for getting a hash from a password & salt (the salt is read from the user's data)"""
 		return hashlib.sha512(password + self.data.authentication.salt).hexdigest()
 
-	def logout(self):
-		"""logs out current user by removing session from db"""
+	def logout(self, token):
+		"""logs-out a session (identified by its token) by removing the session from the db"""
 
 		self.log('logout', self.data.session)
 		del self.data.session
@@ -118,6 +139,13 @@ class Instance(object):
 		"""
 		if not action in self.data['permission']:
 			raise Exception('user does not have permission to ' + action)
+
+	def has_permission(self, action):
+		"""
+			determines if user has permission to do a particular action
+			this returns true or false
+		"""
+		return action in self.data['permission']
 
 	def safe_data(self):
 		"""returns data about user that is safe to give to client (it has passwords and unneeded info filtered out)"""
@@ -146,6 +174,9 @@ class Instance(object):
 			# maybe option to change usernames could be added later
 			raise Exception('usernames cannot be changed directly, they are based on a user\'s email or assigned for special purposes like the guest account')
 
+		if 'password' in new_data:
+			pass  # finish this part!!!!!!!!!!!!!!!!!!1
+
 		if 'email' in new_data:
 			# even guest and admin accounts can set an email. they need to during signup and their changes are not saved to the database anyway
 
@@ -172,7 +203,6 @@ class Instance(object):
 			this is called at the end of the script????
 			CONSIDER: switch to a transparent method of writing to the db
 		"""
-		self.can('modify_account_data')  # guest account cannot be changed
 		db.user.save(self.data)
 
 	def log(self, event, data):
