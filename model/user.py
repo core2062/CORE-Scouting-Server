@@ -1,4 +1,4 @@
-from config import ALLOW_TOKENS_TO_CHANGE_IP, TOKEN_LENGTH, SALT_LENGTH
+from config import ALLOW_TOKENS_TO_CHANGE_IP, TOKEN_LENGTH, SALT_LENGTH, DEFAULT_PASSWORD
 from os import urandom
 import hashlib
 from time import time
@@ -16,12 +16,13 @@ from helper import restrictive_merge
 EMAIL_RE = re.compile(r"[^@]+@[^@]+\.[^@]+")
 
 GUEST_PERMISSIONS = [
-	'multiple_login',  # allow multiple users to login to same account - needed because many people need to use guest
+#	'multiple_login',  # allow multiple users to login to same account - needed because many people need to use guest
 ]
 
 STANDARD_PERMISSIONS = [
 	'input',
 	'modify_account_data',
+	'logout',  # guest cannot do this - it would screw up other people's sessions
 ]
 
 ADMIN_PERMISSIONS = STANDARD_PERMISSIONS + [
@@ -32,7 +33,7 @@ ADMIN_PERMISSIONS = STANDARD_PERMISSIONS + [
 class Instance(object):
 	"""this class is used to create a new instance of the user object (each object represents a single user)"""
 
-	def __init__(self, ip, username=None, password=None, token=None):
+	def __init__(self, ip, username=None, password=None, token=None, init_empty=False):
 		"""
 		used to authenticate user
 		checks username & password or token and if correct, puts the user object in data
@@ -40,33 +41,31 @@ class Instance(object):
 		"""
 		if username != None and password != None:
 			# authenticate user and make a token
-			self.data = db.user.find_one({'_id': username})
+			self.data = db.user.find_one({'username': username})
 
 			if self.data == None:  # means nothing was returned from mongo query
+				del self.data  # shouldn't keep data if login was wrong
 				raise Exception('incorrect password or username')  # better to not say it was the username, to increase security
 
 			# check password
-			if self.get_hash(password) != self.data.authentication.hash:
+			if self.get_hash(password) != self.data['authentication']['hash']:
 				del self.data  # shouldn't keep data if login was wrong
 				raise Exception('incorrect password or username')  # better to not say it was the password, to increase security
 
-			#check if currently logged in and run logout if true
-			if not self.has_permission('multiple_login'):
-				# user can only have one open session at a time
-				# remove any / all sessions before adding a new one
-				for session_key in self.data['session'].iteritems():
-					self.logout(session_key)
+			# check if currently logged in and run logout if true (and if user has permission to logout)
+			# this is good because it creates a new session key during login, but it prevents users from logging into multiple computers
+			# this is commented out for now
+			#if self.has_permission('logout') and 'session' in self.data:
+			#		self.logout()
 
-			# store session data
-			# make a cryptographically secure random token - token is key for session (to make searching easier)
-			new_token = urandom(TOKEN_LENGTH)
-
-			self.data['session'][new_token] = {
-				'ip': ip,
-				'start_time': time(),
-			}
-
-			self.session = self.data['session'][new_token]  # alias to current session
+			if not 'session' in self.data:
+				# store session data if user is now logged out
+				# the user not being logged out will cause the same token to be used for all logins to that account until logout is used
+				self.data['session'] = {
+					'token': urandom(TOKEN_LENGTH),  # make a cryptographically secure random token
+					'ip': ip,
+					'start_time': time(),
+				}
 
 			self.save()  # save session data
 
@@ -123,13 +122,16 @@ class Instance(object):
 
 	def get_hash(self, password):
 		"""small function for getting a hash from a password & salt (the salt is read from the user's data)"""
-		return hashlib.sha512(password + self.data.authentication.salt).hexdigest()
+		return hashlib.sha512(password + self.data['authentication']['salt']).hexdigest()
 
-	def logout(self, token):
-		"""logs-out a session (identified by its token) by removing the session from the db"""
+	def logout(self):
+		"""
+			logs-out current user by removing the session from the db
+			a new token will be generated on the next login
+		"""
 
-		self.log('logout', self.data.session)
-		del self.data.session
+		self.log('logout', self.data['session'])
+		del self.data['session']
 		self.save()
 
 	def can(self, action):
@@ -175,7 +177,11 @@ class Instance(object):
 			raise Exception('usernames cannot be changed directly, they are based on a user\'s email or assigned for special purposes like the guest account')
 
 		if 'password' in new_data:
-			pass  # finish this part!!!!!!!!!!!!!!!!!!1
+			# make a new salt (keep salts as unique as possible)
+			self.data['authentication']['salt'] = urandom(SALT_LENGTH)
+
+			# set a new password by changing the user's hash
+			self.data['authentication']['hash'] = self.get_hash(new_data['password'])
 
 		if 'email' in new_data:
 			# even guest and admin accounts can set an email. they need to during signup and their changes are not saved to the database anyway
@@ -203,6 +209,7 @@ class Instance(object):
 			this is called at the end of the script????
 			CONSIDER: switch to a transparent method of writing to the db
 		"""
+		self.can('modify_account_data')  # guest account cannot be changed
 		db.user.save(self.data)
 
 	def log(self, event, data):
@@ -211,3 +218,50 @@ class Instance(object):
 			'data': data,
 			'time': time(),
 		})
+
+
+def create_default_users():
+	"""
+		put the default users (guest and admin) directly into the database
+		while resetting/setting up the database
+	"""
+
+	salt = urandom(SALT_LENGTH)
+
+	db.user.save({
+		'_id': '',
+		'authentication': {
+			'salt': salt,
+			'hash': hashlib.sha512(DEFAULT_PASSWORD + salt).hexdigest(),
+		},
+		'permission': GUEST_PERMISSIONS,
+		'prefs': {
+			'fade': True,
+			'verbose': True,
+		},
+		'first_name': '',
+		'last_name': '',
+		'username': 'guest',
+		'email': '',
+		'team': 0,
+		'log': [],
+	})
+
+	db.user.save({
+		'_id': '',
+		'authentication': {
+			'salt': salt,
+			'hash': hashlib.sha512(DEFAULT_PASSWORD + salt).hexdigest(),
+		},
+		'permission': ADMIN_PERMISSIONS,
+		'prefs': {
+			'fade': True,
+			'verbose': True,
+		},
+		'first_name': '',
+		'last_name': '',
+		'username': 'admin',
+		'email': '',
+		'team': 0,
+		'log': [],
+	})
