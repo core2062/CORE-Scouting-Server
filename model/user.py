@@ -33,92 +33,72 @@ ADMIN_PERMISSIONS = STANDARD_PERMISSIONS + [
 class Instance(object):
 	"""this class is used to create a new instance of the user object (each object represents a single user)"""
 
-	def __init__(self, ip, username=None, password=None, token=None, init_empty=False):
+	def __init__(self, ip, username=None, password=None, token=None, empty=False):
 		"""
 		used to authenticate user
 		checks username & password or token and if correct, puts the user object in data
 		if an error occurs in this part, the client must run its logout function
+
+		the empty option allows a user object to be loaded with no authentication (just a user object with no data)
 		"""
 		if username != None and password != None:
-			# authenticate user and make a token
-			self.data = db.user.find_one({'username': username})
-
-			if self.data == None:  # means nothing was returned from mongo query
-				del self.data  # shouldn't keep data if login was wrong
-				raise Exception('incorrect password or username')  # better to not say it was the username, to increase security
-
-			# check password
-			if self.get_hash(password) != self.data['authentication']['hash']:
-				del self.data  # shouldn't keep data if login was wrong
-				raise Exception('incorrect password or username')  # better to not say it was the password, to increase security
-
-			# check if currently logged in and run logout if true (and if user has permission to logout)
-			# this is good because it creates a new session key during login, but it prevents users from logging into multiple computers
-			# this is commented out for now
-			#if self.has_permission('logout') and 'session' in self.data:
-			#		self.logout()
-
-			if not 'session' in self.data:
-				# store session data if user is now logged out
-				# the user not being logged out will cause the same token to be used for all logins to that account until logout is used
-				self.data['session'] = {
-					'token': urandom(TOKEN_LENGTH),  # make a cryptographically secure random token
-					'ip': ip,
-					'start_time': time(),
-				}
-
-			self.save()  # save session data
-
+			self.authenticate_password(username, password, ip)
 		elif token != None:
-			# check token to authenticate user
-			query = {'session.token': token}  # base query (check token)
-
-			if not ALLOW_TOKENS_TO_CHANGE_IP:
-				query['session.ip'] = ip  # must match ip too
-
-			self.data = db.user.find_one(query)
-
-			if self.data == None:  # means nothing was returned from mongo query
-				if ALLOW_TOKENS_TO_CHANGE_IP:
-					raise Exception('incorrect info: token is incorrect')
-				else:
-					raise Exception('incorrect info: token is incorrect or was moved to a new IP address')
-
+			self.authenticate_token(token, ip)
 		else:
 			raise Exception('not enough data provided to authenticate. a token or a username & password are required')
 
-	# TODO: write in json schema
+	def authenticate_token(self, token, ip):
+		"""
+		check token to authenticate user and load user data
+		ip address should be provided to check aginst token if ALLOW_TOKENS_TO_CHANGE_IP == True
+		"""
 
-	# defaults = {
-	# 	'_id': '',  # unique id (so it never changes)
-	# 	'authentication': {  # cannot be sent to client
-	# 		'salt': '',
-	# 		'hash': '',
-	# 	},
-	# 	'permission': [  # must be sent to client (used to determine what options client can present), permissions that user has
-	# 		'input',
-	# 	],
-	# 	'session': {  # info about current session
-	# 		'ip': '',  # should not be sent to client
-	# 		'start_time': '',  # should not be sent to client, time when when token was issued
-	# 		'token': '',  # must be sent to client
-	# 	},
-	# 	'prefs': {  # must be sent to client, used to store preferences
-	# 		'fade': True,
-	# 		'verbose': True,
-	# 	},
-	# 	# must be sent to client, basic info about user
-	# 	'first_name': '',
-	# 	'last_name': '',
-	# 	'username': '',  # should be same as email, except for guest and admin
-	# 	'email': '',
-	# 	'team': 0,
-	# 	# should not be sent to client, optional info ... probably wouldn't matter if it was sent to client
-	# 	'zip': '',
-	# 	'browser': '',
-	# 	'gender': '',
-	# 	'log': [],  # should be sent to client (but perhaps truncated to certain length)
-	#}
+		query = {'session.token': token}  # base query (check token)
+
+		if not ALLOW_TOKENS_TO_CHANGE_IP:
+			query['session.ip'] = ip  # must match ip too (add to mongo query)
+
+		user_data = db.user.find_one(query)
+
+		if user_data == None:  # means nothing matched mongo query
+			if ALLOW_TOKENS_TO_CHANGE_IP:
+				raise Exception('incorrect info: token is incorrect')
+			else:
+				raise Exception('incorrect info: token is incorrect or was moved to a new IP address')
+
+		self.data = user_data  # token is correct, load the user's data
+
+	def authenticate_password(self, username, password, ip):
+		"""authenticate user and make a token"""
+		self.data = db.user.find_one({'username': username})
+
+		if self.data == None:  # means nothing was returned from mongo query
+			del self.data  # shouldn't keep data if login was wrong
+			raise Exception('incorrect password or username')  # better to not say it was the username, to increase security
+
+		# check password
+		if self.get_hash(password) != self.data['authentication']['hash']:
+			del self.data  # shouldn't keep data if login was wrong
+			raise Exception('incorrect password or username')  # better to not say it was the password, to increase security
+
+		# check if currently logged in and run logout if true (and if user has permission to logout)
+		# this is good because it creates a new session key during login, but it prevents users from logging into multiple computers
+		# this is commented out for now
+		#if self.has_permission('logout') and 'session' in self.data:
+		#		self.logout()
+
+		if not 'session' in self.data:
+			# store session data if user is now logged out
+			# the user not being logged out will cause the same token to be used for all logins to that account until logout is used
+			self.data['session'] = {
+				'token': urandom(TOKEN_LENGTH),  # make a cryptographically secure random token
+				'ip': ip,
+				'start_time': time(),
+			}
+
+		self.save()  # save session data
+
 
 	def get_hash(self, password):
 		"""small function for getting a hash from a password & salt (the salt is read from the user's data)"""
@@ -265,3 +245,36 @@ def create_default_users():
 		'team': 0,
 		'log': [],
 	})
+
+# TODO: write in json schema
+
+# defaults = {
+# 	'_id': '',  # unique id (so it never changes)
+# 	'authentication': {  # cannot be sent to client
+# 		'salt': '',
+# 		'hash': '',
+# 	},
+# 	'permission': [  # must be sent to client (used to determine what options client can present), permissions that user has
+# 		'input',
+# 	],
+# 	'session': {  # info about current session
+# 		'ip': '',  # should not be sent to client
+# 		'start_time': '',  # should not be sent to client, time when when token was issued
+# 		'token': '',  # must be sent to client
+# 	},
+# 	'prefs': {  # must be sent to client, used to store preferences
+# 		'fade': True,
+# 		'verbose': True,
+# 	},
+# 	# must be sent to client, basic info about user
+# 	'first_name': '',
+# 	'last_name': '',
+# 	'username': '',  # should be same as email, except for guest and admin
+# 	'email': '',
+# 	'team': 0,
+# 	# should not be sent to client, optional info ... probably wouldn't matter if it was sent to client
+# 	'zip': '',
+# 	'browser': '',
+# 	'gender': '',
+# 	'log': [],  # should be sent to client (but perhaps truncated to certain length)
+#}
