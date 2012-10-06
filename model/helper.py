@@ -13,19 +13,19 @@ def check_args(supplied_data, *required_args):
 			raise Exception('the argument "' + arg + '" was not supplied in your request')
 
 
-def restrictive_merge(data, structure):
+def merge(origional, addition):
 	"""
-		merges data into structure without adding or removing any keys in structure or changing any data types
-		this can be used to provide a basic validation of the structure / type of user provided data
+		merges addition into origional
+		used to modify / overwrite default values using a json object
 	"""
-	if type(data) is dict and type(structure) is dict:
-		for k in structure:
-			if k in data:
-				if type(structure[k]) is dict:
-					structure[k] = restrictive_merge(data[k], structure[k])
-				elif type(data[k]) is type(structure[k]):  # ensure that types match
-					structure[k] = data[k]
-	return structure
+	if type(addition) is dict and type(origional) is dict:
+		for k in origional.keys():
+			if k in addition:
+				origional[k] = merge(origional[k], addition[k])
+	else:
+		origional = addition
+
+	return origional
 
 
 def remove_defaults(data, defaults):

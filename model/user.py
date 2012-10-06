@@ -5,7 +5,7 @@ from time import time
 from model.db import database as db
 from copy import deepcopy
 import re
-from helper import restrictive_merge
+from helper import merge
 
 """
 	this module deals with all user data and authentication of the user
@@ -198,7 +198,7 @@ class Instance(object):
 				new_data['username'] = new_data['email']
 
 		# use regular merge !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		self.data = restrictive_merge(new_data, self.data)  # TODO: add error reporting to tell if any part of merge fails
+		self.data = merge(new_data, self.data)  # TODO: add error reporting to tell if any part of merge fails
 
 	def save(self):
 		"""
