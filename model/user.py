@@ -2,7 +2,7 @@ from config import ALLOW_TOKENS_TO_CHANGE_IP, TOKEN_LENGTH, SALT_LENGTH, DEFAULT
 from os import urandom
 import hashlib
 from time import time
-from db import database as db
+from model.db import database as db
 from copy import deepcopy
 import re
 from helper import restrictive_merge
@@ -16,7 +16,7 @@ from helper import restrictive_merge
 EMAIL_RE = re.compile(r"[^@]+@[^@]+\.[^@]+")
 
 GUEST_PERMISSIONS = [
-#	'multiple_login',  # allow multiple users to login to same account - needed because many people need to use guest
+	'no_email',  # guest email is fake - mail cannot be sent to it
 ]
 
 STANDARD_PERMISSIONS = [
@@ -29,24 +29,42 @@ ADMIN_PERMISSIONS = STANDARD_PERMISSIONS + [
 	'reset_db',
 ]
 
+		# if username != None and password != None:
+		# 	self.authenticate_password(username, password, ip)
+		# elif token != None:
+		# 	self.authenticate_token(token, ip)
+		# else:
+		# 	raise Exception('not enough data provided to authenticate. a token or a username & password are required')
+
 
 class Instance(object):
-	"""this class is used to create a new instance of the user object (each object represents a single user)"""
+	"""
+		this class is used to create a new instance of the user object (each object represents a single user)
+		loads an empty user object by default. one of the authentication/loading methods should be used to load the user's data
+	"""
 
-	def __init__(self, ip, username=None, password=None, token=None, empty=False):
-		"""
-		used to authenticate user
-		checks username & password or token and if correct, puts the user object in data
-		if an error occurs in this part, the client must run its logout function
-
-		the empty option allows a user object to be loaded with no authentication (just a user object with no data)
-		"""
-		if username != None and password != None:
-			self.authenticate_password(username, password, ip)
-		elif token != None:
-			self.authenticate_token(token, ip)
-		else:
-			raise Exception('not enough data provided to authenticate. a token or a username & password are required')
+	data = {
+		#'_id': '',  # unique id (so it never changes) - mongo will assign this during saving if not assigned
+		# must be sent to client (used to determine what options client can present), permissions that user has
+		'permission': STANDARD_PERMISSIONS,
+		'session': {  # info about current session
+			'ip': '',  # should not be sent to client
+			'start_time': '',  # should not be sent to client, time when when token was issued
+			'token': '',  # must be sent to client
+		},
+		'prefs': {  # must be sent to client, used to store preferences
+			'fade': True,
+		},
+		# cannot be sent to client
+		'salt': '',
+		'hash': '',
+		# must be sent to client, basic info about user
+		'name': '',
+		'username': '',  # should be same as email, except for guest and admin
+		'email': '',
+		'team': 0,
+		'log': [],  # should be sent to client (but perhaps truncated to certain length)
+	}
 
 	def authenticate_token(self, token, ip):
 		"""
@@ -78,7 +96,7 @@ class Instance(object):
 			raise Exception('incorrect password or username')  # better to not say it was the username, to increase security
 
 		# check password
-		if self.get_hash(password) != self.data['authentication']['hash']:
+		if self.get_hash(password) != self.data['hash']:
 			del self.data  # shouldn't keep data if login was wrong
 			raise Exception('incorrect password or username')  # better to not say it was the password, to increase security
 
@@ -99,10 +117,9 @@ class Instance(object):
 
 		self.save()  # save session data
 
-
 	def get_hash(self, password):
 		"""small function for getting a hash from a password & salt (the salt is read from the user's data)"""
-		return hashlib.sha512(password + self.data['authentication']['salt']).hexdigest()
+		return hashlib.sha512(password + self.data['salt']).hexdigest()
 
 	def logout(self):
 		"""
@@ -133,35 +150,36 @@ class Instance(object):
 		"""returns data about user that is safe to give to client (it has passwords and unneeded info filtered out)"""
 		safe_data = deepcopy(self.data)  # needs copy because it cuts stuff out
 		del safe_data['username']  # client already knows username
-		del safe_data['authentication']
-		del safe_data['opt']
-		del safe_data['session']['ip']
-		del safe_data['session']['start_time']
+		del safe_data['hash']
+		del safe_data['salt']
+		del safe_data['session']
 		return safe_data
 
 	def update(self, new_data):
 		"""
 			merges new_data into the user data and validates it
 			this is also used for signup, because signing up is conceptually the same as an update plus changing the username
-			also, if a password is put user.authentication.password it handles the generation of a new hash and salt (because passwords cannot be updated directly, the same way normal data is)
+			also, if a password is put user.password it handles the generation of a new hash and salt (because passwords cannot be updated directly, the same way normal data is)
 			this does not save to the db (since it is used for signup, which uses the guest account and needs to save on its own) - call self.save() after all updating
 		"""
-		if '_id' in new_data:
-			# _id is a unique value that is used by the database to connect actions and other stuff to user accounts, changing it would break a lot of stuff
-			raise Exception('_id cannot be changed')
+		#if '_id' in new_data:
+		#	# _id is a unique value that is used by the database to connect actions and other stuff to user accounts, changing it would break a lot of stuff
+		#	raise Exception('_id cannot be changed')
 
 		#CONSIDER: replace check for username and _id with limit by JSON schema
 
-		if 'username' in new_data:
-			# maybe option to change usernames could be added later
-			raise Exception('usernames cannot be changed directly, they are based on a user\'s email or assigned for special purposes like the guest account')
+		#if 'username' in new_data:
+		#	# maybe option to change usernames could be added later
+		#	raise Exception('usernames cannot be changed directly, they are based on a user\'s email or assigned for special purposes like the guest account')
+
+		# validate data aginst schema !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 		if 'password' in new_data:
 			# make a new salt (keep salts as unique as possible)
-			self.data['authentication']['salt'] = urandom(SALT_LENGTH)
+			self.data['salt'] = urandom(SALT_LENGTH)
 
 			# set a new password by changing the user's hash
-			self.data['authentication']['hash'] = self.get_hash(new_data['password'])
+			self.data['hash'] = self.get_hash(new_data['password'])
 
 		if 'email' in new_data:
 			# even guest and admin accounts can set an email. they need to during signup and their changes are not saved to the database anyway
@@ -179,8 +197,7 @@ class Instance(object):
 				# change the username to match the new email
 				new_data['username'] = new_data['email']
 
-		# validate other data aginst schema
-
+		# use regular merge !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		self.data = restrictive_merge(new_data, self.data)  # TODO: add error reporting to tell if any part of merge fails
 
 	def save(self):
@@ -209,18 +226,13 @@ def create_default_users():
 	salt = urandom(SALT_LENGTH)
 
 	db.user.save({
-		'_id': '',
-		'authentication': {
-			'salt': salt,
-			'hash': hashlib.sha512(DEFAULT_PASSWORD + salt).hexdigest(),
-		},
+		'salt': salt,
+		'hash': hashlib.sha512(DEFAULT_PASSWORD + salt).hexdigest(),
 		'permission': GUEST_PERMISSIONS,
 		'prefs': {
 			'fade': True,
-			'verbose': True,
 		},
-		'first_name': '',
-		'last_name': '',
+		'name': '',
 		'username': 'guest',
 		'email': '',
 		'team': 0,
@@ -228,18 +240,13 @@ def create_default_users():
 	})
 
 	db.user.save({
-		'_id': '',
-		'authentication': {
-			'salt': salt,
-			'hash': hashlib.sha512(DEFAULT_PASSWORD + salt).hexdigest(),
-		},
+		'salt': salt,
+		'hash': hashlib.sha512(DEFAULT_PASSWORD + salt).hexdigest(),
 		'permission': ADMIN_PERMISSIONS,
 		'prefs': {
 			'fade': True,
-			'verbose': True,
 		},
-		'first_name': '',
-		'last_name': '',
+		'name': '',
 		'username': 'admin',
 		'email': '',
 		'team': 0,
@@ -247,34 +254,3 @@ def create_default_users():
 	})
 
 # TODO: write in json schema
-
-# defaults = {
-# 	'_id': '',  # unique id (so it never changes)
-# 	'authentication': {  # cannot be sent to client
-# 		'salt': '',
-# 		'hash': '',
-# 	},
-# 	'permission': [  # must be sent to client (used to determine what options client can present), permissions that user has
-# 		'input',
-# 	],
-# 	'session': {  # info about current session
-# 		'ip': '',  # should not be sent to client
-# 		'start_time': '',  # should not be sent to client, time when when token was issued
-# 		'token': '',  # must be sent to client
-# 	},
-# 	'prefs': {  # must be sent to client, used to store preferences
-# 		'fade': True,
-# 		'verbose': True,
-# 	},
-# 	# must be sent to client, basic info about user
-# 	'first_name': '',
-# 	'last_name': '',
-# 	'username': '',  # should be same as email, except for guest and admin
-# 	'email': '',
-# 	'team': 0,
-# 	# should not be sent to client, optional info ... probably wouldn't matter if it was sent to client
-# 	'zip': '',
-# 	'browser': '',
-# 	'gender': '',
-# 	'log': [],  # should be sent to client (but perhaps truncated to certain length)
-#}

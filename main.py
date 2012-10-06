@@ -2,7 +2,7 @@
 from functools import wraps
 from model.helper import error_dump, check_args
 import model.user as user
-import db
+import model.db as db
 from override_flask import Flask
 from flask import request, g
 
@@ -124,6 +124,7 @@ def user_logout():
 
 
 @app.route('/user/update')
+@permission_required()
 def user_update():
 	try:
 		check_args(request.args, 'data')
@@ -136,7 +137,6 @@ def user_update():
 
 
 @app.route('/user/signup')
-@permission_required()  # guest account must be loaded - this account performs the signup
 def signup():
 	try:
 		check_args(request.args, 'data')
