@@ -1,6 +1,6 @@
 #from celery.decorators import task
 from datetime import datetime
-from db import database as db
+from model.db import database as db
 import scraper.event
 
 """

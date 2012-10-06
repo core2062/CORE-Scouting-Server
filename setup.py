@@ -1,4 +1,4 @@
-import db
+import model.db as db
 from datetime import datetime
 import model.scraper.scraper as scraper  # TODO: switch to tasks to distribute load
 

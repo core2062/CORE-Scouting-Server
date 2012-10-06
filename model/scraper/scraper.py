@@ -1,5 +1,5 @@
 from datetime import datetime
-from db import database as db
+from model.db import database as db
 import event as event_scraper
 import match as match_scraper
 import team as team_scraper
