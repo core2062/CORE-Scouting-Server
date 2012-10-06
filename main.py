@@ -105,11 +105,11 @@ def user_login():
 	#NOTE: no permission required for this part because it uses an alternative login method (username & password rather than token) and declares the user object on its own
 	#CONSIDER: add a delay for password based login to prevent excessive attempts
 
-	try:
-		check_args(request.args, 'username', 'password')
-		g.user.login(username=request.args['username'], password=request.args['password'], ip=request.remote_addr)
-	except Exception as error:
-		return error_dump(error)  # bad info supplied
+	#try:
+	check_args(request.args, 'username', 'password')
+	g.user = user.Instance(username=request.args['username'], password=request.args['password'], ip=request.remote_addr)
+	#except Exception as error:
+	#	return error_dump(error)  # bad info supplied
 
 	return {
 		'token': g.user.data['session']['token'],
@@ -124,7 +124,6 @@ def user_logout():
 
 
 @app.route('/user/update')
-@permission_required('modify_account_data')  # guest account cannot be changed (except for making sessions / logging)
 def user_update():
 	try:
 		check_args(request.args, 'data')
@@ -156,6 +155,7 @@ def signup():
 @permission_required('reset_db')
 def reset_db():
 	db.reset()
+	user.create_default_users()
 	return {'notify': 'reset successful'}
 
 
