@@ -1,0 +1,32 @@
+{
+	"description":"input for an update or signup for a user",
+	"type":"object",
+	"properties":{
+		"prefs":{
+			"type":"object",
+			"properties":{
+				"fade":{
+					"type":"boolean",
+					"description":"animate fade between pages"
+				}
+			}
+		},
+		"name":{
+			"type":"string",
+			"description":"full name of user"
+		},
+		"email":{
+			"type":"string",
+			"format":"email"
+		},
+		"team":{
+			"type":"integer",
+			"minimum":0,
+			"description":"number of the team that a user is associated with"
+		},
+		"password":{
+			"type":"string",
+			"minLength":4
+		}
+	}
+}
