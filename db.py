@@ -59,19 +59,6 @@ def reset():
 	database.create_collection('sourceEvent')  # scraped data on events
 	database.create_collection('sourceMatch')  # scraped data on matches
 
-	database.user.insert(
-		{
-			'_id': 'admin',
-			'account': {
-				'password': 'superpass',
-			},
-			'permission': [  # this user has permissions to do everything
-				'input',
-				'run_admin_task',
-			],
-		}
-	)
-
 
 def backup(db_name, filename):
 	"""
