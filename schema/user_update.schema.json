@@ -1,5 +1,5 @@
 {
-	"description":"input for an update or signup for a user",
+	"description":"input for an update or signup for a user. required items can be ommitted if they already are specified in the user's data, but if they are not (like during a signup) they must be sent.",
 	"type":"object",
 	"properties":{
 		"prefs":{
@@ -17,16 +17,19 @@
 		},
 		"email":{
 			"type":"string",
-			"format":"email"
+			"format":"email",
+			"required":true
 		},
 		"team":{
 			"type":"integer",
 			"minimum":0,
-			"description":"number of the team that a user is associated with"
+			"description":"number of the team that a user is associated with",
+			"required":true
 		},
 		"password":{
 			"type":"string",
-			"minLength":4
+			"minLength":4,
+			"required":true,
 		}
 	}
 }
