@@ -5,7 +5,7 @@ The CSD itself acts as a web service and is separated from the client. It only r
 ###Installation
  - install Python 2.7
  - [install MongoDB](http://docs.mongodb.org/manual/tutorial/install-mongodb-on-debian-or-ubuntu-linux/)
- - `sudo pip install Flask simplejson pymongo`
+ - `sudo pip install Flask simplejson pymongo jsonschema`
  - clone this repo
  - run the server with `python path-to-repo/CORE-Scouting-Server/main.py`
 
