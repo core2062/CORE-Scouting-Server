@@ -92,8 +92,6 @@ class User(object):
 		"""authenticate user and make a token"""
 		self.data = db.user.find_one({'username': username})
 
-		print self.data
-
 		if self.data == None:  # means nothing was returned from mongo query
 			del self.data  # shouldn't keep data if login was wrong
 			raise Exception('incorrect password or username----')  # better to not say it was the username, to increase security
@@ -208,7 +206,6 @@ class User(object):
 			this is called at the end of the script????
 			CONSIDER: switch to a transparent method of writing to the db
 		"""
-		print self.data
 		db.user.save(self.data)
 
 	def log(self, event, data):
