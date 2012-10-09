@@ -47,7 +47,8 @@ def permission_required(*permissions):
 
 				# store user object in g (thread safe context)
 				# users may only authenticate with a token, this is to prevent users from transmitting their username & password with every request
-				g.user = User(token=request.args['token'], ip=request.remote_addr)
+				g.user = User()
+				g.user.authenticate_token(token=request.args['token'], ip=request.remote_addr)
 
 				for permission in permissions:
 					g.user.can(permission)

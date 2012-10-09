@@ -152,6 +152,8 @@ class User(object):
 	def safe_data(self):
 		"""returns data about user that is safe to give to client (it has passwords and unneeded info filtered out)"""
 		safe_data = deepcopy(self.data)  # needs copy because it cuts stuff out
+
+		del safe_data['_id']  # for internal use only
 		del safe_data['username']  # client already knows username
 		del safe_data['hash']
 		del safe_data['salt']
