@@ -197,7 +197,7 @@ class User(object):
 				# change the username to match the new email
 				new_data['username'] = new_data['email']
 
-		self.data = self.data.items() + new_data.items()  # TODO: add error reporting to tell if any part of merge fails
+		self.data = dict(self.data.items() + new_data.items())  # TODO: add error reporting to tell if any part of merge fails
 
 	def save(self):
 		"""
@@ -208,7 +208,7 @@ class User(object):
 		db.user.save(self.data)
 
 	def log(self, event, data):
-		self.data.append({
+		self.data['log'].append({
 			'event': event,
 			'data': data,
 			'time': time(),
@@ -233,6 +233,7 @@ def create_default_users():
 	user.data['permission'] = ADMIN_PERMISSIONS
 	user.save()
 
+	del user
 	user = User()
 
 	user.update({
