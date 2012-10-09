@@ -21,15 +21,14 @@
 			"required":true
 		},
 		"team":{
-			"type":"integer",
-			"minimum":0,
+			"type":"number",
 			"description":"number of the team that a user is associated with",
 			"required":true
 		},
 		"password":{
 			"type":"string",
 			"minLength":4,
-			"required":true,
+			"required":true
 		}
 	}
 }

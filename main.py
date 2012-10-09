@@ -1,7 +1,7 @@
 #from threading import Timer
 from functools import wraps
 from model.helper import error_dump, check_args
-import model.user as user
+from model.user import User, create_default_users
 import model.db as db
 from override_flask import Flask
 from flask import request, g
@@ -47,7 +47,7 @@ def permission_required(*permissions):
 
 				# store user object in g (thread safe context)
 				# users may only authenticate with a token, this is to prevent users from transmitting their username & password with every request
-				g.user = user.Instance(token=request.args['token'], ip=request.remote_addr)
+				g.user = User(token=request.args['token'], ip=request.remote_addr)
 
 				for permission in permissions:
 					g.user.can(permission)
@@ -107,7 +107,7 @@ def user_login():
 
 	#try:
 	check_args(request.args, 'username', 'password')
-	g.user = user.Instance(username=request.args['username'], password=request.args['password'], ip=request.remote_addr)
+	g.user = User(username=request.args['username'], password=request.args['password'], ip=request.remote_addr)
 	#except Exception as error:
 	#	return error_dump(error)  # bad info supplied
 
@@ -152,10 +152,10 @@ def signup():
 
 
 @app.route('/admin/task/reset')
-@permission_required('reset_db')
+#@permission_required('reset_db')
 def reset_db():
 	db.reset()
-	user.create_default_users()
+	create_default_users()
 	return {'notify': 'reset successful'}
 
 
