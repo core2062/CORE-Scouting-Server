@@ -6,7 +6,6 @@ import hashlib
 from time import time
 from model.db import database as db
 from copy import deepcopy
-from helper import merge
 
 """
 	this module deals with all user data and authentication of the user
@@ -198,7 +197,7 @@ class User(object):
 				# change the username to match the new email
 				new_data['username'] = new_data['email']
 
-		self.data = merge(self.data, new_data)  # TODO: add error reporting to tell if any part of merge fails
+		self.data = self.data.items() + new_data.items()  # TODO: add error reporting to tell if any part of merge fails
 
 	def save(self):
 		"""
