@@ -7,7 +7,6 @@ from time import time
 from model.db import database as db
 from copy import deepcopy
 from helper import merge
-from bson.binary import Binary
 
 """
 	this module deals with all user data and authentication of the user
@@ -93,14 +92,16 @@ class User(object):
 		"""authenticate user and make a token"""
 		self.data = db.user.find_one({'username': username})
 
+		print self.data
+
 		if self.data == None:  # means nothing was returned from mongo query
 			del self.data  # shouldn't keep data if login was wrong
-			raise Exception('incorrect password or username')  # better to not say it was the username, to increase security
+			raise Exception('incorrect password or username----')  # better to not say it was the username, to increase security
 
 		# check password
 		if self.get_hash(password) != self.data['hash']:
 			del self.data  # shouldn't keep data if login was wrong
-			raise Exception('incorrect password or username')  # better to not say it was the password, to increase security
+			raise Exception('incorrect password or username****')  # better to not say it was the password, to increase security
 
 		# check if currently logged in and run logout if true (and if user has permission to logout)
 		# this is good because it creates a new session key during login, but it prevents users from logging into multiple computers
@@ -112,7 +113,7 @@ class User(object):
 			# store session data if user is now logged out
 			# the user not being logged out will cause the same token to be used for all logins to that account until logout is used
 			self.data['session'] = {
-				'token': urandom(TOKEN_LENGTH),  # make a cryptographically secure random token
+				'token': urandom(TOKEN_LENGTH).encode('hex'),  # make a cryptographically secure random token
 				'ip': ip,
 				'start_time': time(),
 			}
@@ -184,7 +185,7 @@ class User(object):
 			self.can('change_username')
 
 		if 'password' in new_data:
-			self.data['salt'] = Binary(urandom(SALT_LENGTH))  # make a new salt (keep salts as unique as possible)
+			self.data['salt'] = urandom(SALT_LENGTH).encode('hex')  # make a new salt (keep salts as unique as possible)
 			self.data['hash'] = self.get_hash(new_data['password'])  # set a new password by changing the user's hash
 
 		# stop email updates from changing to same email as another user
@@ -232,7 +233,6 @@ def create_default_users():
 
 	user.data['username'] = 'admin'
 	user.data['permission'] = ADMIN_PERMISSIONS
-
 	user.save()
 
 	user = User()
@@ -245,5 +245,4 @@ def create_default_users():
 
 	user.data['username'] = 'guest'
 	user.data['permission'] = GUEST_PERMISSIONS
-
 	user.save()

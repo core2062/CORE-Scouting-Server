@@ -107,7 +107,8 @@ def user_login():
 
 	#try:
 	check_args(request.args, 'username', 'password')
-	g.user = User(username=request.args['username'], password=request.args['password'], ip=request.remote_addr)
+	g.user = User()
+	g.user.authenticate_password(username=request.args['username'], password=request.args['password'], ip=request.remote_addr)
 	#except Exception as error:
 	#	return error_dump(error)  # bad info supplied
 
