@@ -48,7 +48,9 @@ def permission_required(*permissions):
 				# store user object in g (thread safe context)
 				# users may only authenticate with a token, this is to prevent users from transmitting their username & password with every request
 				g.user = User()
-				g.user.authenticate_token(token=request.args['token'], ip=request.remote_addr)
+
+				#the token gets escaped when sent, so decode it first
+				g.user.authenticate_token(token=request.args['token'].decode('string-escape'), ip=request.remote_addr)
 
 				for permission in permissions:
 					g.user.can(permission)
@@ -115,7 +117,7 @@ def user_login():
 
 	return {
 		'token': g.user.data['session']['token'],
-		'notice': 'login successful',
+		'notify': 'login successful',
 	}
 
 
@@ -123,6 +125,7 @@ def user_login():
 @permission_required()
 def user_logout():
 	g.user.logout()
+	return {'notify': 'logout successful'}
 
 
 @app.route('/user/update')
@@ -142,11 +145,11 @@ def user_update():
 def signup():
 	try:
 		check_args(request.args, 'data')
-		g.user.update(request.args['data'])
 
-		#reset permissions
-		#remove _id to make new account
-		#save to db
+		user = User()
+		user.update(request.args['data'])
+		user.save()
+
 	except Exception as error:
 		return error_dump(error)
 

@@ -93,12 +93,12 @@ class User(object):
 
 		if self.data == None:  # means nothing was returned from mongo query
 			del self.data  # shouldn't keep data if login was wrong
-			raise Exception('incorrect password or username----')  # better to not say it was the username, to increase security
+			raise Exception('incorrect password or username')  # better to not say it was the username, to increase security
 
 		# check password
 		if self.get_hash(password) != self.data['hash']:
 			del self.data  # shouldn't keep data if login was wrong
-			raise Exception('incorrect password or username****')  # better to not say it was the password, to increase security
+			raise Exception('incorrect password or username')  # better to not say it was the password, to increase security
 
 		# check if currently logged in and run logout if true (and if user has permission to logout)
 		# this is good because it creates a new session key during login, but it prevents users from logging into multiple computers
@@ -110,7 +110,7 @@ class User(object):
 			# store session data if user is now logged out
 			# the user not being logged out will cause the same token to be used for all logins to that account until logout is used
 			self.data['session'] = {
-				'token': urandom(TOKEN_LENGTH).encode('hex'),  # make a cryptographically secure random token
+				'token': urandom(TOKEN_LENGTH).encode('base64'),  # make a cryptographically secure random token
 				'ip': ip,
 				'start_time': time(),
 			}
@@ -119,7 +119,7 @@ class User(object):
 
 	def get_hash(self, password):
 		"""small function for getting a hash from a password & salt (the salt is read from the user's data)"""
-		return hashlib.sha512(password + self.data['salt']).hexdigest()
+		return hashlib.sha512(password + self.data['salt']).digest().encode('base64')
 
 	def logout(self):
 		"""
@@ -184,7 +184,7 @@ class User(object):
 			self.can('change_username')
 
 		if 'password' in new_data:
-			self.data['salt'] = urandom(SALT_LENGTH).encode('hex')  # make a new salt (keep salts as unique as possible)
+			self.data['salt'] = urandom(SALT_LENGTH).encode('base64')  # make a new salt (keep salts as unique as possible)
 			self.data['hash'] = self.get_hash(new_data['password'])  # set a new password by changing the user's hash
 
 		# stop email updates from changing to same email as another user
@@ -233,7 +233,6 @@ def create_default_users():
 	user.data['permission'] = ADMIN_PERMISSIONS
 	user.save()
 
-	del user
 	user = User()
 
 	user.update({
