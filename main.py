@@ -8,7 +8,6 @@ from flask import request, g
 
 app = Flask(__name__,)
 
-# users must login with something to be able to access anything that uses a user object (including signup)
 # the limited public "guest" account is automatically used (by client) for most stuff that doesn't require much permission
 
 
@@ -108,16 +107,16 @@ def user_login():
 	#NOTE: no permission required for this part because it uses an alternative login method (username & password rather than token) and declares the user object on its own
 	#CONSIDER: add a delay for password based login to prevent excessive attempts
 
-	#try:
-	check_args(request.args, 'username', 'password')
-	g.user = User()
-	g.user.authenticate_password(username=request.args['username'], password=request.args['password'], ip=request.remote_addr)
-	#except Exception as error:
-	#	return error_dump(error)  # bad info supplied
+	try:
+		check_args(request.args, 'username', 'password')
+		g.user = User()
+		g.user.authenticate_password(username=request.args['username'], password=request.args['password'], ip=request.remote_addr)
+	except Exception as error:
+		return error_dump(error)  # bad info supplied
 
 	return {
-		'token': g.user.data['session']['token'],
 		'notify': 'login successful',
+		'token': g.user.data['session']['token'],
 	}
 
 
@@ -149,7 +148,6 @@ def signup():
 		user = User()
 		user.update(request.args['data'])
 		user.save()
-
 	except Exception as error:
 		return error_dump(error)
 
@@ -157,7 +155,7 @@ def signup():
 
 
 @app.route('/admin/task/reset')
-#@permission_required('reset_db')
+@permission_required('reset_db')
 def reset_db():
 	db.reset()
 	create_default_users()
