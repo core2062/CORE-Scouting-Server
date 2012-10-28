@@ -1,7 +1,11 @@
 import os
 
 """
-	this file holds configuration variables for the csd. these variables are used throughout the code, but are stored here to make changing configuration easier. there are also a few variables which are dynamically set and store info about the enviroment that the CSD is running in
+	this file holds configuration variables for the csd.
+	these variables are used throughout the code, but are stored here
+	to make changing configuration easier. There are also
+	a few variables which are dynamically set and store info
+	about the enviroment that the CSD is running in
 """
 
 #filesystem
