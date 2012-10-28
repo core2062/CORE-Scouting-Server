@@ -1,13 +1,9 @@
-from functools import wraps
-
 from flask import request, g
 from werkzeug import exceptions as ex
 
 from override_flask import make_json_app
 
 from helper import check_args, permission_required
-import model.newuser
-from model.newuser import User
 import model.db as db
 
 app = make_json_app(__name__,)
@@ -35,6 +31,9 @@ def after_view(rv):
 	#put stuff from g in response
 	return
 
+import user_api
+user_api.mix(app)
+
 @app.route('/')
 def index():
 	return """
@@ -49,84 +48,7 @@ def index():
 		</html>
 	"""
 
-
-#@app.route('/test')
-#def test():
-#	import model.scraper.scraper as scraper
-#	scraper.event_names(request.args.get('year'))
-#	return 'done'
-
 #TODO: add mongs like db browser, with option to only return json (read only?) (restricted - not able to read user collection)
-
-
-# def cron():
-# 	"""handles simple cron-like jobs such as rescraping"""
-# 	print "cron jobs can be put here"
-# 	t = Timer(10000, cron)
-# 	t.start()
-
-# cron()
-
-
-@app.route('/user/account')
-@permission_required()
-def user_account():
-	return g.user
-
-
-@app.route('/user/login', methods=['POST'])
-def user_login():
-	"""get a token to use for authentication throughout the rest of the site"""
-	#NOTE: no permission required for this part because it uses an alternative login method (username & password rather than token) and declares the user object on its own
-	#CONSIDER: add a delay for password based login to prevent excessive attempts
-
-	check_args(request.args, 'username', 'password')
-	g.user = model.newuser.auth(request.args['username'], request.args['password'])
-	if not g.user:
-		raise ex.Unauthorized('Bad username or password.')
-
-	return {
-		'notify': 'login successful',
-		'token': g.user.token,
-	}
-
-
-@app.route('/user/logout', methods=['POST'])
-@permission_required()
-def user_logout():
-	g.user.logout()
-	return {'notify': 'logout successful'}
-
-
-@app.route('/user/update', methods=['POST'])
-@permission_required()
-def user_update():
-	raise ex.NotImplemented()
-	# check_args(request.args, 'data')
-	# g.user.update(request.args['data'])
-	# g.user.save()
-	# return {'notify': 'update successful'}
-
-
-@app.route('/user/signup', methods=['POST'])
-def signup():
-	raise ex.NotImplemented()
-	# try:
-	# 	check_args(request.args, 'data')
-
-	# 	user = User()
-	# 	user.update(request.args['data'])
-	# 	user.save()
-	# except Exception as error:
-	# 	return error_dump(error)
-
-	return {'notify': 'signup successful'}
-
-@app.route('/debug/users')
-def listusers():
-	model.newuser.defaults()
-	return model.newuser.list_users()
-
 
 @app.route('/admin/task/reset',methods=['DELETE'])
 @permission_required('reset_db')
@@ -154,7 +76,6 @@ def tea():
     `.            :.,'
       `-.________,-'
 '''
-
 
 if __name__ == "__main__":
 	app.run(
