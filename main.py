@@ -1,12 +1,14 @@
-#from threading import Timer
 from functools import wraps
-from model.helper import check_args
+
+from flask import request, g
+from werkzeug import exceptions as ex
+
+from override_flask import make_json_app
+
+from helper import check_args, permission_required
 import model.newuser
 from model.newuser import User
 import model.db as db
-from override_flask import make_json_app
-from flask import request, g
-from werkzeug import exceptions as ex
 
 app = make_json_app(__name__,)
 
@@ -32,39 +34,6 @@ def after_view(rv):
 		return
 	#put stuff from g in response
 	return
-
-
-def permission_required(*permissions):
-	"""
-		defines a decorator for checking a user's token
-		permissions may also be checked by passing all required permissions as args
-		the user object handles a lot of its own authentication,
-		but this decorator makes it easier to check permissions on other
-		things like admin tasks or submitting data
-	"""
-	def decorator(f):
-		@wraps(f)
-		def decorated_function(*args, **kwargs):
-			check_args(request.args, 'token')
-
-			# store user object in g (thread safe context)
-			# users may only authenticate with a token,
-			# this is to prevent users from transmitting
-			# their username & password with every request
-
-			#the token gets escaped when sent, so decode it first
-			g.user = model.newuser.token_auth(
-				request.args['token'],
-				ip=request.remote_addr)
-			if not g.user:
-				raise ex.Unauthorized('Bad token.')
-			for permission in permissions:
-				if not g.user.has_perm(permission):
-					raise ex.Forbidden()
-			return f(*args, **kwargs)
-		return decorated_function
-	return decorator
-
 
 @app.route('/')
 def index():
@@ -105,7 +74,7 @@ def user_account():
 	return g.user
 
 
-@app.route('/user/login')
+@app.route('/user/login', methods=['POST'])
 def user_login():
 	"""get a token to use for authentication throughout the rest of the site"""
 	#NOTE: no permission required for this part because it uses an alternative login method (username & password rather than token) and declares the user object on its own
@@ -122,14 +91,14 @@ def user_login():
 	}
 
 
-@app.route('/user/logout')
+@app.route('/user/logout', methods=['POST'])
 @permission_required()
 def user_logout():
 	g.user.logout()
 	return {'notify': 'logout successful'}
 
 
-@app.route('/user/update')
+@app.route('/user/update', methods=['POST'])
 @permission_required()
 def user_update():
 	raise ex.NotImplemented()
@@ -139,7 +108,7 @@ def user_update():
 	# return {'notify': 'update successful'}
 
 
-@app.route('/user/signup')
+@app.route('/user/signup', methods=['POST'])
 def signup():
 	raise ex.NotImplemented()
 	# try:
@@ -159,7 +128,7 @@ def listusers():
 	return model.newuser.list_users()
 
 
-@app.route('/admin/task/reset')
+@app.route('/admin/task/reset',methods=['DELETE'])
 @permission_required('reset_db')
 def reset_db():
 	db.reset()
@@ -168,7 +137,7 @@ def reset_db():
 
 @app.route('/coffee')
 def coffee():
-	raise ex.ImATeapot('Idjit.')
+	raise ex.ImATeapot()
 
 @app.route('/tea')
 def tea():

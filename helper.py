@@ -25,3 +25,34 @@ def remove_defaults(data, defaults):
 			else:
 				compressed[k] = data[k]
 	return compressed
+
+def permission_required(*permissions):
+	"""
+		defines a decorator for checking a user's token
+		permissions may also be checked by passing all required permissions as args
+		the user object handles a lot of its own authentication,
+		but this decorator makes it easier to check permissions on other
+		things like admin tasks or submitting data
+	"""
+	def decorator(f):
+		@wraps(f)
+		def decorated_function(*args, **kwargs):
+			check_args(request.args, 'token')
+
+			# store user object in g (thread safe context)
+			# users may only authenticate with a token,
+			# this is to prevent users from transmitting
+			# their username & password with every request
+
+			#the token gets escaped when sent, so decode it first
+			g.user = model.newuser.token_auth(
+				request.args['token'],
+				ip=request.remote_addr)
+			if not g.user:
+				raise ex.Unauthorized('Bad token.')
+			for permission in permissions:
+				if not g.user.has_perm(permission):
+					raise ex.Forbidden()
+			return f(*args, **kwargs)
+		return decorated_function
+	return decorator
