@@ -1,4 +1,7 @@
+from functools import wraps
 from werkzeug import exceptions as ex
+from flask import request, g
+import model.newuser
 
 def check_args(supplied_data, *required_args):
 	"""

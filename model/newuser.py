@@ -1,12 +1,13 @@
 import pymongo
 from mongo_descriptors import Db, MongoI
 from os import urandom
+from time import time
 
 from passwords import pwd_context
 from model.db import database as db
 from config import ALLOW_TOKENS_TO_CHANGE_IP, TOKEN_LENGTH
 
-def auth(name, password):
+def auth(name, password, ip=None):
 	user = db.user.find_one({"_id" : str(name)})
 	if not password:
 		password = ""
@@ -14,7 +15,7 @@ def auth(name, password):
 		return None
 	if pwd_context.verify(password, user["password"]):
 		user = User(name)
-		user.newSession()
+		user.newSession(ip)
 		return user
 	else:
 		return False
