@@ -1,9 +1,10 @@
 import pymongo
-from passwords import pwd_context
 from mongo_descriptors import Db, MongoI
+from os import urandom
+
+from passwords import pwd_context
 from model.db import database as db
 from config import ALLOW_TOKENS_TO_CHANGE_IP, TOKEN_LENGTH
-from os import urandom
 
 def auth(name, password):
 	user = db.user.find_one({"_id" : str(name)})
