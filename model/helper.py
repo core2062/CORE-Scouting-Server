@@ -1,7 +1,4 @@
-def error_dump(exception):
-	"""returns an exception formatted in json so it can be returned to the client"""
-	return {'error': exception.args[0]}
-
+from werkzeug import exceptions as ex
 
 def check_args(supplied_data, *required_args):
 	"""
@@ -10,7 +7,7 @@ def check_args(supplied_data, *required_args):
 	"""
 	for arg in required_args:
 		if arg not in supplied_data:
-			raise Exception('the argument "' + arg + '" was not supplied in your request')
+			raise ex.BadRequest('the argument "' + arg + '" was not supplied in your request')
 
 
 def remove_defaults(data, defaults):

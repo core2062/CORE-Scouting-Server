@@ -1,10 +1,12 @@
 #from threading import Timer
 from functools import wraps
-from model.helper import error_dump, check_args
-from model.user import User, create_default_users
+from model.helper import check_args
+import model.newuser
+from model.newuser import User
 import model.db as db
 from override_flask import make_json_app
 from flask import request, g
+from werkzeug import exceptions as ex
 
 app = make_json_app(__name__,)
 
@@ -24,7 +26,7 @@ def before_request():
 	g.error = ()
 
 
-@app.after_view
+# @app.after_view
 def after_view(rv):
 	if not type(rv) in (dict, list):  # check to see that it's json, if not then return
 		return
@@ -43,26 +45,22 @@ def permission_required(*permissions):
 	def decorator(f):
 		@wraps(f)
 		def decorated_function(*args, **kwargs):
-			try:  # try to authenticate
-				check_args(request.args, 'token')
+			check_args(request.args, 'token')
 
-				# store user object in g (thread safe context)
-				# users may only authenticate with a token,
-				# this is to prevent users from transmitting
-				# their username & password with every request
-				g.user = User()
+			# store user object in g (thread safe context)
+			# users may only authenticate with a token,
+			# this is to prevent users from transmitting
+			# their username & password with every request
 
-				#the token gets escaped when sent, so decode it first
-				g.user.authenticate_token(
-					token=request.args['token'].decode('string-escape'),
-					ip=request.remote_addr)
-
-				for permission in permissions:
-					g.user.can(permission)
-
-			except Exception as error:
-				return error_dump(error)  # return error if authentication failed
-
+			#the token gets escaped when sent, so decode it first
+			g.user = model.newuser.token_auth(
+				request.args['token'],
+				ip=request.remote_addr)
+			if not g.user:
+				raise ex.Unauthorized('Bad token.')
+			for permission in permissions:
+				if not g.user.has_perm(permission):
+					raise ex.Forbidden()
 			return f(*args, **kwargs)
 		return decorated_function
 	return decorator
@@ -104,7 +102,7 @@ def index():
 @app.route('/user/account')
 @permission_required()
 def user_account():
-	return g.user.safe_data()
+	return g.user
 
 
 @app.route('/user/login')
@@ -113,16 +111,14 @@ def user_login():
 	#NOTE: no permission required for this part because it uses an alternative login method (username & password rather than token) and declares the user object on its own
 	#CONSIDER: add a delay for password based login to prevent excessive attempts
 
-	try:
-		check_args(request.args, 'username', 'password')
-		g.user = User()
-		g.user.authenticate_password(username=request.args['username'], password=request.args['password'], ip=request.remote_addr)
-	except Exception as error:
-		return error_dump(error)  # bad info supplied
+	check_args(request.args, 'username', 'password')
+	g.user = model.newuser.auth(request.args['username'], request.args['password'])
+	if not g.user:
+		raise ex.Unauthorized('Bad username or password.')
 
 	return {
 		'notify': 'login successful',
-		'token': g.user.data['session']['token'],
+		'token': g.user.token,
 	}
 
 
@@ -136,40 +132,62 @@ def user_logout():
 @app.route('/user/update')
 @permission_required()
 def user_update():
-	try:
-		check_args(request.args, 'data')
-		g.user.update(request.args['data'])
-		g.user.save()
-	except Exception as error:
-		return error_dump(error)
-
-	return {'notify': 'update successful'}
+	raise ex.NotImplemented()
+	# check_args(request.args, 'data')
+	# g.user.update(request.args['data'])
+	# g.user.save()
+	# return {'notify': 'update successful'}
 
 
 @app.route('/user/signup')
 def signup():
-	try:
-		check_args(request.args, 'data')
+	raise ex.NotImplemented()
+	# try:
+	# 	check_args(request.args, 'data')
 
-		user = User()
-		user.update(request.args['data'])
-		user.save()
-	except Exception as error:
-		return error_dump(error)
+	# 	user = User()
+	# 	user.update(request.args['data'])
+	# 	user.save()
+	# except Exception as error:
+	# 	return error_dump(error)
 
 	return {'notify': 'signup successful'}
+
+@app.route('/debug/users')
+def listusers():
+	model.newuser.defaults()
+	return model.newuser.list_users()
 
 
 @app.route('/admin/task/reset')
 @permission_required('reset_db')
 def reset_db():
 	db.reset()
-	create_default_users()
+	model.defaults()
 	return {'notify': 'reset successful'}
+
+@app.route('/coffee')
+def coffee():
+	raise ex.ImATeapot('Idjit.')
+
+@app.route('/tea')
+def tea():
+	return '''
+	                       (
+            _           ) )
+         _,(_)._        ((
+    ___,(_______).        )
+  ,'__.   /       \    /\_
+ /,' /  |""|       \  /  /
+| | |   |__|       |,'  /
+ \`.|                  /
+  `. :           :    /
+    `.            :.,'
+      `-.________,-'
+'''
 
 
 if __name__ == "__main__":
 	app.run(
 		debug=True,
-		host='0.0.0.0',  # make dev server public
 	)

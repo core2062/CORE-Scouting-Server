@@ -7,7 +7,7 @@ from werkzeug.exceptions import HTTPException
 """this holds overrides to modify flask"""
 
 
-class Flask(Flask):
+class JFlask(Flask):
 	"""
 		override the make_response method to:
 			allow json to be returned by view functions
@@ -54,7 +54,7 @@ class Flask(Flask):
 				rv = func_rv  # like all the other types of functions, if it returns something, that gets sent instead
 				break
 
-		if type(rv) in (dict, list):  # format the response in json if it is a variable (not html being returned)
+		if type(rv) in (dict, list) or hasattr(rv, '__json__'):  # format the response in json if it is a variable (not html being returned)
 			if self.debug:  # pretty print json in dev mode, else dump compressed json
 				json = dumps(rv, sort_keys=True, indent=4)
 			else:
@@ -88,7 +88,7 @@ def make_json_app(import_name, **kwargs):
                                 else 500)
         return response
 
-    app = Flask(import_name, **kwargs)
+    app = JFlask(import_name, **kwargs)
 
     for code in default_exceptions.iterkeys():
         app.error_handler_spec[None][code] = make_json_error
