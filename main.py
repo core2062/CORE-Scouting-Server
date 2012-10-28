@@ -3,10 +3,10 @@ from functools import wraps
 from model.helper import error_dump, check_args
 from model.user import User, create_default_users
 import model.db as db
-from override_flask import Flask
+from override_flask import make_json_app
 from flask import request, g
 
-app = Flask(__name__,)
+app = make_json_app(__name__,)
 
 # the limited public "guest" account is automatically used (by client) for most stuff that doesn't require much permission
 
@@ -36,7 +36,9 @@ def permission_required(*permissions):
 	"""
 		defines a decorator for checking a user's token
 		permissions may also be checked by passing all required permissions as args
-		the user object handles a lot of its own authentication, but this decorator makes it easier to check permissions on other things like admin tasks or submitting data
+		the user object handles a lot of its own authentication,
+		but this decorator makes it easier to check permissions on other
+		things like admin tasks or submitting data
 	"""
 	def decorator(f):
 		@wraps(f)
@@ -45,11 +47,15 @@ def permission_required(*permissions):
 				check_args(request.args, 'token')
 
 				# store user object in g (thread safe context)
-				# users may only authenticate with a token, this is to prevent users from transmitting their username & password with every request
+				# users may only authenticate with a token,
+				# this is to prevent users from transmitting
+				# their username & password with every request
 				g.user = User()
 
 				#the token gets escaped when sent, so decode it first
-				g.user.authenticate_token(token=request.args['token'].decode('string-escape'), ip=request.remote_addr)
+				g.user.authenticate_token(
+					token=request.args['token'].decode('string-escape'),
+					ip=request.remote_addr)
 
 				for permission in permissions:
 					g.user.can(permission)

@@ -1,8 +1,8 @@
-from flask import Flask, Response, request
-try:
-	from simplejson import dumps
-except ImportError:
-	from json import dumps
+from flask import Flask, Response, request, jsonify
+import simplejson
+from simplejson import dumps
+from werkzeug.exceptions import default_exceptions
+from werkzeug.exceptions import HTTPException
 
 """this holds overrides to modify flask"""
 
@@ -70,3 +70,37 @@ class Flask(Flask):
 		if isinstance(rv, tuple):
 			return self.response_class(*rv)
 		return self.response_class.force_type(rv, request.environ)
+
+def make_json_app(import_name, **kwargs):
+    """
+    Creates a JSON-oriented Flask app.
+
+    All error responses that you don't specifically
+    manage yourself will have application/json content
+    type, and will contain JSON like this (just an example):
+
+    { "message": "405: Method Not Allowed" }
+    """
+    def make_json_error(ex):
+        response = jsonify(message=str(ex))
+        response.status_code = (ex.code
+                                if isinstance(ex, HTTPException)
+                                else 500)
+        return response
+
+    app = Flask(import_name, **kwargs)
+
+    for code in default_exceptions.iterkeys():
+        app.error_handler_spec[None][code] = make_json_error
+
+    return app
+
+class MagicJSONEncoder(simplejson.JSONEncoder):
+    def default(s, o):
+        if getattr(o,'__json__',None):
+            return o.__json__()
+        else:
+            raise TypeError(repr(o) + " is not JSON serializable")
+
+simplejson.JSONEncoder = MagicJSONEncoder
+

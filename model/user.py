@@ -93,22 +93,28 @@ class User(object):
 
 		if self.data == None:  # means nothing was returned from mongo query
 			del self.data  # shouldn't keep data if login was wrong
-			raise Exception('incorrect password or username')  # better to not say it was the username, to increase security
+			raise Exception('incorrect password or username') 
+			 #better to not say it was the username, to increase security
 
 		# check password
 		if self.get_hash(password) != self.data['hash']:
 			del self.data  # shouldn't keep data if login was wrong
-			raise Exception('incorrect password or username')  # better to not say it was the password, to increase security
+			raise Exception('incorrect password or username') 
+			# better to not say it was the password, to increase security
 
-		# check if currently logged in and run logout if true (and if user has permission to logout)
-		# this is good because it creates a new session key during login, but it prevents users from logging into multiple computers
+		# check if currently logged in and run logout
+		# if true (and if user has permission to logout)
+		# this is good because it creates a new session key
+		# during login, but it prevents users from logging into multiple computers
+
 		# this is commented out for now
 		#if self.has_permission('logout') and 'session' in self.data:
 		#		self.logout()
 
 		if not 'session' in self.data:
 			# store session data if user is now logged out
-			# the user not being logged out will cause the same token to be used for all logins to that account until logout is used
+			# the user not being logged out will cause the same token
+			# to be used for all logins to that account until logout is used
 			self.data['session'] = {
 				'token': urandom(TOKEN_LENGTH).encode('base64'),  # make a cryptographically secure random token
 				'ip': ip,
@@ -147,7 +153,8 @@ class User(object):
 		return action in self.data['permission']
 
 	def safe_data(self):
-		"""returns data about user that is safe to give to client (it has passwords and unneeded info filtered out)"""
+		"""returns data about user that is safe to
+		give to client (it has passwords and unneeded info filtered out)"""
 		safe_data = deepcopy(self.data)  # needs copy because it cuts stuff out
 
 		del safe_data['_id']  # for internal use only
@@ -160,8 +167,11 @@ class User(object):
 	def update(self, new_data):
 		"""
 			merges new_data into the user data and validates it
-			this is also used for signup, because signing up is conceptually the same as an update plus changing the username
-			also, if a password is put user.password it handles the generation of a new hash and salt (because passwords cannot be updated directly, like normal data is)
+			this is also used for signup, because signing up is conceptually
+			the same as an update plus changing the username
+			also, if a password is put user.password it handles the generation
+			of a new hash and salt (because passwords cannot be updated directly,
+			like normal data is)
 		"""
 		self.can('modify_account_data')  # guest account cannot be changed
 
