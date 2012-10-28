@@ -1,26 +1,28 @@
-import pymongo
 from mongo_descriptors import Db, MongoI
 from os import urandom
+from time import time
 
 from passwords import pwd_context
 from model.db import database as db
 from config import ALLOW_TOKENS_TO_CHANGE_IP, TOKEN_LENGTH
 
+
 def auth(name, password):
-	user = db.user.find_one({"_id" : str(name)})
+	user = db.user.find_one({"_id": str(name)})
 	if not password:
 		password = ""
 	if not user:
 		return None
 	if pwd_context.verify(password, user["password"]):
 		user = User(name)
-		user.newSession()
+		user.new_session()
 		return user
 	else:
 		return False
 
+
 def token_auth(token, ip=None):
-	user = db.user.find_one({"token" : str(token)})
+	user = db.user.find_one({"token": str(token)})
 	if not user:
 		return None
 	if ip and not ALLOW_TOKENS_TO_CHANGE_IP:
@@ -28,6 +30,7 @@ def token_auth(token, ip=None):
 			return False
 	else:
 		return User(user['_id'])
+
 
 class User(object):
 	db = Db(db=db['user'])
@@ -44,44 +47,50 @@ class User(object):
 
 	raw = MongoI()
 
-	def __init__(s, name, create=False):
-		s.oi = str(name)
-		if s.db.find_one(s.oi)==None:
+	def __init__(self, name, create=False):
+		self.oi = str(name)
+		if self.db.find_one(self.oi) == None:
 			if create:
-				s.db.insert({"_id":s.oi})
+				self.db.insert({"_id": self.oi})
 			else:
-				raise ValueError("No user "+s.oi)
+				raise ValueError("No user " + self.oi)
 
-	def passwd(s, password):
-		s.password = pwd_context.encrypt(password)
+	def passwd(self, password):
+		self.password = pwd_context.encrypt(password)
 
-	def has_perm(s, perm):
+	def has_perm(self, perm):
 		perm = str(perm)
-		if "-"+perm in s.perms:
+		if "-" + perm in self.perms:
 			return False
-		if "*" in s.perms:
+		if "*" in self.perms:
 			return True
-		return perms in s.perms
+		return perm in self.perms
 
-	def give_perm(s, perm):
-		if not perm in s.perms:
-			s.perms+=[str(perm)]
+	def give_perm(self, perm):
+		if not perm in self.perms:
+			self.perms += [str(perm)]
 
-	def newSession(s,ip):
-		s.token = urandom(TOKEN_LENGTH).encode('base64')
-		s.ip = ip
-		s.startTime = time()
+	def new_session(self, ip):
+		self.token = urandom(TOKEN_LENGTH).encode('base64')
+		self.ip = ip
+		self.startTime = time()
 
-	def logout(s):
-		s.token = None
-		s.ip = None
-		s.startTime = None
+	def logout(self):
+		self.token = None
+		self.ip = None
+		self.startTime = None
 
-	def __repr__(s):
-		return str(s.oi) +" ("+ s.fullname +")"
+	def __repr__(self):
+		return str(self.oi) + "(" + self.fullname + ")"
 
-	def __json__(s):
-		return {'name':s.oi,'fullname':s.fullname,'email':s.email,'team':s.team}
+	def __json__(self):
+		return {
+			'name': self.oi,
+			'fullname': self.fullname,
+			'email': self.email,
+			'team': self.team,
+		}
+
 
 def new_user(name, password, fullname=None, team=None, email=None):
 	u = User(name, create=True)
@@ -95,10 +104,12 @@ def new_user(name, password, fullname=None, team=None, email=None):
 		u.team = team
 	return u
 
+
 def defaults():
 	u = new_user("admin", 'mApru', fullname='Kai\'ckul')
 	u.give_perm("*")
-	u = new_user('test-user','m3jhrk4')
+	u = new_user('test-user', 'm3jhrk4')
+
 
 def list_users():
 	users = db.user.find()
