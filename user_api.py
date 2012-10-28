@@ -2,7 +2,7 @@ from helper import permission_required, check_args
 from flask import request, g
 from werkzeug import exceptions as ex
 
-import model.newuser
+import model.user
 
 def mix(app):
 	@app.route('/user/account')
@@ -18,7 +18,7 @@ def mix(app):
 		#CONSIDER: add a delay for password based login to prevent excessive attempts
 
 		check_args(request.args, 'username', 'password')
-		g.user = model.newuser.auth(request.args['username'], request.args['password'],
+		g.user = model.user.auth(request.args['username'], request.args['password'],
 			ip=request.remote_addr)
 		if not g.user:
 			raise ex.Unauthorized('Bad username or password.')
@@ -58,5 +58,5 @@ def mix(app):
 
 	@app.route('/debug/users')
 	def listusers():
-		model.newuser.defaults()
-		return model.newuser.list_users()
+		model.user.defaults()
+		return model.user.list_users()

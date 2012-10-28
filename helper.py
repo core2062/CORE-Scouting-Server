@@ -48,7 +48,7 @@ def permission_required(*permissions):
 			# their username & password with every request
 
 			#the token gets escaped when sent, so decode it first
-			g.user = model.newuser.token_auth(
+			g.user = model.user.token_auth(
 				request.args['token'],
 				ip=request.remote_addr)
 			if not g.user:
