@@ -6,8 +6,8 @@ from werkzeug import exceptions as ex
 from override_flask import make_json_app
 
 from helper import check_args, permission_required
-import model.newuser
-from model.newuser import User
+import model.user
+from model.user import User
 import model.db as db
 
 app = make_json_app(__name__,)
@@ -81,7 +81,7 @@ def user_login():
 	#CONSIDER: add a delay for password based login to prevent excessive attempts
 
 	check_args(request.args, 'username', 'password')
-	g.user = model.newuser.auth(request.args['username'], request.args['password'])
+	g.user = model.user.auth(request.args['username'], request.args['password'])
 	if not g.user:
 		raise ex.Unauthorized('Bad username or password.')
 
@@ -124,8 +124,8 @@ def signup():
 
 @app.route('/debug/users')
 def listusers():
-	model.newuser.defaults()
-	return model.newuser.list_users()
+	model.user.defaults()
+	return model.user.list_users()
 
 
 @app.route('/admin/task/reset',methods=['DELETE'])
