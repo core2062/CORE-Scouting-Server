@@ -8,7 +8,7 @@ def error(*text):
 class Log(object):
 	"""Represents a log document"""
 	db = Db('log', root='csd')
-	log = MongoI('entires',typ=list)
+	log = MongoI('entries',typ=list)
 	raw = MongoI()
 	def __init__(s, oi):
 		s.oi = oi
