@@ -12,8 +12,11 @@ class Log(object):
 	raw = MongoI()
 	def __init__(s, oi):
 		s.oi = oi
-		if s.db.find_one(oi)==None:
+		if not s.db.find_one(oi):
 			s.db.insert({"_id":oi})
 	def append(s,*entries):
 		logentry = (time(),' '.join(entries))
 		s.log+=[logentry]
+
+def defaults():
+	Log('errors')

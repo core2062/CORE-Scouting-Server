@@ -21,10 +21,11 @@ def check():
 	"""checks that the db is setup, if not runs setup"""
 	if database.user.find_one({'_id': 'admin'}) == None:  # checks if there is an admin user
 		print 'setting up db in mongoDB'
-		reset()
+		clear()
+		defaults()
 
 
-def reset():
+def clear():
 	"""
 		This script sets up or resets the entire CSD database
 		It will remove all data on the site and restore the default user
@@ -36,27 +37,31 @@ def reset():
 	#clear out db
 	c.drop_database(DB_NAME)
 
-	#make collections
-	database.create_collection('user')  # holds all the users
-	database.create_collection('log')  # logging info
-	database.create_collection('error')  # holds error logs for database collections, such as data that is incorrect (not programming errors)
-	database.create_collection('config')  # holds configuration variables for the site
+	#################################
+	## Commented. Mongo can make collections lazily.
+	#################################
 
-#	globalVar('analysisScoutingErrors', [])  # error log for analysisScouting
-#	globalVar('analysisQueryLimits', [])  #limit what is carried into analysisScouting
+	#make collections
+	# database.create_collection('user')  # holds all the users
+	# database.create_collection('log')  # logging info
+	# database.create_collection('error')  # holds error logs for database collections, such as data that is incorrect (not programming errors)
+	# database.create_collection('config')  # holds configuration variables for the site
+
+	# globalVar('analysisScoutingErrors', [])  # error log for analysisScouting
+	# globalVar('analysisQueryLimits', [])  #limit what is carried into analysisScouting
 
 	#compiled collections (holds fully compiled data and is rebuilt because data relies on multiple sources)
-	database.create_collection('compiledEvent')
-	database.create_collection('compiledTeam')
+	# database.create_collection('compiledEvent')
+	# database.create_collection('compiledTeam')
 
-	#analysis collections (holds semi-compiled data and is updated rather than rebuilt, to improve performance)
-	database.create_collection('semi-compiledScouting')
+	# #analysis collections (holds semi-compiled data and is updated rather than rebuilt, to improve performance)
+	# database.create_collection('semi-compiledScouting')
 
-	#source collections (holds nearly raw data)
-	database.create_collection('sourceScouting')  # data from the scouting part of the db
-	database.create_collection('sourceTeam')  # scraped data on teams from the FIRST FMS
-	database.create_collection('sourceEvent')  # scraped data on events
-	database.create_collection('sourceMatch')  # scraped data on matches
+	# #source collections (holds nearly raw data)
+	# database.create_collection('sourceScouting')  # data from the scouting part of the db
+	# database.create_collection('sourceTeam')  # scraped data on teams from the FIRST FMS
+	# database.create_collection('sourceEvent')  # scraped data on events
+	# database.create_collection('sourceMatch')  # scraped data on matches
 
 
 def backup(db_name, filename):
@@ -119,3 +124,7 @@ def restore(db_name, backup_file):
 			db[collection_file.name].insert(loads(line))  # load a line of json and insert into db
 
 	backup_tar_file.close()
+
+def defaults():
+	user.defaults()
+	log.defaults()

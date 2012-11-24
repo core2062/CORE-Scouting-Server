@@ -53,8 +53,8 @@ def index():
 @app.route('/admin/task/reset',methods=['DELETE'])
 @permission_required('reset_db')
 def reset_db():
-	db.reset()
-	model.defaults()
+	db.clear()
+	db.defaults()
 	return {'notify': 'reset successful'}
 
 @app.route('/coffee')
