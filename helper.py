@@ -40,7 +40,13 @@ def permission_required(*permissions):
 	def decorator(f):
 		@wraps(f)
 		def decorated_function(*args, **kwargs):
-			check_args(request.args, 'token')
+			# print request.json
+			if 'token' in request.args.keys():
+				token = request.args['token']
+			elif request.json and 'token' in request.json.keys():
+				token = request.json['token']
+			else:
+				raise ex.BadRequest('The argument token is needed for authentication')
 
 			# store user object in g (thread safe context)
 			# users may only authenticate with a token,
@@ -49,8 +55,7 @@ def permission_required(*permissions):
 
 			#the token gets escaped when sent, so decode it first
 			g.user = model.user.token_auth(
-				request.args['token'],
-				ip=request.remote_addr)
+				token, ip=request.remote_addr)
 			if not g.user:
 				raise ex.Unauthorized('Bad token.')
 			for permission in permissions:
