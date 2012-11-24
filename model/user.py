@@ -1,4 +1,4 @@
-from mongo_descriptors import Db, MongoI
+from mongo_descriptors import Db, MongoI, CatDict
 from os import urandom
 from time import time
 
@@ -7,7 +7,7 @@ from model.db import database as db
 from config import ALLOW_TOKENS_TO_CHANGE_IP, TOKEN_LENGTH
 
 
-def auth(name, password):
+def auth(name, password, ip=None):
 	user = db.user.find_one({"_id": str(name)})
 	if not password:
 		password = ""
@@ -15,7 +15,7 @@ def auth(name, password):
 		return None
 	if pwd_context.verify(password, user["password"]):
 		user = User(name)
-		user.new_session()
+		user.new_session(ip)
 		return user
 	else:
 		return False
@@ -34,12 +34,13 @@ def token_auth(token, ip=None):
 
 class User(object):
 	db = Db(db=db['user'])
-	fullname = MongoI("fullname", typ=str)
 	password = MongoI("password")
 	perms = MongoI("perms", typ=list)
 
+	public_attrs = ['email','team','fullname']
 	email = MongoI("email", typ=str)
 	team = MongoI("team", typ=int)
+	fullname = MongoI("fullname", typ=str)
 
 	token = MongoI("token")
 	ip = MongoI("ip")
@@ -49,7 +50,7 @@ class User(object):
 
 	def __init__(self, name, create=False):
 		self.oi = str(name)
-		if self.db.find_one(self.oi) == None:
+		if not self.db.find_one(self.oi):
 			if create:
 				self.db.insert({"_id": self.oi})
 			else:
@@ -84,24 +85,21 @@ class User(object):
 		return str(self.oi) + "(" + self.fullname + ")"
 
 	def __json__(self):
-		return {
-			'name': self.oi,
-			'fullname': self.fullname,
-			'email': self.email,
-			'team': self.team,
-		}
+		ret = CatDict({'name':self.oi})
+		for i in self.public_attrs:
+			ret+={i:getattr(self,i)}
+		return ret
 
 
-def new_user(name, password, fullname=None, team=None, email=None):
+def new_user(name, password, **kw):
 	u = User(name, create=True)
 
 	u.passwd(password)
-	if fullname:
-		u.fullname = fullname
-	if email:
-		u.email = email
-	if team:
-		u.team = team
+
+	for i in User.public_attrs:
+		if i in kw.keys():
+			u+={i:kw[i]}
+
 	return u
 
 
