@@ -1,7 +1,5 @@
 import requests
 import sys
-from random import random
-import simplejson as json
 import pytest
 
 def die(message):
@@ -24,6 +22,7 @@ def test_login():
 	print login.status_code
 	print login.json
 	assert login.status_code == 200
+	return login.json['token']
 
 def test_accountDetails(login):
 	acctParams = {'token':login}
@@ -34,11 +33,20 @@ def test_accountDetails(login):
 	assert acct.json['team']==0
 
 def test_modify(login):
+	from random import random
+	import simplejson as json
+
 	newmail='newmail'+str(random())
 	modifyData = json.dumps({'email':newmail,'token':login})
 	modifyHeaders= {'content-type': 'application/json'}
+
 	modify = requests.post(base('user/update'), data=modifyData, headers=modifyHeaders)
+
 	print modify.status_code
+	print modifyHeaders
 	print modify.json
 	assert modify.status_code == 200
 	assert 'email' in modify.json['modified']
+
+if __name__ == '__main__':
+	pytest.main('tests.py')
