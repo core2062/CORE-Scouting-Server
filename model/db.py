@@ -1,10 +1,14 @@
-from config import DB_NAME, BACKUP_DIR
 import pymongo
 from time import time
 import os
 from simplejson import dumps, loads
 import tarfile
 import cStringIO as StringIO
+
+from config import DB_NAME, BACKUP_DIR
+import model.user as user
+import model.log as log
+
 
 """
 this module establishes the connection to mongo and deals with all db interaction
@@ -117,6 +121,7 @@ def restore(db_name, backup_file):
 			db[collection_file.name].insert(loads(line))  # load a line of json and insert into db
 
 	backup_tar_file.close()
+
 
 def defaults():
 	user.defaults()
