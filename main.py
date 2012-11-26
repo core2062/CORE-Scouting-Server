@@ -1,14 +1,13 @@
-from flask import request, g
-from werkzeug import exceptions as ex
-
+from flask import g
 from override_flask import make_json_app
 
-from helper import check_args, permission_required
+from helper import permission_required
 import model.db as db
 
 app = make_json_app(__name__,)
 
-# the limited public "guest" account is automatically used (by client) for most stuff that doesn't require much permission
+# the limited public "guest" account is automatically used (by client) for
+# most stuff that doesn't require much permission
 
 
 @app.before_request
@@ -26,13 +25,15 @@ def before_request():
 
 # @app.after_view
 def after_view(rv):
-	if not type(rv) in (dict, list):  # check to see that it's json, if not then return
+	# check to see that it's json, if not then return
+	if not type(rv) in (dict, list):
 		return
 	#put stuff from g in response
 	return
 
 import user_api
 user_api.mix(app)
+
 
 @app.route('/')
 def index():
@@ -48,36 +49,13 @@ def index():
 		</html>
 	"""
 
-#TODO: add mongs like db browser, with option to only return json (read only?) (restricted - not able to read user collection)
 
-@app.route('/admin/task/reset',methods=['DELETE'])
+@app.route('/admin/task/reset', methods=['DELETE'])
 @permission_required('reset_db')
 def reset_db():
 	db.clear()
 	db.defaults()
 	return {'notify': 'reset successful'}
 
-@app.route('/coffee')
-def coffee():
-	raise ex.ImATeapot()
-
-@app.route('/tea')
-def tea():
-	return '''
-	                       (
-            _           ) )
-         _,(_)._        ((
-    ___,(_______).        )
-  ,'__.   /       \    /\_
- /,' /  |""|       \  /  /
-| | |   |__|       |,'  /
- \`.|                  /
-  `. :           :    /
-    `.            :.,'
-      `-.________,-'
-'''
-
 if __name__ == "__main__":
-	app.run(
-		debug=True,
-	)
+	app.run(debug=True,)
