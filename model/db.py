@@ -8,7 +8,25 @@ import cStringIO as StringIO
 
 """
 this module establishes the connection to mongo and deals with all db interaction
-it is in the top level directory to make it easy to write backups to the backups folder
+
+base collections
+	user - holds all the users
+	log - logging info
+	error - holds error logs for database collections, such as data that is incorrect (not programming errors)
+	config - holds configuration variables for the site
+
+compiled collections (holds fully compiled data and is rebuilt because data relies on multiple sources)
+	compiledEvent
+	compiledTeam
+
+analysis collections (holds semi-compiled data and is updated rather than rebuilt, to improve performance)
+	analysisScouting
+
+source collections (holds nearly raw data)
+	sourceScouting - data from the scouting part of the db
+	sourceTeam - scraped data on teams from the FIRST FMS
+	sourceEvent - scraped data on events
+	sourceMatch - scraped data on matches
 """
 
 c = pymongo.Connection()
@@ -37,32 +55,6 @@ def clear():
 	#clear out db
 	c.drop_database(DB_NAME)
 
-	#################################
-	## Commented. Mongo can make collections lazily.
-	#################################
-
-	#make collections
-	# database.create_collection('user')  # holds all the users
-	# database.create_collection('log')  # logging info
-	# database.create_collection('error')  # holds error logs for database collections, such as data that is incorrect (not programming errors)
-	# database.create_collection('config')  # holds configuration variables for the site
-
-	# globalVar('analysisScoutingErrors', [])  # error log for analysisScouting
-	# globalVar('analysisQueryLimits', [])  #limit what is carried into analysisScouting
-
-	#compiled collections (holds fully compiled data and is rebuilt because data relies on multiple sources)
-	# database.create_collection('compiledEvent')
-	# database.create_collection('compiledTeam')
-
-	# #analysis collections (holds semi-compiled data and is updated rather than rebuilt, to improve performance)
-	# database.create_collection('semi-compiledScouting')
-
-	# #source collections (holds nearly raw data)
-	# database.create_collection('sourceScouting')  # data from the scouting part of the db
-	# database.create_collection('sourceTeam')  # scraped data on teams from the FIRST FMS
-	# database.create_collection('sourceEvent')  # scraped data on events
-	# database.create_collection('sourceMatch')  # scraped data on matches
-
 
 def backup(db_name, filename):
 	"""
@@ -86,9 +78,10 @@ def backup(db_name, filename):
 			collection_file = StringIO.StringIO()  # make a file in the archive to hold the collection
 
 			for document in db[collection].find({}):
-				if document["_id"].__class__.__name__ == 'ObjectId': del document["_id"]  # ObjectIds aren't able to be stored in json... remove them before saving
-				#return
-				#if type(document["_id"])
+				# ObjectIds aren't able to be stored in json... remove them before saving
+				if document["_id"].__class__.__name__ == 'ObjectId':
+					del document["_id"]
+
 				collection_file.write(dumps(document, separators=(',', ':')) + '\n')
 
 			info = tarfile.TarInfo(name=collection)
