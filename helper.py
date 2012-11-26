@@ -1,12 +1,14 @@
 from functools import wraps
 from werkzeug import exceptions as ex
 from flask import request, g
-import model.newuser
+
+import model.user as user
 
 def check_args(supplied_data, *required_args):
 	"""
-		checks that the required arguments (specified in a tuple or list) exist in the supplied data
-		if they don't exist, then an exception is returned
+		checks that the required arguments (specified in a tuple or list)
+		exist in the supplied data if they don't exist, then an exception is
+		returned
 	"""
 	for arg in required_args:
 		if arg not in supplied_data:
@@ -29,13 +31,14 @@ def remove_defaults(data, defaults):
 				compressed[k] = data[k]
 	return compressed
 
+
 def permission_required(*permissions):
 	"""
-		defines a decorator for checking a user's token
-		permissions may also be checked by passing all required permissions as args
-		the user object handles a lot of its own authentication,
-		but this decorator makes it easier to check permissions on other
-		things like admin tasks or submitting data
+		defines a decorator for checking a user's token permissions may also
+		be checked by passing all required permissions as args the user object
+		handles a lot of its own authentication, but this decorator makes it
+		easier to check permissions on other things like admin tasks or
+		submitting data
 	"""
 	def decorator(f):
 		@wraps(f)
@@ -54,8 +57,11 @@ def permission_required(*permissions):
 			# their username & password with every request
 
 			#the token gets escaped when sent, so decode it first
-			g.user = model.user.token_auth(
-				token, ip=request.remote_addr)
+			g.user = user.token_auth(
+				token,
+				ip=request.remote_addr,
+			)
+
 			if not g.user:
 				raise ex.Unauthorized('Bad token.')
 			for permission in permissions:
