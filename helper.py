@@ -4,6 +4,7 @@ from flask import request, g
 
 import model.user as user
 
+
 def check_args(supplied_data, *required_args):
 	"""
 		checks that the required arguments (specified in a tuple or list)
