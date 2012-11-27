@@ -1,10 +1,5 @@
 import requests
-import sys
 import pytest
-
-def die(message):
-	print message
-	sys.exit()
 
 base=lambda x:'http://localhost:5000/'+str(x)
 
