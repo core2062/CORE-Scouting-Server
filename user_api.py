@@ -45,25 +45,26 @@ def mix(app):
 		modified = []
 		for i in model.user.User.public_attrs:
 			if i in request.json.keys():
-				g.user.raw += {i:request.json[i]}
+				g.user.raw += {i: request.json[i]}
 				modified.append(i)
-		return {'200 OK':'Update successful','modified':modified}
+		return {'200 OK': 'Update successful', 'modified': modified}
 
 	@app.route('/user/update/<user>', methods=['POST'])
 	@permission_required('modify-other')
 	def user_update_other(user):
-		other = exUser(user)
+		#other = exUser(user)
 
+		modified = []
 		for i in model.user.User.public_attrs:
 			if i in request.json.keys():
-				g.user.raw += {i:request.json[i]}
+				g.user.raw += {i: request.json[i]}
 				modified.append(i)
 
 		# if g.user.has_perm('modify-perm'):
 		# 	if 'perms' in request.json.keys:
-		# 		if 
-		# 		other.perms += 
-		return {'200 OK':'Update successful','modified':modified}
+		# 		if
+		# 		other.perms +=
+		return {'200 OK': 'Update successful', 'modified': modified}
 
 	@app.route('/user/signup', methods=['POST'])
 	@permission_required('make-user')
@@ -73,21 +74,23 @@ def mix(app):
 			request.json['name'],
 			request.json['password'],
 			request.json)
-		return {'200 Ok': 'signup successful','user': u}
+		return {'200 Ok': 'signup successful', 'user': u}
 
 	@app.route('/users/<user>/delete', methods=['DELETE'])
 	@permission_required('remove-user')
 	def remove_user(user):
-		u=exUser(user)
-
+		"""
+		"""
+		#u = exUser(user)
 
 	@app.route('/debug/users')
 	def listusers():
 		model.user.defaults()
 		return model.user.list_users()
 
+
 def exUser(user):
 	try:
 		return model.user.User(user)
 	except ValueError:
-		raise ex.NotFound('User '+user+' not found')
+		raise ex.NotFound('User ' + user + ' not found')
