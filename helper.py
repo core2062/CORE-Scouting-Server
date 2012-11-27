@@ -24,7 +24,9 @@ def remove_defaults(data, defaults):
 			if k in defaults:
 				if type(defaults[k]) is dict:
 					compressed[k] = remove_defaults(data[k], defaults[k])
-					if compressed[k] == {}:  # already know that key exists, if exactly the same then delete
+
+					# already know that key exists, if exactly the same then delete
+					if compressed[k] == {}:
 						del compressed[k]
 				elif not data[k] == defaults[k]:  # ensure that they are the same
 					compressed[k] = data[k]
