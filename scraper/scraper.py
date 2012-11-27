@@ -134,3 +134,11 @@ def team_details():
 
 		team.update(team_scraper.get_team_details(tpid, year))
 		db.sourceTeam.update({'_id': team['_id']}, team)
+
+def is_scraped(year=datetime.now().year):
+	if not db.sourceEvent.find_one({'year':year}):
+		return False
+	if not db.sourceTeam.find_one():
+		return False
+	if not db.sourceMatch.find_one():
+		return False
