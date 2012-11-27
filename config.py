@@ -25,3 +25,5 @@ SALT_LENGTH = 20
 #only used while setting up db (for guest & admin account)
 #admin password should be changed directly after setting up db
 DEFAULT_PASSWORD = 'guest'
+
+CURRENT_EVENT = 'wi'

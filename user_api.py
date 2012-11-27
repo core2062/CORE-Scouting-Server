@@ -33,13 +33,11 @@ def mix(app):
 			'token': g.user.token,
 		}
 
-
 	@app.route('/user/logout', methods=['POST'])
 	@permission_required()
 	def user_logout():
 		g.user.logout()
 		return {'200 OK': 'logout successful'}
-
 
 	@app.route('/user/update', methods=['POST'])
 	@permission_required()
@@ -75,7 +73,7 @@ def mix(app):
 			request.json['name'],
 			request.json['password'],
 			request.json)
-		return {'notify': 'signup successful','user':u}
+		return {'200 Ok': 'signup successful','user': u}
 
 	@app.route('/users/<user>/delete', methods=['DELETE'])
 	@permission_required('remove-user')

@@ -5,6 +5,7 @@ from override_flask import make_json_app
 
 from helper import check_args, permission_required
 import model.db as db
+from config import CURRENT_EVENT
 
 app = make_json_app(__name__,)
 
@@ -50,16 +51,16 @@ def index():
 
 #TODO: add mongs like db browser, with option to only return json (read only?) (restricted - not able to read user collection)
 
-@app.route('/admin/task/reset',methods=['DELETE'])
+@app.route('/admin/reset',methods=['DELETE'])
 @permission_required('reset_db')
 def reset_db():
 	db.clear()
 	db.defaults()
-	return {'notify': 'reset successful'}
+	return {'200 OK': 'reset successful'}
 
 @app.route('/coffee')
 def coffee():
-	raise ex.ImATeapot()
+	raise ex.ImATeapot()	# I really agreed to this whole project just for an excuse to do this....
 
 @app.route('/tea')
 def tea():
@@ -76,6 +77,18 @@ def tea():
     `.            :.,'
       `-.________,-'
 '''
+
+
+@app.route('/admin/scrape',methods=['POST'])
+@permission_required()
+def scrape():
+	from scraper import scraper
+	scraper.event_names()
+	scraper.event_details()
+	scraper.tpids()
+	scraper.team_details()
+	scraper.match(CURRENT_EVENT)
+	return {'200 Ok':'Scrape successful'}
 
 if __name__ == "__main__":
 	app.run(
