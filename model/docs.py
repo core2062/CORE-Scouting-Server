@@ -50,29 +50,34 @@ class Commit(object):
 		"""
 		validate self.data based on the schema that self.data_type indicates
 		"""
+		if not self.type:
+			raise ex.BadRequest('No type in commit')
+		if not self.data:
+			raise ex.BadRequest('No data in commit')
+		if not self.enabled:
+			#enable commits by default
+			commit['enabled'] == True
+		if not "validate_" + str(self.data_type) in globals().keys():
+			ex.BadRequest('Unknown type')
+
+		#pass data through json schema, based on self.data_type
 
 
 def commit(user, commit):
+	"""
+	create a commit. this isn't the __init__ method for the commit because not
+	all commits are to be loaded this way
+	"""
 	commit = defaultdict(lambda: None, commit)
 
-	########
-	# This could be replaced by a generic commit schema.
-	########
-	if not commit['type']:
-		raise ex.BadRequest('No type in commit')
-	if not commit['data']:
-		raise ex.BadRequest('No data in commit')
-	if not commit['enabled']:
-		commit['enabled'] == True
-
-	if not "validate_" + str(commit['type']) in globals().keys():
-		ex.BadRequest('Unknown type')
 	c = Commit()
 	c.user = user.oi
 	c.data = commit['data']
 	c.time = time()
 	c.enabled = commit['enabled']
-	globals()["validate_" + str(commit['type'])](c)
+
+	c.validate()
+	return c
 
 
 ##############
