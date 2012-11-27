@@ -2,11 +2,13 @@ from flask import g
 from werkzeug import exceptions as ex
 from override_flask import make_json_app
 
+from config import CURRENT_EVENT
 from helper import permission_required
 import model.db as db
-from config import CURRENT_EVENT
+import api.user as user_api
 
 app = make_json_app(__name__,)
+user_api.mix(app)
 
 # the limited public "guest" account is automatically used (by client) for
 # most stuff that doesn't require much permission
@@ -28,9 +30,6 @@ def after_view(rv):
 	#put stuff from g in response
 	return
 
-import user_api
-user_api.mix(app)
-
 
 @app.route('/')
 def index():
@@ -47,16 +46,18 @@ def index():
 	"""
 
 
-@app.route('/admin/reset',methods=['DELETE'])
+@app.route('/admin/reset', methods=['DELETE'])
 @permission_required('reset_db')
 def reset_db():
 	db.clear()
 	db.defaults()
 	return {'200 OK': 'reset successful'}
 
+
 @app.route('/coffee')
 def coffee():
-	raise ex.ImATeapot()	# I really agreed to this whole project just for an excuse to do this....
+	raise ex.ImATeapot()  # I really agreed to this whole project just for an excuse to do this....
+
 
 @app.route('/tea')
 def tea():
@@ -75,7 +76,7 @@ def tea():
 '''
 
 
-@app.route('/admin/scrape',methods=['POST'])
+@app.route('/admin/scrape', methods=['POST'])
 @permission_required()
 def scrape():
 	from scraper import scraper
@@ -84,7 +85,7 @@ def scrape():
 	scraper.tpids()
 	scraper.team_details()
 	scraper.match(CURRENT_EVENT)
-	return {'200 Ok':'Scrape successful'}
+	return {'200 Ok': 'Scrape successful'}
 
 if __name__ == "__main__":
-	app.run(debug=True,)
+	app.run(debug=True)
