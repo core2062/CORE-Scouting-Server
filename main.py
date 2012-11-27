@@ -14,13 +14,8 @@ app = make_json_app(__name__,)
 def before_request():
 	# below stuff (g.notify & g.error) isn't really used... consider removing
 
-	g.notify = []  # an array that holds notifications (like non-fatal errors or important messages)
-
-	# a variable that holds an error... if there is one (there should be 1 or 0 errors returned)
-	# a error is formatted as ('title','discription')
-	#	title: one word name for the error
-	#	description: text given to the user to tell what happened / how to fix
-	g.error = ()
+	# an array that holds notifications (like non-fatal errors or important messages)
+	g.notify = []
 
 
 # @app.after_view
