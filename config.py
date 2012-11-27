@@ -9,14 +9,19 @@ import os
 """
 
 #filesystem
-CWD = os.getcwd() + '/'  # get current working directory (top level of the csd server folder)
+
+# get current working directory (top level of the csd server folder)
+CWD = os.getcwd() + '/'
+
 BACKUP_DIR = CWD + 'backup/'  # where db backups are put
 SCHEMA_DIR = CWD + 'schema/'
 
 #MongoDB
 DB_NAME = 'csd'
 
-# allowing tokens to be moved to a different ip address could allow an attacker to more easily hijack a session, but not allowing it could require users to login more often
+# allowing tokens to be moved to a different ip address could allow an
+# attacker to more easily hijack a session, but not allowing it could require
+# users to login more often
 ALLOW_TOKENS_TO_CHANGE_IP = True
 
 TOKEN_LENGTH = 20
