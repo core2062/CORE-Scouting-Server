@@ -1,10 +1,17 @@
 from mongo_descriptors import Db, MongoI, CatDict
 from os import urandom
 from time import time
+from passlib.context import CryptContext
 
-from passwords import pwd_context
 from model.db import database as db
 from config import ALLOW_TOKENS_TO_CHANGE_IP, TOKEN_LENGTH
+
+
+pwd_context = CryptContext(
+	schemes=["sha512_crypt"],
+	default="sha512_crypt",
+	all__vary_rounds=0.1
+)
 
 
 def auth(name, password, ip=None):
@@ -37,7 +44,7 @@ class User(object):
 	password = MongoI("password")
 	perms = MongoI("perms", typ=list)
 
-	public_attrs = ['email','team','fullname']
+	public_attrs = ['email', 'team', 'fullname']
 	email = MongoI("email", typ=str)
 	team = MongoI("team", typ=int)
 	fullname = MongoI("fullname", typ=str)
@@ -85,33 +92,35 @@ class User(object):
 		return str(self.oi) + "(" + self.fullname + ")"
 
 	def __json__(self):
-		ret = CatDict({'name':self.oi})
+		ret = CatDict({'name': self.oi})
 		for i in self.public_attrs:
-			ret+={i:getattr(self,i)}
+			ret += {i: getattr(self, i)}
 		return ret
 
 
 def new_user(name, password, **kw):
-	u = User(name, create=True)
+	user = User(name, create=True)
 
-	u.passwd(password)
+	user.passwd(password)
 
 	for i in User.public_attrs:
 		if i in kw.keys():
-			u+={i:kw[i]}
+			user += {i: kw[i]}
 
-	return u
+	return user
 
 
 def defaults():
-	u = new_user("admin", 'mApru', fullname='Kai\'ckul')
-	u.give_perm("*")
-	u = new_user('test-user', 'm3jhrk4')
+	user = new_user("admin", 'mApru', fullname='Kai\'ckul')
+	user.give_perm("*")
+	user = new_user('test-user', 'm3jhrk4')
 
 
 def list_users():
 	users = db.user.find()
 	ret = []
-	for i in users:
-		ret.append(User(i["_id"]))
+	for user in users:
+		ret.append(
+			User(user["_id"])
+		)
 	return ret
