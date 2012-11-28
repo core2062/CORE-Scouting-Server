@@ -1,0 +1,36 @@
+{
+	"description":"this object represents a single change to a document. one or more commit(s) compile into a document",
+	"type":"object",
+	"properties":{
+		"user":{
+			"type":"string",
+			"description":"_id of user (assigned on submission based on token)",
+			"required":true
+		},
+		"data":{
+			"type":"object",
+			"description":"holds the json that is the commit - the parts of the doc that are updated (or the entire doc if it's new)",
+			"required":true
+		},
+		"data_type":{
+			"type":"string",
+			"description":"the schema that will be used to validate the data, and the type of doc that it compiles into ex: pitdata, matchdata, scraped_data",
+			"required":true
+		},
+		"enabled":{
+			"type":"boolean",
+			"description":"a boolean value telling whether or not this commit should be used. (this is assigned on submission as true)",
+			"required":true
+		},
+		"time":{
+			"type":"number",
+			"description":"unix time of commit (assigned on submission). this tells the order in which commits will be compiled into each other",
+			"required":true
+		},
+		"doc_id":{
+			"type":"string",
+			"description":"this identifies the document that the commit goes to (the _id of the doc). it is assigned on submission (as a random string, if this is the first commit in a doc) or provided (if it is a update to an existing doc)",
+			"required":true
+		}
+	}
+}
