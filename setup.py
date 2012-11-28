@@ -5,9 +5,9 @@ import model.scraper.scraper as scraper  # TODO: switch to tasks to distribute l
 
 def setup():
 	"""
+		THIS FUNCTION IS NOT USED, AND WON"T BE USED ... IT IS FOR TESTING ONLY
 		this function runs setup for the db and runs the scraper to get history for past years
 		don't call this if the db is already running... it will reset the db entirely
-		THIS FUNCTION IS NOT USED, AND WON"T BE USED
 	"""
 
 	db.reset()  # setup mongo
