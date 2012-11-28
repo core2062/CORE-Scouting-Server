@@ -15,6 +15,7 @@ CWD = os.getcwd() + '/'
 
 BACKUP_DIR = CWD + 'backup/'  # where db backups are put
 SCHEMA_DIR = CWD + 'schema/'
+CACHE_DIR = CWD + 'scraper/cache/'  # used by scraper
 
 #MongoDB
 DB_NAME = 'csd'
