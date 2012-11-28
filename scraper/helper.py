@@ -1,21 +1,65 @@
 import re
 import urllib2
+import os
+from BeautifulSoup import BeautifulSoup
 
-# a URL that gives us a result with urls that have session keys in them (response only shows 25 results from FMS DB... pretty small request)
+from config import CACHE_DIR
+
+# a URL that gives us a result with urls that have session keys in them
+# (response only shows 25 results from FMS DB... pretty small request)
 SESSION_KEY_GENERATING_PATTERN = "https://my.usfirst.org/myarea/index.lasso?page=searchresults&programs=FRC&reports=teams&omit_searchform=1&season_FRC=%s"
 SESSION_RE = re.compile(r'myarea:([A-Za-z0-9]*)')
 
 
-def url_fetch(url):
+def url_fetch(url, cache=True, soup=True):
 	"""
-	gets the url specified and returns the content
-	caching of pages from previous years (non-changing pages) could be implemented in this function to speed up testing of new scrapers
+	gets the url specified and returns the content cache tells if the page
+	should be. cached and if a cached version should be loaded from the cache.
+	if soup is true, a beautiful soup object will be returned (with some of
+	the crap cut out)
 	"""
+	saved = False
 
+	filename = CACHE_DIR + url[url.index(':') + 3:]
+	if(cache == True and os.path.exists(filename)):
+		content = open(filename, 'r').read()
+		saved = True
+	else:
+		try:
+			content = urllib2.urlopen(url, timeout=60).read()
+		except urllib2.URLError, e:  # raise a better error
+			raise Exception(
+				'unable to retrieve url: %s reason:' % url + str(e.reason)
+			)
+
+	if(soup):
+		content = BeautifulSoup(content)
+
+	print 'saved: ' + str(saved)
+
+	if(cache and not saved):
+		if(soup):
+			#remove crap (non-data) from html
+			for tag in content.findAll(True):
+				if(tag.name in ['script', 'img', 'style']):
+					tag.decompose()
+
+				for attribute in ['style', 'cellpadding', 'cellspacing', 'valign', 'align', 'height', 'width', 'bgcolor']:
+					del tag[attribute]
+
+		# if content is beautiful soup, str will make it into a string
+		cache_file(str(content), filename)
+
+	return content
+
+
+def cache_file(content, filename):
 	try:
-		return urllib2.urlopen(url, timeout=60).read()
-	except urllib2.URLError, e:  # raise a better error
-		raise Exception('unable to retrieve url: ' + url + ' reason:' + str(e.reason))
+		os.makedirs(os.path.dirname(filename))
+	except:
+		pass
+
+	open(filename, 'w').write(content)
 
 
 def get_session_key(year):
@@ -27,10 +71,10 @@ def get_session_key(year):
 	Every request must also know what year it is for.
 	"""
 
-	regex_results = re.search(SESSION_RE, url_fetch(SESSION_KEY_GENERATING_PATTERN % year))
+	regex_results = re.search(SESSION_RE, url_fetch(SESSION_KEY_GENERATING_PATTERN % year, False))
 
 	if regex_results is not None:
-		session_key = regex_results.group(1)  # first parenthetical group
+		session_key = regex_results.group(1)
 		if session_key is not None:
 			return session_key
 
