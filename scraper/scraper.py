@@ -5,18 +5,22 @@ import match as match_scraper
 import team as team_scraper
 
 """
-this script defines tasks such as scraping and analysis which are used to run the CSD
-this is where DB interaction happens for these tasks
-all event functions are called for a specific year to avoid rescraping past years which cannot logically change
+this script defines tasks such as scraping and analysis which are used to run
+the CSD this is where DB interaction happens for these tasks all event
+functions are called for a specific year to avoid rescraping past years which
+cannot logically change
 """
 
 
 def event_names(year=datetime.now().year):
 	"""
-	this task scrapes event names and other basic info which is later used for getting more advanced event info
-	it basically just prepares a document for scrape_event() to use and add data to
-	we assume that all previous years have been scraped (however the db setup script can call this for previous years)
-	this function will not overwrite entries that are already in the db, it only adds new ones (so other scraping functions can add data to the documents and it won't be lost)
+	this task scrapes event names and other basic info which is later used for
+	getting more advanced event info. it basically just prepares a document
+	for scrape_event() to use and add data to. we assume that all previous
+	years have been scraped, however the db setup script can call this for
+	previous years. this function will not overwrite entries that are already
+	in the db, it only adds new ones. so other scraping functions can add data
+	to the documents and it won't be lost.
 	"""
 
 	print 'getting event list for ' + str(year)
@@ -52,7 +56,9 @@ def all_matches(year=datetime.now().year):
 
 	year = int(year)  # make sure it is an int
 
-	if year == 2003 or year == 2004 or year == 2005: return  # the parser for 2003/2004/2005 matches is not finished yet, remove this when it is
+	# the parser for 2003/2004/2005 matches is not finished yet, remove this when it is
+	if year in (2003, 2004, 2005):
+		return
 
 	print 'getting all matches from ' + str(year)
 
@@ -135,8 +141,9 @@ def team_details():
 		team.update(team_scraper.get_team_details(tpid, year))
 		db.sourceTeam.update({'_id': team['_id']}, team)
 
+
 def is_scraped(year=datetime.now().year):
-	if not db.sourceEvent.find_one({'year':year}):
+	if not db.sourceEvent.find_one({'year': year}):
 		return False
 	if not db.sourceTeam.find_one():
 		return False
