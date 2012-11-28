@@ -4,6 +4,7 @@ from werkzeug import exceptions as ex
 
 import model.user
 
+
 def mix(app):
 	@app.route('/user/account')
 	@permission_required()
@@ -74,7 +75,7 @@ def mix(app):
 			request.json['name'],
 			request.json['password'],
 			request.json)
-		return {'200 Ok': 'signup successful', 'user': u}
+		return {'200 OK': 'signup successful', 'user': u}
 
 	@app.route('/users/<user>/delete', methods=['DELETE'])
 	@permission_required('remove-user')
