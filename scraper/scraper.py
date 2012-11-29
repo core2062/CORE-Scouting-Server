@@ -1,8 +1,9 @@
 from datetime import datetime
+
+import scraper.event as event_scraper
+import scraper.match as match_scraper
+import scraper.team as team_scraper
 from model.db import database as db
-import event as event_scraper
-import match as match_scraper
-import team as team_scraper
 
 """
 this script defines tasks such as scraping and analysis which are used to run
@@ -37,9 +38,12 @@ def event_names(year=datetime.now().year):
 
 def event_details(year=datetime.now().year):
 	"""
-	this function uses data produced by event_names() to get more data about events which have been found
-	it will change existing records to match the event data in the FIRST FMS (like if more teams register for an event), but should not change data created by event_names()
-	this should be run more often than scrape_event_names() because events change details like attendance more often than they are created
+	this function uses data produced by event_names() to get more data about
+	events which have been found it will change existing records to match the
+	event data in the FIRST FMS (like if more teams register for an event),
+	but should not change data created by event_names(). this should be run
+	more often than scrape_event_names() because events change details like
+	attendance more often than they are created
 	"""
 
 	year = int(year)  # make sure it is an int
@@ -70,9 +74,10 @@ def all_matches(year=datetime.now().year):
 
 def match(event_short_name, year=datetime.now().year):
 	"""
-	this function uses data produced by event_details() to get matches from a event which has been scraped
-	it will change existing match records to match the event data in the FIRST FMS, as matches occur
-	this should be run often during a competition to get new match results
+	this function uses data produced by event_details() to get matches from a
+	event which has been scraped it will change existing match records to
+	match the event data in the FIRST FMS, as matches occur this should be run
+	often during a competition to get new match results
 	"""
 
 	year = int(year)  # make sure it is an int
@@ -100,8 +105,8 @@ def match(event_short_name, year=datetime.now().year):
 
 def tpids(year=datetime.now().year):
 	"""
-	get tpids for all teams in a certain year
-	this function adds tpid info to team objects
+	get tpids for all teams in a certain year. this function adds tpid info to
+	team objects
 	"""
 	print 'getting tpid list for ' + str(year)
 
@@ -124,7 +129,8 @@ def tpids(year=datetime.now().year):
 
 
 def team_details():
-	"""this code is written with the assumption that only the most recent info should be gotten about the teams"""
+	"""this code is written with the assumption that only the most recent info
+	should be gotten about the teams"""
 
 	for team in db.sourceTeam.find({}):
 		tpid = None
