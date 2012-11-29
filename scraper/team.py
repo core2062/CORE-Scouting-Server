@@ -1,7 +1,6 @@
-from BeautifulSoup import BeautifulSoup
-import urllib2
 import re
-import helper
+
+from helper import url_fetch, get_session_key
 
 """Facilitates getting information about FIRST teams"""
 
@@ -12,32 +11,26 @@ TEAM_DETAILS_URL = "https://my.usfirst.org/myarea/index.lasso?page=team_details&
 
 def get_basic_team_info():
 	"""
-	Facilitates getting information about Teams from FIRST.
-	Reads from FMS data pages, which are mostly tab delimited files wrapped in some HTML.
+	Facilitates getting information about Teams from FIRST. Reads from FMS
+	data pages, which are mostly tab delimited files wrapped in some HTML.
 	Note, this can only get info on teams in current season
 	"""
-	try:
-		result = urllib2.urlopen(TEAMLIST_URL, timeout=60)
-	except urllib2.URLError, e:  # raise a better error
-		raise Exception('Unable to retreive url: %s' % TEAMLIST_URL + ' reason:' + str(e.reason))
-
-	return _parse_basic_team_info(result.content)
+	return _parse_basic_team_info(url_fetch(TEAMLIST_URL))
 
 
-def _parse_basic_team_info(html):
+def _parse_basic_team_info(soup):
 	"""
 	Parse the information table on USFIRSTs site to extract team information.
 	Return a list of dictionaries of team data.
 	"""
 	teams = []
-	soup = BeautifulSoup(html,
-			convertEntities=BeautifulSoup.HTML_ENTITIES)
 
 	# for title in soup.findAll('title'):
 	# 	if title.string != '2012 FRC Team/Event List':
 	# 		return None
 
-	team_rows = soup.findAll('pre')[0].string.split('\n')[2:]  # first is blank, second is headers.
+	# first is blank, second is headers.
+	team_rows = soup.findAll('pre')[0].string.split('\n')[2:]
 
 	for line in team_rows:
 		data = line.split('\t')
@@ -59,25 +52,16 @@ def _parse_basic_team_info(html):
 def get_team_details(tpid, year):
 	"""Return a Team object for the requested team_number"""
 
-	session_key = helper.get_session_key(year)
+	session_key = get_session_key(year)
 	url = TEAM_DETAILS_URL % (tpid, session_key)
 
-	try:
-		result = urllib2.urlopen(url, timeout=60)
-	except urllib2.URLError, e:  # raise a better error
-		raise Exception('unable to retrieve url (for session key): ' + url + ' reason:' + str(e.reason))
-
-	return parse_team_details(result.read())
+	return parse_team_details(url_fetch(url))
 
 
-def parse_team_details(html):
-	"""Parse the information table on USFIRSTs site to extract relevant team information. Return a Team object"""
-
+def parse_team_details(soup):
+	"""Parse the information table on USFIRSTs site to extract relevant team
+	information. Return a Team object"""
 	team = {}
-	soup = BeautifulSoup(
-		html,
-		convertEntities=BeautifulSoup.HTML_ENTITIES,
-	)
 
 	if soup.find(text='No team found.') is not None:
 		raise Exception('team not found')
@@ -111,7 +95,8 @@ def parse_team_details(html):
 					awards = []
 					unfiltered_awards = event[2].contents
 					for award in unfiltered_awards:
-						if award.__class__.__name__ == 'NavigableString' and award.strip() != '':  # filter out all the tags n' whitespace n' shit
+						# filter out all the tags n' whitespace n' shit
+						if award.__class__.__name__ == 'NavigableString' and award.strip() != '':
 							awards.append(award.strip())  # it is really an award, add to the list
 
 					team['events'].append({
@@ -120,7 +105,9 @@ def parse_team_details(html):
 						'awards': awards
 					})
 
-				return team  # team history is the last part of the page return here to avoid looping through other stuff
+				# team history is the last part of the page return here to
+				# avoid looping through other stuff
+				return team
 
 
 # Separates tpids on the FIRST list of all teams.
@@ -141,15 +128,7 @@ def get_tpids(year):
 	while True:
 		url = TPID_URL % (year, skip)
 
-		try:
-			result = urllib2.urlopen(url, timeout=60)
-		except urllib2.URLError, e:
-			raise Exception('Unable to retrieve url: ' + url + ' Reason:' + str(e.reason))
-
-		soup = BeautifulSoup(
-			result.read(),
-			convertEntities=BeautifulSoup.HTML_ENTITIES
-		)
+		soup = url_fetch(url)
 
 		try:
 			content = soup.p.td.table.findAll('tr')  # sort through badly written html

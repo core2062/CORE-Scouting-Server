@@ -1,5 +1,5 @@
-import urllib2
-from BeautifulSoup import BeautifulSoup, NavigableString
+from helper import url_fetch
+from BeautifulSoup import NavigableString
 
 """
 Facilitates grabbing Match information from USFIRST.org. It enables discovering matches from official FIRST events
@@ -28,12 +28,7 @@ def get_matches(year, event_short_name):
 
 	url = MATCH_RESULTS_URL_PATTERN % (year, EVENT_SHORT_EXCEPTIONS.get(event_short_name, event_short_name), page_name)
 
-	try:
-		result = urllib2.urlopen(url, timeout=60)
-	except urllib2.URLError, e:  # raise a better error
-		raise Exception('unable to retrieve url: ' + url + ' reason:' + str(e.reason))
-
-	return parse_match_results_list(result.read())
+	return parse_match_results_list(url_fetch(url))
 
 
 def parse2003match(html):
@@ -41,16 +36,10 @@ def parse2003match(html):
 	# TODO: finish this function
 
 
-def parse_match_results_list(html):
+def parse_match_results_list(soup):
 	"""Parse the match results from USFIRST. This provides us with information about Matches and the teams that played in them"""
 
 	matches = []
-
-	soup = BeautifulSoup(
-		html,
-		convertEntities=BeautifulSoup.HTML_ENTITIES
-	)
-
 	tables = soup.findAll('table')
 
 	matches.extend(parse_match_result(tables[2]))
@@ -116,9 +105,6 @@ def parse_match_result(table):
 		# NOTICE: if FIRST decides to make a game w/ negitive scores then this code will have to be redone
 		if (red_score > -1 and blue_score > -1):
 			matches.append(match)
-
-		# except Exception, detail:
-		# 	raise Exception('Match Parse Failed: ' + str(detail))
 
 	return matches
 
