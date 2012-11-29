@@ -1,7 +1,7 @@
 import re
 import urllib2
 import os
-from BeautifulSoup import BeautifulSoup
+from BeautifulSoup import BeautifulSoup, Comment
 
 from config import CACHE_DIR
 
@@ -9,6 +9,21 @@ from config import CACHE_DIR
 # (response only shows 25 results from FMS DB... pretty small request)
 SESSION_KEY_GENERATING_PATTERN = "https://my.usfirst.org/myarea/index.lasso?page=searchresults&programs=FRC&reports=teams&omit_searchform=1&season_FRC=%s"
 SESSION_RE = re.compile(r'myarea:([A-Za-z0-9]*)')
+
+# stuff to be cut out of html (to reduce file size)
+CRAP_ATTRIBUTES = (
+	'style',
+	'cellpadding',
+	'cellspacing',
+	'valign',
+	'align',
+	'height',
+	'width',
+	'bgcolor',
+	'onmouseout',
+	'onmouseover',
+)
+CRAP_TAGS = ('script', 'img', 'style')
 
 
 def url_fetch(url, cache=True, soup=True):
@@ -21,9 +36,9 @@ def url_fetch(url, cache=True, soup=True):
 	saved = False
 
 	filename = CACHE_DIR + url[url.index(':') + 3:]
-	if(cache == True and os.path.exists(filename)):
+	if cache == True and os.path.exists(filename):
 		content = open(filename, 'r').read()
-		saved = True
+		#saved = True
 	else:
 		try:
 			content = urllib2.urlopen(url, timeout=60).read()
@@ -32,20 +47,24 @@ def url_fetch(url, cache=True, soup=True):
 				'unable to retrieve url: %s reason:' % url + str(e.reason)
 			)
 
-	if(soup):
+	if soup:
 		content = BeautifulSoup(content)
 
 	print 'saved: ' + str(saved)
 
 	if(cache and not saved):
-		if(soup):
+		if soup:
 			#remove crap (non-data) from html
 			for tag in content.findAll(True):
-				if(tag.name in ['script', 'img', 'style']):
+				if tag.name in CRAP_TAGS:
 					tag.decompose()
 
-				for attribute in ['style', 'cellpadding', 'cellspacing', 'valign', 'align', 'height', 'width', 'bgcolor']:
+				for attribute in CRAP_ATTRIBUTES:
 					del tag[attribute]
+
+			comments = content.findAll(text=lambda text: isinstance(text, Comment))
+			for comment in comments:
+				comment.extract()
 
 		# if content is beautiful soup, str will make it into a string
 		cache_file(str(content), filename)
@@ -61,17 +80,23 @@ def cache_file(content, filename):
 
 	open(filename, 'w').write(content)
 
+print url_fetch('http://www2.usfirst.org/2005comp/Events/NH/matchresults.html')
+
 
 def get_session_key(year):
 	"""
 	Grab a page from FIRST so we can get a session key out of URLs on it.
 	This session key is needed to construct working event detail information URLs.
 
-	FIRST session keys are season-dependent. A session key retrieved from a 2011 page does not work to get information about 2012 events.
-	Every request must also know what year it is for.
+	FIRST session keys are season-dependent. A session key retrieved from a
+	2011 page does not work to get information about 2012 events. Every
+	request must also know what year it is for.
 	"""
 
-	regex_results = re.search(SESSION_RE, url_fetch(SESSION_KEY_GENERATING_PATTERN % year, False))
+	regex_results = re.search(
+		SESSION_RE,
+		url_fetch(SESSION_KEY_GENERATING_PATTERN % year, False)
+	)
 
 	if regex_results is not None:
 		session_key = regex_results.group(1)
