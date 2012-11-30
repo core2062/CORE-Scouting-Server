@@ -6,12 +6,11 @@ import tarfile
 import cStringIO as StringIO
 
 from config import DB_NAME, BACKUP_DIR
-import model.user as user
-import model.log as log
 
 
 """
-this module establishes the connection to mongo and deals with all db interaction
+this module establishes the connection to mongo and deals with all db
+interaction
 
 base collections
 	user - holds all the users
@@ -44,7 +43,7 @@ def check():
 	if database.user.find_one({'_id': 'admin'}) == None:  # checks if there is an admin user
 		print 'setting up db in mongoDB'
 		clear()
-		defaults()
+		#defaults()
 
 
 def clear():
@@ -121,8 +120,3 @@ def restore(db_name, backup_file):
 			db[collection_file.name].insert(loads(line))  # load a line of json and insert into db
 
 	backup_tar_file.close()
-
-
-def defaults():
-	user.defaults()
-	log.defaults()
