@@ -1,0 +1,68 @@
+{
+	"description":"this object represents a single FRC event",
+	"type":"object",
+	"properties":{
+		"name":{
+			"type":"string",
+			"description":"name of the event. not including a year"
+		},
+		"website":{
+			"type":"string",
+			"format":"uri",
+		},
+		"start_date":{
+			"type":"number",
+			"format":"utc-millisec"
+		},
+		"end_date":{
+			"type":"number",
+			"format":"utc-millisec"
+		},
+		"year":{
+			"type":"integer",
+		},
+		"eid":{
+			"type":"integer",
+			"description":"event id made by FMS database, needed for scraper to get pages"
+		},
+		"type":{
+			"type":"string",
+			"enum":[
+				"Championship",
+				"Regional",
+				"MI FRC State Championship",
+				"MI District",
+				"Qualifying Event",
+				"Qualifying Championship",
+				"District Event",
+				"District Championship",
+				"preseason",
+				"postseason",
+			]
+		},
+		"team":{
+			"type":"array",
+			"items":{
+				"type":"integer",
+			},
+			"minItems":6,
+			"uniqueItems":true,
+			"description":"the team numbers of all teams attending"
+		},
+		"official": {
+			"type":"boolean"
+		},
+		"venue_address": {
+			"type":"string"
+		},
+		"short_name":{
+			"type":"array",
+			"items":{
+				"type":"string",
+			},
+			"minItems":1,
+			"uniqueItems":true,
+			"description":"used by FMS database to identify events. note: championship events have multiple short_names (1 for each division)"
+		}
+	}
+}
