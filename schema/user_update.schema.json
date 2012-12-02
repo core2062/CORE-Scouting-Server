@@ -21,9 +21,8 @@
 			"required":true
 		},
 		"team":{
-			"type":"number",
+			"type":"integer",
 			"description":"number of the team that a user is associated with",
-			"required":true
 		},
 		"password":{
 			"type":"string",
