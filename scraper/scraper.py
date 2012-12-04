@@ -60,7 +60,8 @@ def all_matches(year=datetime.now().year):
 
 	year = int(year)  # make sure it is an int
 
-	# the parser for 2003/2004/2005 matches is not finished yet, remove this when it is
+	# the parser for 2003/2004/2005 matches is not finished yet, remove this
+	# when it is
 	if year in (2003, 2004, 2005):
 		return
 
@@ -133,14 +134,9 @@ def team_details():
 	should be gotten about the teams"""
 
 	for team in db.sourceTeam.find({}):
-		tpid = None
-		year = datetime.now().year
-
-		while tpid == None:  # loop till it finds the most recent tpid
-			try:
-				tpid = team['tpid'][str(year)]
-			except:
-				year += -1
+		# get most recent year in tpid list
+		year = max(team['tpid'].keys())
+		tpid = team['tpid'][str(year)]
 
 		print 'scraping team %s with tpid from %s' % (team['team'], year)
 
