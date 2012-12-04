@@ -11,7 +11,7 @@ import os
 #filesystem
 
 # get current working directory (top level of the csd server folder)
-CWD = os.getcwd() + '/'
+CWD = os.path.dirname(__file__) + '/'
 
 BACKUP_DIR = CWD + 'backup/'  # where db backups are put
 SCHEMA_DIR = CWD + 'schema/'
