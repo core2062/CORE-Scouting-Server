@@ -1,8 +1,7 @@
 from datetime import datetime
 from calendar import timegm
-from BeautifulSoup import BeautifulSoup
 import re
-import helper
+from helper import url_fetch, get_session_key
 
 """
 this script provides functions to scrape the FIRST FMS database
@@ -44,12 +43,7 @@ def get_event_list(year):
 	if there are more than 250 events then this function will break because the site splits the return into pages w/ 250 on each page
 	"""
 
-	html = helper.url_fetch(REGIONAL_EVENTS_URL % year)
-
-	soup = BeautifulSoup(
-		html,
-		convertEntities=BeautifulSoup.HTML_ENTITIES
-	)
+	soup = url_fetch(REGIONAL_EVENTS_URL % year)
 
 	events = []
 	content = soup.p.table.table.findAll('tr')[3:-2]  # get to the actual content, past all the shitty layout tables and headers / footers
@@ -71,29 +65,25 @@ def get_event_list(year):
 def get_event(year, eid):
 	"""populate an event object with other data form different parts of the FIRST FMS DB, including event registration"""
 
-	session_key = helper.get_session_key(year)
-	event = parse_event(helper.url_fetch(EVENT_URL_PATTERN % (eid, session_key)))
+	session_key = get_session_key(year)
+	event = parse_event(url_fetch(EVENT_URL_PATTERN % (eid, session_key)))
 	event['official'] = True  # wtf is this???
 	event['teams'] = get_event_registration(eid, year)
 
 	return event
 
-# it used to be called "matchsum" in 2003 and "matches" in 2004
-EVENT_SHORT_NAME_RE = re.compile(r"http://www2\.usfirst\.org/[0-9]*comp/Events/([a-zA-Z0-9]*)/match(:?results|sum|es)\.html")
+# it used to be called "matchsum" in 2003 and "matches" in 2004 and "matchs"
+# in at least one event in 2006
+EVENT_SHORT_NAME_RE = re.compile(r"http://www2\.usfirst\.org/[0-9]*comp/Events/([a-zA-Z0-9]*)/match(:?results|sum|es|s)\.html")
 
 
-def parse_event(html):
+def parse_event(soup):
 	"""
 	Parse an event's specific page HTML from FIRST into the individual
 	fields of an Event object. This updates events and gets us fuller
 	information once we know about this.
 	"""
-
 	event_dict = {}
-	soup = BeautifulSoup(
-		html,
-		convertEntities=BeautifulSoup.HTML_ENTITIES,
-	)
 
 	for tr in soup.findAll('tr'):
 		tds = tr.findAll('td')
@@ -121,7 +111,8 @@ def parse_event(html):
 
 				standings_links = tds[1].findAll('a')
 				for link in standings_links:
-					event_dict["short_name"].append(re.match(EVENT_SHORT_NAME_RE, link["href"]).group(1).lower())  # lowercase just looks nicer and more consistant
+					# lowercase just looks nicer and more consistant
+					event_dict["short_name"].append(re.match(EVENT_SHORT_NAME_RE, link["href"]).group(1).lower())
 
 	event = {
 		'short_name': event_dict.get("short_name", None),
@@ -178,8 +169,8 @@ def parse_event_dates(datestring):
 def get_event_registration(eid, year):
 	"""Returns a list of team_numbers attending a particular Event"""
 
-	session_key = helper.get_session_key(year)
-	teams = parse_event_registration(helper.url_fetch(EVENT_REGISTRATION_URL_PATTERN % (eid, session_key)))
+	session_key = get_session_key(year)
+	teams = parse_event_registration(url_fetch(EVENT_REGISTRATION_URL_PATTERN % (eid, session_key), soup=False))
 	return teams
 
 

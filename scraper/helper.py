@@ -36,9 +36,15 @@ def url_fetch(url, cache=True, soup=True):
 	saved = False
 
 	filename = CACHE_DIR + url[url.index(':') + 3:]
+	try:
+		#if there's a session key attached, remove it... it shouldn't be in
+		#the file name
+		filename = filename[:filename.index('&-session=myarea:')]
+	except:
+		pass
 	if cache == True and os.path.exists(filename):
 		content = open(filename, 'r').read()
-		#saved = True
+		saved = True
 	else:
 		try:
 			content = urllib2.urlopen(url, timeout=60).read()
@@ -49,8 +55,6 @@ def url_fetch(url, cache=True, soup=True):
 
 	if soup:
 		content = BeautifulSoup(content)
-
-	print 'saved: ' + str(saved)
 
 	if(cache and not saved):
 		if soup:
@@ -79,8 +83,7 @@ def cache_file(content, filename):
 		pass
 
 	open(filename, 'w').write(content)
-
-print url_fetch('http://www2.usfirst.org/2005comp/Events/NH/matchresults.html')
+	print 'cached ' + filename
 
 
 def get_session_key(year):
@@ -95,7 +98,7 @@ def get_session_key(year):
 
 	regex_results = re.search(
 		SESSION_RE,
-		url_fetch(SESSION_KEY_GENERATING_PATTERN % year, False)
+		url_fetch(SESSION_KEY_GENERATING_PATTERN % year, False, False)
 	)
 
 	if regex_results is not None:
