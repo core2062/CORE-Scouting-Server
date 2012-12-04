@@ -77,7 +77,7 @@ def backup(db_name, filename):
 	backup_file = tarfile.open(filename, mode='w:bz2')
 
 	for collection in db.collection_names():
-		if collection != 'system.indexes':  # auto-generated stuff... don't backup
+		if collection[0:7] != 'system.':  # auto-generated stuff... don't backup
 			collection_file = StringIO.StringIO()  # make a file in the archive to hold the collection
 
 			for document in db[collection].find({}):
