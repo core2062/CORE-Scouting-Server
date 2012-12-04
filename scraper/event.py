@@ -41,6 +41,7 @@ def get_event_list(year):
 	returns back a list of dictionaries.
 
 	if there are more than 250 events then this function will break because the site splits the return into pages w/ 250 on each page
+	so far there are ~80 per year... fix this later
 	"""
 
 	soup = url_fetch(REGIONAL_EVENTS_URL % year)
@@ -97,7 +98,7 @@ def parse_event(soup):
 			elif field == "When":
 				event_dates = str(tds[1].string).strip()
 				event_dict["start_date"], event_dict["end_date"] = parse_event_dates(event_dates)
-				event_dict["year"] = int(event_dates[-4:])
+				event_dict["year"] = int(event_dates[-4:])  # warning: could cause Y10K issues
 
 			elif field == "Where":
 				# TODO: This next line is awful. Make this suck less.
