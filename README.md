@@ -23,4 +23,5 @@ teams which have not been active during the past 3 years are purged from the frc
 
 contact FIRST and see if they still have any of this data?
 
-[(Ↄ) 2011-2012 CORE 2062](http://www.gnu.org/licenses/gpl.html)
+----------------------
+[(Ↄ)](http://www.gnu.org/licenses/gpl.html) 2011-2012 FIRST Robotics Team, CORE 2062
