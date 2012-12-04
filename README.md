@@ -1,4 +1,5 @@
 #CORE Scouting Database Server
+------------------------------
 
 The CSD itself acts as a web service and is separated from the client. It only returns machine readable data (in json) and other resources like csv exports from the database. The client acts as a viewer for this data and presents it in a human readable form. By keeping this separation, the CSD maintains an API that can be easily used by other programs while still being human readable (unlike the FIRST FMS which is neither human-readable nor machine-readable).
 
@@ -21,3 +22,5 @@ data on events before 2003 is not available on the FIRST FMS DB... team history 
 teams which have not been active during the past 3 years are purged from the frc database ... see: http://www.team358org/files/team_lookup/
 
 contact FIRST and see if they still have any of this data?
+
+[(Ↄ) 2011-2012 CORE 2062](http://www.gnu.org/licenses/gpl.html)
