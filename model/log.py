@@ -14,6 +14,7 @@ class Log(object):
 	raw = MongoI()
 
 	def __init__(self, oi):
+		self.oi = oi
 		if not self.db.find_one(self.oi):
 			self.db.insert(
 				{"_id": self.oi}
