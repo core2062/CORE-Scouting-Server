@@ -41,19 +41,21 @@ def token_auth(token, ip=None):
 
 class User(object):
 	db = Db(db=db['user'])
+	raw = MongoI()
+
 	password = MongoI("password")
-	perms = MongoI("perms", typ=list)
+	perms =	MongoI("perms", typ=list)
 
-	public_attrs = ['email', 'team', 'fullname']
-	email = MongoI("email", typ=str)
-	team = MongoI("team", typ=int)
-	fullname = MongoI("fullname", typ=str)
-
-	token = MongoI("token")
+	token =	MongoI("token")
 	ip = MongoI("ip")
 	startTime = MongoI('startTime')
 
-	raw = MongoI()
+	############
+	public_attrs = ['email', 'team', 'fullname']
+
+	email = MongoI("email", typ=str)
+	team = MongoI("team", typ=int)
+	fullname = MongoI("fullname", typ=str)
 
 	def __init__(self, name, create=False):
 		self.oi = str(name)
@@ -105,7 +107,7 @@ def new_user(name, password, **kw):
 
 	for i in User.public_attrs:
 		if i in kw.keys():
-			user += {i: kw[i]}
+			user.raw += {i: kw[i]}
 
 	return user
 
