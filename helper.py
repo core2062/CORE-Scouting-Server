@@ -16,25 +16,6 @@ def check_args(supplied_data, *required_args):
 			raise ex.BadRequest('the argument "' + arg + '" was not supplied in your request')
 
 
-def remove_defaults(data, defaults):
-	"""removes default values from data and returns compressed result"""
-	if type(data) is dict and type(defaults) is dict:
-		compressed = {}
-		for k in data:
-			if k in defaults:
-				if type(defaults[k]) is dict:
-					compressed[k] = remove_defaults(data[k], defaults[k])
-
-					# already know that key exists, if exactly the same then delete
-					if compressed[k] == {}:
-						del compressed[k]
-				elif not data[k] == defaults[k]:  # ensure that they are the same
-					compressed[k] = data[k]
-			else:
-				compressed[k] = data[k]
-	return compressed
-
-
 def permission_required(*permissions):
 	"""
 		defines a decorator for checking a user's token permissions may also
