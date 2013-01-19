@@ -32,4 +32,4 @@ SALT_LENGTH = 20
 #admin password should be changed directly after setting up db
 DEFAULT_PASSWORD = 'guest'
 
-CURRENT_EVENT = 'wi'  # temporary (for development)
+CURRENT_EVENT = 'wi'  # temporary (for development). the client will determine this in the future
