@@ -31,6 +31,7 @@
 		"time":{
 			"type":"number",
 			"description":"unix time of commit (assigned on submission). this tells the order in which commits will be compiled into each other",
+			"format":"utc-millisec",
 			"required":true
 		},
 		"doc_id":{
