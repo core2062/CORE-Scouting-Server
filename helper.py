@@ -17,11 +17,8 @@ def check_args(supplied_data, *required_args):
 
 def permission_required(*permissions):
 	"""
-	defines a decorator for checking a user's token permissions may also be
-	checked by passing all required permissions as args the user object
-	handles a lot of its own authentication, but this decorator makes it
-	easier to check permissions on other things like admin tasks or submitting
-	data
+	defines a decorator for checking a user's token. permissions may also be
+	checked by passing all required permissions as args.
 	"""
 	def decorator(f):
 		@wraps(f)
