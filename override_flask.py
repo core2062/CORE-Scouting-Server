@@ -1,13 +1,10 @@
-from flask import Flask, Response, request, jsonify
-import simplejson
+from flask import Flask, Response, request
 from simplejson import dumps
-from werkzeug.exceptions import default_exceptions
-from werkzeug.exceptions import HTTPException
 
 """this holds overrides to modify flask"""
 
 
-class JFlask(Flask):
+class NewFlask(Flask):
 	"""
 		override the make_response method to:
 			allow json to be returned by view functions
@@ -54,8 +51,14 @@ class JFlask(Flask):
 				rv = func_rv  # like all the other types of functions, if it returns something, that gets sent instead
 				break
 
-		if type(rv) in (dict, list) or hasattr(rv, '__json__'):  # format the response in json if it is a variable (not html being returned)
-			if self.debug:  # pretty print json in dev mode, else dump compressed json
+		if hasattr(rv, '__json__'):
+			# returns a dict or list that will get formatted in the next `if`
+			rv = rv.__json__
+
+		# format in json if it is a variable (not html being returned)
+		if type(rv) in (dict, list):
+			# pretty print json in dev mode, else dump compressed json
+			if self.debug:
 				json = dumps(rv, sort_keys=True, indent=4)
 			else:
 				json = dumps(rv, separators=(',', ':'))
@@ -70,37 +73,3 @@ class JFlask(Flask):
 		if isinstance(rv, tuple):
 			return self.response_class(*rv)
 		return self.response_class.force_type(rv, request.environ)
-
-def make_json_app(import_name, **kwargs):
-    """
-    Creates a JSON-oriented Flask app.
-
-    All error responses that you don't specifically
-    manage yourself will have application/json content
-    type, and will contain JSON like this (just an example):
-
-    { "message": "405: Method Not Allowed" }
-    """
-    def make_json_error(ex):
-        response = jsonify(message=str(ex))
-        response.status_code = (ex.code
-                                if isinstance(ex, HTTPException)
-                                else 500)
-        return response
-
-    app = JFlask(import_name, **kwargs)
-
-    for code in default_exceptions.iterkeys():
-        app.error_handler_spec[None][code] = make_json_error
-
-    return app
-
-class MagicJSONEncoder(simplejson.JSONEncoder):
-    def default(s, o):
-        if getattr(o,'__json__',None):
-            return o.__json__()
-        else:
-            raise TypeError(repr(o) + " is not JSON serializable")
-
-simplejson.JSONEncoder = MagicJSONEncoder
-
