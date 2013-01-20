@@ -21,7 +21,6 @@ def before_request():
 	if request.json:
 		# if json is sent, merge that into the args
 		g.args.update(request.json)
-	print g.args
 
 	# below stuff (g.notify & g.error) isn't really used... consider removing
 	# an array that holds notifications (like non-fatal errors or important messages)
