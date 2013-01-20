@@ -18,7 +18,6 @@
 		"email":{
 			"type":"string",
 			"format":"email",
-			"required":true
 		},
 		"team":{
 			"type":"integer",
@@ -27,7 +26,6 @@
 		"password":{
 			"type":"string",
 			"minLength":4,
-			"required":true
 		}
 	}
 }
