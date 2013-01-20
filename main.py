@@ -1,5 +1,5 @@
-from flask import g
-from werkzeug import exceptions as ex
+from flask import g, request
+#from werkzeug import exceptions as ex
 from override_flask import make_json_app
 
 from config import CURRENT_EVENT
@@ -11,24 +11,30 @@ app = make_json_app(__name__,)
 user_api.mix(app)
 
 # the limited public "guest" account is automatically used (by client) for
-# most stuff that doesn't require much permission
+# most stuff that doesn't require permission
 
 
 @app.before_request
 def before_request():
-	# below stuff (g.notify & g.error) isn't really used... consider removing
+	# put the request args in a mutable dict so we can pre-process them
+	g.args = dict(request.args)
+	if request.json:
+		# if json is sent, merge that into the args
+		g.args.update(request.json)
+	print g.args
 
+	# below stuff (g.notify & g.error) isn't really used... consider removing
 	# an array that holds notifications (like non-fatal errors or important messages)
-	g.notify = []
+	#g.notify = []
 
 
 # @app.after_view
-def after_view(rv):
-	# check to see that it's json, if not then return
-	if not type(rv) in (dict, list):
-		return
-	#put stuff from g in response
-	return
+# def after_view(rv):
+# 	# check to see that it's json, if not then return
+# 	if not type(rv) in (dict, list):
+# 		return
+# 	#put stuff from g in response
+# 	return
 
 
 @app.route('/')
@@ -51,29 +57,7 @@ def index():
 def reset_db():
 	db.clear()
 	db.defaults()
-	return {'200 OK': 'reset successful'}
-
-
-@app.route('/coffee')
-def coffee():
-	raise ex.ImATeapot()  # I really agreed to this whole project just for an excuse to do this....
-
-
-@app.route('/tea')
-def tea():
-	return '''
-	                       (
-            _           ) )
-         _,(_)._        ((
-    ___,(_______).        )
-  ,'__.   /       \    /\_
- /,' /  |""|       \  /  /
-| | |   |__|       |,'  /
- \`.|                  /
-  `. :           :    /
-    `.            :.,'
-      `-.________,-'
-'''
+	return {'notify': 'reset successful'}
 
 
 @app.route('/admin/scrape', methods=['POST'])
@@ -85,7 +69,7 @@ def scrape():
 	scraper.tpids()
 	scraper.team_details()
 	scraper.match(CURRENT_EVENT)
-	return {'200 Ok': 'Scrape successful'}
+	return {'notify': 'scrape successful'}
 
 if __name__ == "__main__":
 	app.run(debug=True)
