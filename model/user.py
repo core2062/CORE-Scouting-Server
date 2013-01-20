@@ -1,11 +1,10 @@
-from mongo_descriptors import Db, MongoI, CatDict
 from os import urandom
 from time import time
 from passlib.context import CryptContext
+import collections
 
 from model.db import database as db
 from config import ALLOW_TOKENS_TO_CHANGE_IP, TOKEN_LENGTH
-
 
 pwd_context = CryptContext(
 	schemes=["sha512_crypt"],
@@ -13,15 +12,21 @@ pwd_context = CryptContext(
 	all__vary_rounds=0.1
 )
 
+# attributes of the user object that can be sent to the client. this doesn't
+# currently support nested objects being included / excluded only entire
+# properties
+PUBLIC_ATTRS = ['prefs', 'email', 'team', 'name', 'token', 'permissions']
 
-def auth(name, password, ip=None):
-	user = db.user.find_one({"_id": str(name)})
-	if not password:
-		password = ""
-	if not user:
+# attributes that the user can change
+MUTABLE_ATTRS = ['prefs', 'email', 'team', 'name', 'password']
+
+
+def password_auth(email, password="", ip=None):
+	user_data = db.user.find_one({"email": email})
+	if not user_data:
 		return None
-	if pwd_context.verify(password, user["password"]):
-		user = User(name)
+	if pwd_context.verify(password, user_data["password"]):
+		user = User(user_data)
 		user.new_session(ip)
 		return user
 	else:
@@ -29,100 +34,91 @@ def auth(name, password, ip=None):
 
 
 def token_auth(token, ip=None):
-	user = db.user.find_one({"token": str(token)})
-	if not user:
+	user_data = db.user.find_one({"token": str(token)})
+	if not user_data:
 		return None
-	if ip and not ALLOW_TOKENS_TO_CHANGE_IP:
-		if user.ip != ip:
-			return False
+	if ip and not ALLOW_TOKENS_TO_CHANGE_IP and user_data.ip != ip:
+		# NOTE: if ip is not provided then ALLOW_TOKENS_TO_CHANGE_IP is
+		# automatically not enforced
+		return False
 	else:
-		return User(user['_id'])
+		return User(user_data)
 
 
-class User(object):
-	db = Db(db=db['user'])
-	raw = MongoI()
+class User(collections.Mapping):
+	def __init__(self, *args, **kwargs):
+		self.doc = dict(*args, **kwargs)
 
-	password = MongoI("password")
-	perms =	MongoI("perms", typ=list)
+	def __getitem__(self, key):
+		return self.doc[key]
 
-	token =	MongoI("token")
-	ip = MongoI("ip")
-	startTime = MongoI('startTime')
+	def __iter__(self):
+		return iter(self.doc)
 
-	############
-	public_attrs = ['email', 'team', 'fullname']
+	def __len__(self):
+		return len(self.doc)
 
-	email = MongoI("email", typ=str)
-	team = MongoI("team", typ=int)
-	fullname = MongoI("fullname", typ=str)
+	def __hash__(self):
+		return hash(self.doc)
 
-	def __init__(self, name, create=False):
-		self.oi = str(name)
-		if not self.db.find_one(self.oi):
-			if create:
-				self.db.insert({"_id": self.oi})
-			else:
-				raise ValueError("No user " + self.oi)
-
-	def passwd(self, password):
+	def password(self, password):
 		self.password = pwd_context.encrypt(password)
 
-	def has_perm(self, perm):
-		perm = str(perm)
-		if "-" + perm in self.perms:
-			return False
-		if "*" in self.perms:
+	def can(self, action):
+		if "*" in self.doc['permissions']:
 			return True
-		return perm in self.perms
-
-	def give_perm(self, perm):
-		if not perm in self.perms:
-			self.perms += [str(perm)]
+		return action in self.doc['permissions']
 
 	def new_session(self, ip):
-		self.token = urandom(TOKEN_LENGTH).encode('base64')
-		self.ip = ip
-		self.startTime = time()
+		# current session should be closed first
+		self.logout()
+		self.doc['token'] = urandom(TOKEN_LENGTH).encode('base64')
+		self.doc['ip'] = ip
+		self.doc['start_time'] = time()
+		self.save()
 
 	def logout(self):
-		self.token = None
-		self.ip = None
-		self.startTime = None
+		#move old session into log?
+		self.doc['token'] = None
+		self.doc['ip'] = None
+		self.doc['start_time'] = None
+
+	def update(self, data):
+		# check data against the user_update schema
+		for attr in MUTABLE_ATTRS:
+			if attr in data.keys():
+				if attr is 'password':
+					self.password(data['password'])
+				else:
+					self.doc[attr] = data[attr]
+
+	def save(self):
+		db.user.save(self.doc)
 
 	def __repr__(self):
-		return str(self.oi) + "(" + self.fullname + ")"
+		return str(self.doc['_id']) + "(" + self.doc['name'] + ")"
 
 	def __json__(self):
-		ret = CatDict({'name': self.oi})
-		for i in self.public_attrs:
-			ret += {i: getattr(self, i)}
+		ret = {}
+		for attr in PUBLIC_ATTRS:
+			ret[attr] = self.doc[attr]
 		return ret
 
 
-def new_user(name, password, **kw):
-	user = User(name, create=True)
+def new_user(user_data):
+	# email and password must be provided on signup
+	if not ('email' in user_data.keys() and 'password' in user_data.keys()):
+		raise ValueError('email and password are both required for signup')
 
-	user.passwd(password)
-
-	for i in User.public_attrs:
-		if i in kw.keys():
-			user.raw += {i: kw[i]}
-
+	user = User()
+	user.update(user_data)
+	user.permissions = []  # default permissions
 	return user
-
-
-def defaults():
-	user = new_user("admin", 'mApru', fullname='Kai\'ckul')
-	user.give_perm("*")
-	user = new_user('test-user', 'm3jhrk4')
 
 
 def list_users():
 	users = db.user.find()
 	ret = []
-	for user in users:
-		ret.append(
-			User(user["_id"])
-		)
+	for user_data in users:
+		ret += repr(User(user_data))
 	return ret
