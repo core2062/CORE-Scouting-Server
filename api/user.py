@@ -23,14 +23,14 @@ def mix(app):
 		#and declares the user object on its own
 		#CONSIDER: add a delay for password based login to prevent excessive attempts
 
-		check_args(request.args, 'username', 'password')
-		g.user = model.user.auth(request.args['username'], request.args['password'],
+		check_args(g.args, 'username', 'password')
+		g.user = model.user.auth(g.args['username'], g.args['password'],
 			ip=request.remote_addr)
 		if not g.user:
 			raise ex.Unauthorized('Bad username or password.')
 
 		return {
-			'200 OK': 'login successful',
+			'message': 'login successful',
 			'token': g.user.token,
 		}
 
@@ -38,7 +38,7 @@ def mix(app):
 	@permission_required()
 	def user_logout():
 		g.user.logout()
-		return {'200 OK': 'logout successful'}
+		return {'message': 'logout successful'}
 
 	@app.route('/user/update', methods=['POST'])
 	@permission_required()
@@ -48,7 +48,7 @@ def mix(app):
 			if i in request.json.keys():
 				g.user.raw += {i: request.json[i]}
 				modified.append(i)
-		return {'200 OK': 'Update successful', 'modified': modified}
+		return {'message': 'Update successful', 'modified': modified}
 
 	@app.route('/user/update/<user>', methods=['POST'])
 	@permission_required('modify-other')
@@ -65,7 +65,7 @@ def mix(app):
 		# 	if 'perms' in request.json.keys:
 		# 		if
 		# 		other.perms +=
-		return {'200 OK': 'Update successful', 'modified': modified}
+		return {'message': 'Update successful', 'modified': modified}
 
 	@app.route('/user/signup', methods=['POST'])
 	@permission_required('make-user')
@@ -75,7 +75,7 @@ def mix(app):
 			request.json['name'],
 			request.json['password'],
 			request.json)
-		return {'200 OK': 'signup successful', 'user': u}
+		return {'message': 'signup successful', 'user': u}
 
 	@app.route('/users/<user>/delete', methods=['DELETE'])
 	@permission_required('remove-user')

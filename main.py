@@ -7,7 +7,8 @@ from werkzeug.exceptions import HTTPException
 from config import CURRENT_EVENT
 from helper import permission_required
 #import model.db as db
-import api.user as user_api
+
+import api
 
 
 def make_json_error(ex):
@@ -24,7 +25,7 @@ app = Flask(__name__)
 for code in default_exceptions.iterkeys():
 	app.error_handler_spec[None][code] = make_json_error
 
-user_api.mix(app)
+mix(app, ['commit', 'user', 'beverages'])
 
 
 @app.before_request
@@ -44,14 +45,23 @@ def before_request():
 # def after_view(rv):
 # 	# check to see that it's json, if not then return
 # 	if not type(rv) in (dict, list):
-# 		return
+# 		return 	
 # 	#put stuff from g in response
 # 	return
 
 
 @app.route('/')
 def index():
-	return {"notify": "blah"}
+	# Eventually, return auto-gen sitemap.
+	return {"message": "huh."}
+
+
+@app.route('/admin/reset', methods=['DELETE'])
+@permission_required('reset_db')
+def reset_db():
+   db.clear()
+   db.defaults()
+   return {'message': 'reset successful'}
 
 
 @app.route('/admin/scrape', methods=['POST'])
@@ -63,7 +73,7 @@ def scrape():
 	scraper.tpids()
 	scraper.team_details()
 	scraper.match(CURRENT_EVENT)
-	return {'notify': 'scrape successful'}
+	return {'message': 'scrape successful'}
 
 if __name__ == "__main__":
 	app.run(debug=True)
