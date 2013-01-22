@@ -89,7 +89,6 @@ def mix(app):
 		model.user.defaults()
 		return model.user.list_users()
 
-
 def exUser(user):
 	try:
 		return model.user.User(user)
