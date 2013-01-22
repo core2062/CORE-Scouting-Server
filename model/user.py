@@ -81,11 +81,14 @@ class User(object):
 			self.perms += [str(perm)]
 
 	def new_session(self, ip):
+		self.logout()
 		self.token = urandom(TOKEN_LENGTH).encode('base64')
 		self.ip = ip
 		self.startTime = time()
 
 	def logout(self):
+		#move old session into log?
+
 		self.token = None
 		self.ip = None
 		self.startTime = None
