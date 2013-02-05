@@ -1,7 +1,7 @@
 def mix(app):
 	@app.route('/coffee')
 	def coffee():
-       raise ex.ImATeapot()  # I really agreed to this whole project just for an excuse to do this....
+		raise ex.ImATeapot()  # I really agreed to this whole project just for an excuse to do this....
 	
 	
 	@app.route('/tea')

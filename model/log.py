@@ -4,7 +4,7 @@ from time import time
 
 def error(*text):
 	print ' '.join(text)
-	Log('errors').append(text)
+	Log('errors').append(*text)
 
 
 class Log(object):

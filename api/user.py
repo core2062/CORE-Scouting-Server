@@ -77,18 +77,12 @@ def mix(app):
 			request.json)
 		return {'message': 'signup successful', 'user': u}
 
-	@app.route('/users/<user>/delete', methods=['DELETE'])
-	@permission_required('remove-user')
-	def remove_user(user):
-		"""
-		"""
-		#u = exUser(user)
-
-	@app.route('/debug/users')
-	def listusers():
-		model.user.defaults()
-		return model.user.list_users()
-
+	# @app.route('/users/<user>/delete', methods=['DELETE'])
+	# @permission_required('remove-user')
+	# def remove_user(user):
+	# 	"""Remove user"""
+	# 	pass
+	# 	# u = exUser(user)
 def exUser(user):
 	try:
 		return model.user.User(user)

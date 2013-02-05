@@ -82,6 +82,7 @@ class User(object):
 
 	def new_session(self, ip):
 		self.logout()
+
 		self.token = urandom(TOKEN_LENGTH).encode('base64')
 		self.ip = ip
 		self.startTime = time()
@@ -116,7 +117,7 @@ def new_user(name, password, **kw):
 
 
 def defaults():
-	user = new_user("admin", 'mApru', fullname='Kai\'ckul')
+	user = new_user("admin", 'mApru', fullname="Kai'ckul")
 	user.give_perm("*")
 	user = new_user('test-user', 'm3jhrk4')
 

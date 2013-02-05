@@ -25,7 +25,7 @@ app = Flask(__name__)
 for code in default_exceptions.iterkeys():
 	app.error_handler_spec[None][code] = make_json_error
 
-mix(app, ['commit', 'user', 'beverages'])
+api.mix(app, ['commit', 'user', 'beverages'])
 
 
 @app.before_request
