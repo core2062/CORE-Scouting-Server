@@ -3,7 +3,8 @@ Flask==0.9
 MongoDescriptors==0.2.2
 Werkzeug==0.8.3
 argparse==1.2.1
-jsonschema==0.6
+importlib==1.0.2
+jsonschema==0.8.0
 passlib==1.6.1
 py==1.4.12
 pymongo==2.3
@@ -11,4 +12,3 @@ pytest==2.3.4
 requests==0.14.2
 simplejson==2.6.2
 wsgiref==0.1.2
-jsonvcs>=0.0.1
