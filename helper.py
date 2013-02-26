@@ -5,13 +5,13 @@ from flask import request, g
 import model.user as user
 
 
-def check_args(supplied_data, *required_args):
+def check_args(*required_args):
 	"""
 	checks that the required arguments (specified in a tuple or list) exist in
 	the supplied data if they don't exist, then an exception is raised
 	"""
 	for arg in required_args:
-		if arg not in supplied_data:
+		if arg not in g.args:
 			raise ex.BadRequest('the argument "%s" was not supplied in your request' % arg)
 
 
@@ -23,7 +23,7 @@ def permission_required(*permissions):
 	def decorator(f):
 		@wraps(f)
 		def decorated_function(*args, **kwargs):
-			check_args(g.args, 'token')
+			check_args('token')
 			token = g.args['token']
 
 			# store user object in g (thread safe context) users may only

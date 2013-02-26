@@ -5,9 +5,8 @@ from werkzeug.exceptions import default_exceptions
 from werkzeug.exceptions import HTTPException
 
 from config import CURRENT_EVENT
-from helper import permission_required
-#import model.db as db
-
+from helper import permission_required, check_args
+from model.db import database as db
 import api
 
 
@@ -45,7 +44,7 @@ def before_request():
 # def after_view(rv):
 # 	# check to see that it's json, if not then return
 # 	if not type(rv) in (dict, list):
-# 		return 	
+# 		return
 # 	#put stuff from g in response
 # 	return
 
@@ -54,6 +53,12 @@ def before_request():
 def index():
 	# Eventually, return auto-gen sitemap.
 	return {"message": "huh."}
+
+
+@app.route('/submit')
+def submit():
+	check_args('data')
+	db.scouting.insert(g.args['data'])
 
 
 @app.route('/admin/reset', methods=['DELETE'])
