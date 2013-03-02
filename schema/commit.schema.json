@@ -1,5 +1,5 @@
 {
-	"description":"this object represents a single change to a document. one or more commit(s) compile into a document",
+	"description":"Represents a single commit from the client",
 	"type":"object",
 	"properties":{
 		"user":{
@@ -16,7 +16,7 @@
 			"type":"string",
 			"description":"the schema that will be used to validate the data, and the type of doc that it compiles into",
 			"enum":[
-				"match"
+				"match",
 				"pit",
 				"team",
 				"scraped" // consider using this for the scraper submitting data - would help tracking changes
