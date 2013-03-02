@@ -105,6 +105,8 @@ class User(object):
 
 
 def new_user(name, password, **kw):
+	import model.log
+	model.log.security("New user ", name, " ", str(kw))
 	user = User(name, create=True)
 
 	user.passwd(password)

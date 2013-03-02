@@ -1,11 +1,13 @@
 from mongo_descriptors import Db, MongoI
 from time import time
+from functools import partial
 
+error 		= partial(log, 'errors')
+security	= partial(log, 'security')
 
-def error(*text):
-	print ' '.join(text)
-	Log('errors').append(*text)
-
+def log(logt, *text):
+	print logt + ":  " + ' '.join(text)
+	Log(logt).append(*text)
 
 class Log(object):
 	"""Represents a log document"""
@@ -27,3 +29,4 @@ class Log(object):
 
 def defaults():
 	Log('errors')
+	Log('security')
