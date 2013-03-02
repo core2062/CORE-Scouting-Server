@@ -17,9 +17,7 @@ def add_user():
 			return get_pw()
 		return password
 	password = get_pw()
-	model.user.
-
-
+	model.user.new_user(name,password, email=email)
 
 parser = argparse.ArgumentParse(description="A backend admin CLI to the CORE Scouting Database")
 parser.add('command')
