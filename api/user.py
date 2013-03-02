@@ -44,9 +44,9 @@ def mix(app):
 	@permission_required()
 	def user_update_self():
 		modified = []
-		for i in model.user.User.public_attrs:
-			if i in request.json.keys():
-				g.user.raw += {i: request.json[i]}
+		for i in g.user.public_attrs:
+			if i in g.args.keys():
+				g.user.raw += {i: g.args[i]}
 				modified.append(i)
 		return {'message': 'Update successful', 'modified': modified}
 
@@ -57,8 +57,8 @@ def mix(app):
 
 		modified = []
 		for i in model.user.User.public_attrs:
-			if i in request.json.keys():
-				g.user.raw += {i: request.json[i]}
+			if i in g.args.keys():
+				g.user.raw += {i: g.args[i]}
 				modified.append(i)
 
 		# if g.user.has_perm('modify-perm'):
@@ -70,11 +70,11 @@ def mix(app):
 	@app.route('/user/signup', methods=['POST'])
 	@permission_required('make-user')
 	def signup():
-		check_args(request.json, 'name', 'password')
+		check_args(g.args, 'name', 'password')
 		u = model.user.new_user(
-			request.json['name'],
-			request.json['password'],
-			request.json)
+			g.args['name'],
+			g.args['password'],
+			g.args)
 		return {'message': 'signup successful', 'user': u}
 
 	# @app.route('/users/<user>/delete', methods=['DELETE'])
