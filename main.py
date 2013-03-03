@@ -31,11 +31,11 @@ api.mix(app, ['commit', 'user', 'beverages'])
 @app.before_request
 def before_request():
 	# put the request args in a mutable dict so we can pre-process them
-	g.args = dict(request.args)
+	g.args = dict(request.args.to_dict())
+	
 	if request.json:
 		# if json is sent, merge that into the args
 		g.args.update(request.json)
-
 	# below stuff (g.notify & g.error) isn't really used... consider removing
 	# an array that holds notifications (like non-fatal errors or important messages)
 	#g.notify = []
