@@ -38,13 +38,6 @@ database = c[DB_NAME]  # variable used in the rest of the code to access the db
 #this might hold some invisible db decorators later
 
 
-def check():
-	"""checks that the db is setup, if not runs setup"""
-	if database.user.find_one({'_id': 'admin'}) == None:  # checks if there is an admin user
-		print 'setting up db in mongoDB'
-		clear()
-
-
 def clear():
 	"""
 	This script sets up or resets the entire CSD database It will remove all
