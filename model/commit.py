@@ -5,35 +5,64 @@ from time import time
 import re
 
 from model.db import database as db
+import model.user
 from collections import defaultdict
 from config import CURRENT_EVENT
+import jsonschema
+import simplejson as json
+import functools
+
 
 
 class Commit(object):
-	db = Db(db['commits'])
+	db = Db(db=db['commits'])
 	raw = MongoI()
-	time = MongoI('time')
 
 	###############
-	public_attrs = ['user', 'data', 'data_type', 'enabled']
+	public_attrs = ['user','time', 'data', 'data_type', 'enabled']
 	user = MongoI('user')
+	time = MongoI('time')
 	data = MongoI('data', dict)
 	data_type = MongoI('data_type')
 	enabled = MongoI('enabled', default=True)	# A boolean value telling whether or not this commit should be used
 
 	def __init__(self, oi=None):
-		oi = ObjectId(oi)  # Will get random ObjectId if oi is None.
-		self.oi = oi
+		self.oi = ObjectId(oi)  # Will get random ObjectId if oi is None.
+		if not self.db.find_one(self.oi):
+			self.db.insert({"_id": self.oi})
+
+	def __json__(self):
+		ret = {'id': str(self.oi)}
+		for i in self.public_attrs:
+			ret[i]= getattr(self, i)
+		return ret
+
+	def disable(self):
+		self.enabled = False
+
+	def remove(self):
+		del self.raw
 
 def commit(user, commit):
 	c = Commit()
+
 	for i in c.public_attrs:
 		if i in commit:
 			c.raw += {i: commit[i]}
-	if not validate(c):
-		
+	c.time = time()
+	c.user = user.oi
 	return c
 
+def by_user(user):
+	if hasattr(user,'oi'):
+		user = user.oi
+
+	return [Commit(i['_id']) for i in db['commits'].find({'user':user}, fields=[])]
+
+
+
+schema = json.load(open('schema/commit.schema.json'))
+validate = functools.partial(jsonschema.validate, schema)
 
 ##############
 # Validators for differnt types (Should call schema-specific validation)

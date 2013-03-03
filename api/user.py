@@ -3,6 +3,7 @@ from flask import request, g
 from werkzeug import exceptions as ex
 
 import model.user
+import model.commit
 
 
 def mix(app):
@@ -11,9 +12,17 @@ def mix(app):
 	def self_account():
 		return g.user
 
-	@app.route('/users/<user>')
+	@app.route('/user/<user>')
 	def user_account(user):
 		return exUser(user)
+
+	@app.route('/user/account/commits')
+	def self_commits():
+		return model.commit.by_user(g.user)
+
+	@app.route('/user/<user>/commits')
+	def user_commits():
+		if not model.user.exists(user)
 
 	@app.route('/user/login', methods=['POST'])
 	def user_login():
@@ -23,7 +32,8 @@ def mix(app):
 		#and declares the user object on its own
 		#CONSIDER: add a delay for password based login to prevent excessive attempts
 
-		check_args(g.args, 'username', 'password')
+		check_args('username', 'password')
+		print g.args
 		g.user = model.user.auth(g.args['username'], g.args['password'],
 			ip=request.remote_addr)
 		if not g.user:
