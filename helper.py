@@ -14,6 +14,14 @@ def check_args(*required_args):
 		if arg not in g.args:
 			raise ex.BadRequest('the argument "%s" was not supplied in your request' % arg)
 
+def args_required(*args):
+	def decorator(f):
+		@wraps(f)
+		def decor(*arg, **kwargs):
+			check_args(*args)
+			return f(*args, **kwargs)
+		return decor
+	return decorator
 
 def permission_required(*permissions):
 	"""
