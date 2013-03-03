@@ -51,13 +51,11 @@ class NewFlask(Flask):
 				rv = func_rv  # like all the other types of functions, if it returns something, that gets sent instead
 				break
 
-		if hasattr(rv, '__json__'):
-			# returns a dict or list that will get formatted in the next `if`
-			rv = rv.__json__
-
 		# format in json if it is a variable (not html being returned)
-		if type(rv) in (dict, list):
+		if type(rv) in (dict, list) or hasattr(rv, '__json__'):
 			# pretty print json in dev mode, else dump compressed json
+			if hasattr(rv, "__json__"):
+				rv = rv.__json__()
 			if self.debug:
 				json = dumps(rv, sort_keys=True, indent=4)
 			else:
