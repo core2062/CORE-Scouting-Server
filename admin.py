@@ -2,6 +2,7 @@ import argparse
 import sys
 
 import model.user
+import model.log
 
 
 def add_user():
@@ -19,14 +20,26 @@ def add_user():
 	password = get_pw()
 	model.user.new_user(name,password, email=email)
 
-parser = argparse.ArgumentParse(description="A backend admin CLI to the CORE Scouting Database")
-parser.add('command')
+def defaults():
+	model.user.defaults()
+	model.log.defaults()
 
-args = parser.parse_args
+def list_users():
+	for i in model.user.list_users():
+		print i.oi, " (",i.fullname if i.fullname else "",")"
+		for key, value in i.raw.items():
+			print "  ",key, ": ", value
+
+parser = argparse.ArgumentParser(description="A backend admin CLI to the CORE Scouting Database")
+parser.add_argument('command')
+
+args = parser.parse_args()
 
 commands = {
-	'list_users': model.user.list_users
-	'add_user': add_user
+	'list_users': list_users,
+	'add_user': add_user,
+	'defaults': defaults
 }
+
 
 commands[args.command]()
