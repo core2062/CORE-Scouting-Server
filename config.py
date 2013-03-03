@@ -16,6 +16,7 @@ CWD = os.path.dirname(__file__) + '/'
 BACKUP_DIR = CWD + 'backup/'  # where db backups are put
 SCHEMA_DIR = CWD + 'schema/'
 CACHE_DIR = CWD + 'scraper/cache/'  # used by scraper
+DEFAULT_DATA_DIR = CWD + 'scraper/data/'  # used by scraper
 
 #MongoDB
 DB_NAME = 'csd'

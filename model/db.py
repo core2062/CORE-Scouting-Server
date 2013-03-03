@@ -5,7 +5,7 @@ from simplejson import dumps, loads
 import tarfile
 import cStringIO as StringIO
 
-from config import DB_NAME, BACKUP_DIR
+from config import DB_NAME, BACKUP_DIR, DEFAULT_DATA_DIR
 
 
 """
@@ -43,20 +43,24 @@ def check():
 	if database.user.find_one({'_id': 'admin'}) == None:  # checks if there is an admin user
 		print 'setting up db in mongoDB'
 		clear()
-		#defaults()
 
 
 def clear():
 	"""
-		This script sets up or resets the entire CSD database
-		It will remove all data on the site and restore the default user
-		a backup will be made of the current database
+	This script sets up or resets the entire CSD database It will remove all
+	data on the site and restore the default user a backup will be made of the
+	current database
 	"""
 
 	backup(DB_NAME, BACKUP_DIR + str(time()))  # backup db
 
 	#clear out db
 	c.drop_database(DB_NAME)
+	database = c[DB_NAME]
+
+	#restore default data set
+	for collection in ("sourceEvent", "sourceTeam"):
+		_restore_file(database[collection], open(DEFAULT_DATA_DIR + collection))
 
 
 def backup(db_name, filename):
@@ -103,20 +107,20 @@ def restore(db_name, backup_file):
 		db_name is the db that the contents of the backup are restored to, this db should be empty and will be dropped & overwritten if it already exists
 		backup_file must be the path to the tarred backup file
 	"""
-
 	if db_name in c.database_names():  # drop existing db with same name (if there is one)
 		c.drop_database(db_name)
 
 	db = c[db_name]  # shortcut to db
-
 	backup_tar_file = tarfile.open(backup_file)
 	collection_files = backup_tar_file.getmembers()
 
 	for collection_file in collection_files:  # each file in tar ball is a collection
 		db.create_collection(collection_file.name)
 		fileobj = backup_tar_file.extractfile(collection_file)
-
-		for line in fileobj:
-			db[collection_file.name].insert(loads(line))  # load a line of json and insert into db
-
+		_restore_file(db[collection_file.name], fileobj)
 	backup_tar_file.close()
+
+
+def _restore_file(collection, fileobj):
+	for line in fileobj:
+		collection.insert(loads(line))  # load a line of json and insert into db
