@@ -15,7 +15,7 @@ pwd_context = CryptContext(
 
 
 def auth(name, password, ip=None):
-	user = db.user.find_one({"_id": str(name)})
+	user = db.user.find_one(name)
 	if not password:
 		password = ""
 	if not user:
@@ -59,7 +59,7 @@ class User(object):
 
 	def __init__(self, name, create=False):
 		self.oi = str(name)
-		if not self.db.find_one(self.oi):
+		if not exists(self.oi):
 			if create:
 				self.db.insert({"_id": self.oi})
 			else:
@@ -95,7 +95,7 @@ class User(object):
 		self.startTime = None
 
 	def __repr__(self):
-		return str(self.oi) + "(" + self.fullname + ")"
+		return str(self.oi) + " (" + self.fullname + ")"
 
 	def __json__(self):
 		ret = CatDict({'name': self.oi})
@@ -106,7 +106,6 @@ class User(object):
 
 def new_user(name, password, **kw):
 	import model.log
-	model.log.security("New user ", name, " ", str(kw))
 	user = User(name, create=True)
 
 	user.passwd(password)
@@ -114,9 +113,11 @@ def new_user(name, password, **kw):
 	for i in User.public_attrs:
 		if i in kw.keys():
 			user.raw += {i: kw[i]}
-
+	model.log.security("New user ", user.oi, " ", str(user.raw))
 	return user
 
+def exists(user):
+	return User.db.find_one(user)
 
 def defaults():
 	user = new_user("admin", 'mApru', fullname="Kai'ckul")
