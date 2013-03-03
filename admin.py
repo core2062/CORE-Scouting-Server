@@ -4,6 +4,8 @@ import sys
 import model.user
 import model.log
 from model.db import clear as clear_db
+from scraper import scraper
+from config import CURRENT_EVENT
 
 
 def add_user():
@@ -34,6 +36,14 @@ def list_users():
 		for key, value in i.raw.items():
 			print "  ", key, ": ", value
 
+
+def scrape():
+	#scraper.event_names()
+	#scraper.event_details()
+	#scraper.tpids()
+	#scraper.team_details()
+	scraper.match(CURRENT_EVENT)
+	print "it worked!"
 
 parser = argparse.ArgumentParser(description="A backend admin CLI to the CORE Scouting Database")
 parser.add_argument('command')
