@@ -4,7 +4,19 @@
 		"type": "string",
 		"required": true
 	},
-	"match": {
+	"match_type": {
+		"title": "Match Type",
+		"type" : "string",
+		"required" : true,
+		"enum":[
+			"Practice",
+			"Qualifications",
+			"Quater-finals",
+			"Semi-finals",
+			"Finals"
+		]
+	},
+	"match_num": {
 		"title": "Match Number",
 		"type": "integer",
 		"maximum": 999,
@@ -18,38 +30,39 @@
 	},
 	"alliance": {
 		"title": "Alliance",
-		"default": "",
 		"enum": ["Red", "Blue"],
 		"required": true
 	},
 	"floor_pickup": {
-		"title": "Floor Pickup",
-		"type": "boolean"
+		"title": "Can floor pickup",
+		"type": "boolean",
+		"default": false
 	},
 	"climb_attempt": {
 		"title": "climb_attempt",
 		"type": "integer",
-		"enum": [0, 1, 2, 3]
+		"enum": [0, 1, 2, 3],
+		"default":false
 	},
 	"penalties_red": {
-		"title": "Penalties Red",
-		"type": "integer",
-		"required": true
+		"title": "Red cards",
+		"type": "boolean",
+		"default": false
 	},
 	"penalties_yellow": {
-		"title": "Penalties Yellow",
-		"type": "integer",
-		"required": true
+		"title": "Yellow cards",
+		"type": "boolean",
+		"default": false
 	},
 	"fouls": {
 		"title": "fouls",
 		"type": "integer",
-		"required": true
+		"default": 0
 	},
 	"tech_fouls": {
 		"title": "tech_fouls",
 		"type": "integer",
-		"required": true
+		"default": 0
 	},
 	"strategy": {
 		"title": "Strategy",
@@ -60,33 +73,33 @@
 		}
 	},
 	"pyramid": {
-		"title": "pyramid",
+		"title": "Frisbees scored in pyramid",
 		"type": "integer",
-		"required": true
+		"default": 0
 	},
 	"high": {
-		"title": "high",
+		"title": "Frisbees scored in high goal",
 		"type": "integer",
-		"required": true
+		"default": 0
 	},
 	"middle": {
-		"title": "middle",
+		"title": "Frisbees scored in middle goal",
 		"type": "integer",
-		"required": true
+		"default": 0
 	},
 	"low": {
-		"title": "low",
+		"title": "Frisbees scored in low goal",
 		"type": "integer",
-		"required": true
+		"default": 0
 	},
 	"miss": {
-		"title": "miss",
+		"title": "Frisbees missed",
 		"type": "integer",
-		"required": true
+		"default": 0
 	},
 	"comment": {
 		"title": "comments",
 		"type": "string",
-		"required": true
+		"default": ""
 	}
 }

@@ -19,14 +19,14 @@
 				"match",
 				"pit",
 				"team",
-				"scraped" // consider using this for the scraper submitting data - would help tracking changes
-			]
+				"scraped"
+			],
 			"required":true
 		},
 		"enabled":{
 			"type":"boolean",
-			"default":true
-			"description":"a boolean value telling whether or not this commit should be used. (this is assigned on submission as true)",
+			"default":true,
+			"description":"a boolean value telling whether or not this commit should be used. (this is assigned on submission as true)"
 		},
 		"time":{
 			"type":"number",
