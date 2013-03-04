@@ -70,8 +70,11 @@ def all_matches(year=datetime.now().year):
 
 	event_list = db.sourceEvent.find({'year': year})
 	for event in event_list:
-		for short_name in event['short_name']:
-			match(short_name, year)
+		if event['short_name'] != None:
+			for short_name in event['short_name']:
+				match(short_name, year)
+		else:
+			print '...no matches'
 
 
 def match(event_short_name, year=datetime.now().year):
@@ -126,8 +129,10 @@ def tpids(year=datetime.now().year):
 
 
 def team_details():
-	"""this code is written with the assumption that only the most recent info
-	should be gotten about the teams"""
+	"""
+	this code is written with the assumption that only the most recent info
+	should be gotten about the teams
+	"""
 
 	for team in db.sourceTeam.find({}):
 		# get most recent year in tpid list
@@ -140,10 +145,9 @@ def team_details():
 		db.sourceTeam.update({'_id': team['_id']}, team)
 
 
-def is_scraped(year=datetime.now().year):
-	if not db.sourceEvent.find_one({'year': year}):
-		return False
-	if not db.sourceTeam.find_one():
-		return False
-	if not db.sourceMatch.find_one():
-		return False
+def get_missing_teams():
+	newest_team = 4859
+	missing_log = open('./missing_teams', 'a')
+	for team_num in range(1, newest_team + 1):
+		if db.sourceTeam.find({'team': team_num}) == None:
+			missing_log.write(team_num + '\n')
