@@ -10,7 +10,8 @@ from config import CACHE_DIR
 SESSION_KEY_GENERATING_PATTERN = "https://my.usfirst.org/myarea/index.lasso?page=searchresults&programs=FRC&reports=teams&omit_searchform=1&season_FRC=%s"
 SESSION_RE = re.compile(r'myarea:([A-Za-z0-9]*)')
 
-# stuff to be cut out of html (to reduce file size)
+# stuff to be cut out of html (to reduce file size and make debugging
+# possible)
 CRAP_ATTRIBUTES = (
 	'style',
 	'cellpadding',
@@ -23,7 +24,7 @@ CRAP_ATTRIBUTES = (
 	'onmouseout',
 	'onmouseover',
 )
-CRAP_TAGS = ('script', 'img', 'style')
+CRAP_TAGS = ('script', 'img', 'style', 'meta', 'link')
 
 
 def url_fetch(url, cache=True, soup=True):

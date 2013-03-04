@@ -69,7 +69,7 @@ def parse_match_results_list(soup):
 	matches = []
 	tables = soup.findAll('table')
 
-	#matches.extend(parse_match_result(tables[2])) # doesn't work in 2006
+	matches.extend(parse_match_result(tables[2]))  # doesn't work in 2006
 	matches.extend(parse_match_result(tables[3]))
 	return matches
 
