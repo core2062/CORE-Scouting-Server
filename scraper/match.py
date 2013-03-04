@@ -82,12 +82,8 @@ def parse_match_result(table):
 	for tr in table.findAll('tr')[3:]:
 		tds = tr.findAll('td')
 		if len(tds) == 11 and _recurse_until_string(tds[1]) is not None:
-			match_number_info = parse_elim_match_number(_recurse_until_string(tds[1]))
+			match_number, set_number, comp_level = parse_elim_match_number(_recurse_until_string(tds[1]))
 			del tds[1]  # table is now the same as for a qualification match
-
-			comp_level = match_number_info["comp_level"]
-			set_number = match_number_info["set_number"]
-			match_number = match_number_info["match_number"]
 		elif len(tds) == 10 and _recurse_until_string(tds[1]) is not None:
 			comp_level = "qm"
 			set_number = None
@@ -156,14 +152,7 @@ def parse_elim_match_number(string):
 	match_number = int(string[-1:])
 	set_number = int(string[-3:-2])
 	comp_level = comp_level_dict[string[:-4]]
-
-	results = {
-		"match_number": match_number,
-		"set_number": set_number,
-		"comp_level": comp_level,
-	}
-
-	return results
+	return (match_number, set_number, comp_level)
 
 
 def _recurse_until_string(node):
