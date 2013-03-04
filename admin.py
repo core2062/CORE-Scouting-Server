@@ -1,10 +1,11 @@
+from datetime import datetime
 import argparse
 import sys
 
 import model.user
 import model.log
 import model.db
-import scraper.get_data
+import scraper.get_data as scraper
 from config import CURRENT_EVENT
 
 
@@ -37,13 +38,21 @@ def list_users():
 			print "  ", key, ": ", value
 
 
-def scrape():
-	#scraper.event_names()
-	#scraper.event_details()
-	#scraper.tpids()
-	#scraper.team_details()
+def scrape_current():
 	scraper.match(CURRENT_EVENT)
 	print "it worked!"
+
+
+def scrape():
+	# the FIRST FMS database only lists events back till 2003
+	STARTING_YEAR = 2008
+	CURRENT_YEAR = datetime.now().year
+
+	for year in range(STARTING_YEAR, CURRENT_YEAR + 1):
+		scraper.all_matches(year)
+		scraper.tpids(year)
+	scraper.team_details()
+
 
 parser = argparse.ArgumentParser(description="A backend admin CLI to the CORE Scouting Database")
 parser.add_argument('command')
@@ -53,6 +62,8 @@ commands = {
 	'add_user': add_user,
 	'defaults': defaults,
 	'clear_db': model.db.clear,
+	'scrape': scrape,
+	'scrape_current': scrape_current,
 }
 
 
