@@ -62,7 +62,8 @@ def all_matches(year=datetime.now().year):
 
 	# the parser for 2003/2004/2005 matches is not finished yet, remove this
 	# when it is
-	if year in (2003, 2004, 2005):
+	if year in (2003, 2004, 2005, 2006):
+		print str(year) + " isn't done"
 		return
 
 	print 'getting all matches from ' + str(year)
@@ -80,11 +81,8 @@ def match(event_short_name, year=datetime.now().year):
 	match the event data in the FIRST FMS, as matches occur this should be run
 	often during a competition to get new match results
 	"""
-
 	year = int(year)  # make sure it is an int
-
 	print 'getting matches from ' + event_short_name
-
 	matches = match_scraper.get_matches(year, event_short_name)
 
 	for match in matches:
@@ -110,9 +108,7 @@ def tpids(year=datetime.now().year):
 	team objects
 	"""
 	print 'getting tpid list for ' + str(year)
-
 	year = int(year)  # make sure it is an int
-
 	tpid_list = team_scraper.get_tpids(year)
 
 	for tpid in tpid_list:
