@@ -15,13 +15,5 @@ The CSD itself acts as a web service and is separated from the client. It only r
 ###Notes
 many teams change names, merge, split... etc. the db has no way of tracking this or representing this
 
-data on events before 2003 is not available on the FIRST FMS DB... team history can go back this far
-
-2000 and prior award listings may be incomplete on the FIRST FMS DB
-
-teams which have not been active during the past 3 years are purged from the frc database ... see: http://www.team358org/files/team_lookup/
-
-contact FIRST and see if they still have any of this data?
-
 ----------------------
 [(Ↄ)](http://www.gnu.org/licenses/gpl.html) 2011-2012 FIRST Robotics Team, CORE 2062
