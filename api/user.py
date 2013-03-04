@@ -22,7 +22,9 @@ def mix(app):
 
 	@app.route('/user/<user>/commits')
 	def user_commits():
-		if not model.user.exists(user)
+		if not model.user.exists(user):
+			raise ex.NotFound("No user "+user)
+		return model.commit.by_user(user)
 
 	@app.route('/user/login', methods=['POST'])
 	def user_login():

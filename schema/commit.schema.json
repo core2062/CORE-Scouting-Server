@@ -4,8 +4,7 @@
 	"properties":{
 		"user":{
 			"type":"string",
-			"description":"_id of user (assigned on submission based on token)",
-			"required":true
+			"description":"_id of user (assigned on submission based on token)"
 		},
 		"data":{
 			"type":"object",
@@ -31,13 +30,11 @@
 		"time":{
 			"type":"number",
 			"description":"unix time of commit (assigned on submission). this tells the order in which commits will be compiled into each other",
-			"format":"utc-millisec",
-			"required":true
+			"format":"utc-millisec"
 		},
 		"doc_id":{
 			"type":"string",
-			"description":"this identifies the document that the commit goes to (the _id of the doc). it is assigned on submission (as a random string, if this is the first commit in a doc) or provided (if it is a update to an existing doc)",
-			"required":true
+			"description":"this identifies the document that the commit goes to (the _id of the doc). it is assigned on submission (as a random string, if this is the first commit in a doc) or provided (if it is a update to an existing doc)"
 		}
 	}
 }

@@ -33,6 +33,7 @@ source collections (holds nearly raw data)
 """
 
 c = pymongo.Connection()
+# c = pymongo.Connection("mongodb://admin:jD6jw32sas6@dbh54.mongolab.com:27547/csd-test")
 database = c[DB_NAME]  # variable used in the rest of the code to access the db
 
 #this might hold some invisible db decorators later

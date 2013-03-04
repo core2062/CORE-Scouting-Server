@@ -9,11 +9,11 @@
 		"type" : "string",
 		"required" : true,
 		"enum":[
-			"Practice",
-			"Qualifications",
-			"Quater-finals",
-			"Semi-finals",
-			"Finals"
+			"p",
+			"q",
+			"qf",
+			"sf",
+			"f"
 		]
 	},
 	"match_num": {
@@ -39,10 +39,16 @@
 		"default": false
 	},
 	"climb_attempt": {
-		"title": "climb_attempt",
+		"title": "Attemps a N-level climb",
 		"type": "integer",
 		"enum": [0, 1, 2, 3],
-		"default":false
+		"default":0
+	},
+	"climb_attempt": {
+		"title": "Makes a N-level climb",
+		"type": "integer",
+		"enum": [0, 1, 2, 3],
+		"default":0
 	},
 	"penalties_red": {
 		"title": "Red cards",

@@ -3,8 +3,8 @@ import sys
 
 import model.user
 import model.log
-from model.db import clear as clear_db
-from scraper import scraper
+import model.db
+import scraper.get_data
 from config import CURRENT_EVENT
 
 
@@ -52,7 +52,7 @@ commands = {
 	'list_users': list_users,
 	'add_user': add_user,
 	'defaults': defaults,
-	'clear_db': clear_db,
+	'clear_db': model.db.clear,
 }
 
 

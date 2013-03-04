@@ -10,17 +10,31 @@ from flask import g
 
 def mix(app):
 	
-	@app.route('/commit/match', methods=["POST"])
+	@app.route('/commit/submit', methods=["POST"])
 	@permission_required()
-	def commit_match():
+	def submit_commit():
 		a = g.args.copy()
 		del a['token']
-		try:
-			model.commit.validate(a)
-		except ValidationError:
-			raise ex.BadRequest("Doesn't match schema. See /commit/schema for a copy.")
 		return model.commit.commit(g.user, a)
 
 	@app.route('/commit/schema')
 	def schema():
-		return model.commit.schema
+		return model.commit.wrapper_schema
+
+	@app.route('/commit/types')
+	def types():
+		return model.commit.types
+
+	@app.route('/commit/type/<data_type>')
+	def data_schema(data_type):
+		if data_type not in model.commit.types:
+			raise ex.NotFound("No data type "+data_type+". See /commit/types for a list of data types.")
+		else:
+			return getattr(model.commit, data_type+"_schema")
+
+	@app.route('/commit/<commit>')
+	def get_commit(commit):
+		c = model.commit.Commit(commit)
+		if not c:
+			raise ex.NotFound('No commmit ' + commit)
+		return c

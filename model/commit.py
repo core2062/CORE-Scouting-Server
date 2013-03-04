@@ -9,6 +9,7 @@ import model.user
 from collections import defaultdict
 from config import CURRENT_EVENT
 import jsonschema
+from jsonschema import ValidationError
 import simplejson as json
 import functools
 
@@ -26,7 +27,7 @@ class Commit(object):
 	data_type = MongoI('data_type')
 	enabled = MongoI('enabled', default=True)	# A boolean value telling whether or not this commit should be used
 
-	def __init__(self, oi=None):
+	def __init__(self, oi=None, create=False):
 		self.oi = ObjectId(oi)  # Will get random ObjectId if oi is None.
 		if not self.db.find_one(self.oi):
 			self.db.insert({"_id": self.oi})
@@ -44,7 +45,16 @@ class Commit(object):
 		del self.raw
 
 def commit(user, commit):
-	c = Commit()
+	try:
+		validate_wrapper(commit)
+	except ValidationError, e:
+		raise ex.BadRequest("Doesn't match schema. See /commit/schema for a copy." + str(e))
+	try:
+		validate_data_type(commit['data_type'], commit['data'])
+	except ValidationError, e:
+		raise ex.BadRequest("Doesn't match "+commit['data_type']+" schema. See /commit/type/"+commit['data_type']+" for a copy. "+str(e))
+
+	c = Commit(create = True)
 
 	for i in c.public_attrs:
 		if i in commit:
@@ -59,47 +69,54 @@ def by_user(user):
 
 	return [Commit(i['_id']) for i in db['commits'].find({'user':user}, fields=[])]
 
+def validate_data_type(data_type, data):
+	if data_type in types:
+		globals()["validate_"+str(data_type)](data)
+	else:
+		raise ex.BadRequest("Not a type. See /commit/types for types of data input.")
+
+types = ['match']
+wrapper_schema = json.load(open('schema/commit.schema.json'))
+validate_wrapper = functools.partial(jsonschema.validate, wrapper_schema)
+match_schema = json.load(open('schema/match.schema.json'))
+validate_match = functools.partial(jsonschema.validate, match_schema)
+
+# ##############
+# # Validators for differnt types (Should call schema-specific validation)
+# ##############
+# def validate_match(commit):
+# 	is_team(commit.data['team'])
+# 	is_match(commit.data['match'])
+# 	is_true(commit.data['alliance'] in ['red', 'blue'], 'Alliance is not red or blue')
+# 	try:
+# 		is_regional(commit.data['regional'])
+# 	except ex.BadRequest:
+# 		d = commit.data
+# 		d['regional'] = CURRENT_EVENT
+# 		commit.data = d
 
 
-schema = json.load(open('schema/commit.schema.json'))
-validate = functools.partial(jsonschema.validate, schema)
+# #####################
+# # Validation utils
+# #####################
+# def is_true(val, exp):
+# 	if not val:
+# 		raise ex.BadRequest(exp)
 
-##############
-# Validators for differnt types (Should call schema-specific validation)
-##############
-def validate_match(commit):
-	is_team(commit.data['team'])
-	is_match(commit.data['match'])
-	is_true(commit.data['alliance'] in ['red', 'blue'], 'Alliance is not red or blue')
-	try:
-		is_regional(commit.data['regional'])
-	except ex.BadRequest:
-		d = commit.data
-		d['regional'] = CURRENT_EVENT
-		commit.data = d
+# MATCH_RE = re.compile(r"(p|q|qf|sf|f)(\d+)")
 
 
-#####################
-# Validation utils
-#####################
-def is_true(val, exp):
-	if not val:
-		raise ex.BadRequest(exp)
-
-MATCH_RE = re.compile(r"(p|q|qf|sf|f)(\d+)")
+# def is_match(val):
+# 	match = MATCH_RE.match(val)
+# 	if match is None:
+# 		raise ex.BadRequest(str(val) + ' is not a valid match')
 
 
-def is_match(val):
-	match = MATCH_RE.match(val)
-	if match is None:
-		raise ex.BadRequest(str(val) + ' is not a valid match')
+# def is_team(team):
+# 	if not db.sourceTeams.find_one({'team': team}):
+# 		raise ex.BadRequest(str(team) + ' is not a valid team.')
 
 
-def is_team(team):
-	if not db.sourceTeams.find_one({'team': team}):
-		raise ex.BadRequest(str(team) + ' is not a valid team.')
-
-
-def is_regional(regional):
-	if not db.sourceEvent.find_one({'short_name': regional}):
-		raise ex.BadRequest(str(regional) + 'is not a valid regional')
+# def is_regional(regional):
+# 	if not db.sourceEvent.find_one({'short_name': regional}):
+# 		raise ex.BadRequest(str(regional) + 'is not a valid regional')
