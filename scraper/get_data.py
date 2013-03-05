@@ -4,6 +4,8 @@ import scraper.event as event_scraper
 import scraper.match as match_scraper
 import scraper.team as team_scraper
 from model.db import database as db
+from config import DEFAULT_DATA_DIR
+import os
 
 """
 this script defines tasks such as scraping and analysis which are used to run
@@ -147,7 +149,12 @@ def team_details():
 
 def get_missing_teams():
 	newest_team = 4859
-	missing_log = open('./missing_teams', 'a')
+	missing_log_path = DEFAULT_DATA_DIR + 'missing_teams'
+	try:
+		os.remove(missing_log_path)
+	except:
+		pass
+	missing_log = open(missing_log_path, 'a')
 	for team_num in range(1, newest_team + 1):
-		if db.sourceTeam.find({'team': team_num}) == None:
-			missing_log.write(team_num + '\n')
+		if db.sourceTeam.find_one({'team': team_num}) == None:
+			missing_log.write(str(team_num) + '\n')
