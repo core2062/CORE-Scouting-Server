@@ -53,7 +53,7 @@ def clear():
 	database = c[DB_NAME]
 
 	#restore default data set
-	for collection in ("sourceEvent", "sourceTeam"):
+	for collection in ("sourceEvent", "sourceTeam", "sourceMatch"):
 		_restore_file(database[collection], open(DEFAULT_DATA_DIR + collection))
 
 

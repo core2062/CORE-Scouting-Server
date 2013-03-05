@@ -66,10 +66,10 @@ commands = {
 	'list_users': list_users,
 	'add_user': add_user,
 	'defaults': defaults,
-	'clear_db': model.db.clear,
 	'scrape': scrape,
 	'scrape_current': scrape_current,
 	'missing_team_list': scraper.get_missing_teams,
+	'clear_db': model.db.clear,
 	'backup': model.db.backup,
 }
 
