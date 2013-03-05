@@ -3,6 +3,7 @@
 
 from werkzeug import exceptions as ex
 import model.commit
+import model.match
 from helper import permission_required
 from jsonschema import ValidationError
 from flask import g
@@ -38,3 +39,6 @@ def mix(app):
 		if not c:
 			raise ex.NotFound('No commmit ' + commit)
 		return c
+
+	@app.route('/match/<match_type>/<match_num>'):
+		return Match(match_type, match_num)

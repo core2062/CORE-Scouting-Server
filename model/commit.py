@@ -63,11 +63,18 @@ def commit(user, commit):
 	c.user = user.oi
 	return c
 
+def find(expr):
+	for i in db['commits'].find(expr, fields=[]):
+		yield Commit(i['_id'])
+
+def find_one(expr):
+	return Commit(db['commits'].find_one(expr, fields=[])["_id"])
+
 def by_user(user):
 	if hasattr(user,'oi'):
 		user = user.oi
 
-	return [Commit(i['_id']) for i in db['commits'].find({'user':user}, fields=[])]
+	return (Commit(i['_id']) for i in db['commits'].find({'user':user}, fields=[]))
 
 def validate_data_type(data_type, data):
 	if data_type in types:
