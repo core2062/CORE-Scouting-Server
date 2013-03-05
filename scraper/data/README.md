@@ -5,13 +5,16 @@ this task should probably be automated when the database is being reset
 
 This data is left uncompressed to make it easier to track changes / corrections done to the data. the format that it's in is not quite valid JSON (hence the lack of file extensions). Each line is a valid JSON object, but I didn't make all the lines into a giant array because I didn't want to pass them all through simplejson at once... they're just read line-by-line and inserted into the DB.
 
+`missing_teams` is a list of teams that don't exist in the db but might have existed at one time... it would be interesting to fill some of these in
 
-### Finished Years
+### Finished
+all events from 2003-2012
+all tpids from 2003-2012
+all matches from 2009, 2010, 2012
 
- - 2009
- - 2010
+### Unfinished
 
-### Unfinished Years
+Matches from:
 
  - 2003
  - 2004
@@ -20,7 +23,6 @@ This data is left uncompressed to make it easier to track changes / corrections 
  - 2007
  - 2008
  - 2011
- - 2012
  - 2013
 
 # Errors
