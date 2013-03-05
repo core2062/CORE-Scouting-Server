@@ -57,7 +57,7 @@ def clear():
 		_restore_file(database[collection], open(DEFAULT_DATA_DIR + collection))
 
 
-def backup(db_name, filename):
+def backup(db_name=DB_NAME, filename=BACKUP_DIR + str(time())):
 	"""
 	the filename arg is the full file path that the backup should be saved to, the extension ".tar.bz2" will be automatically added
 	the specified file should be not exist, if it does, the function will overwrite it
