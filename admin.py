@@ -45,12 +45,17 @@ def scrape_current():
 
 def scrape():
 	# the FIRST FMS database only lists events back till 2003
-	STARTING_YEAR = 2008
-	CURRENT_YEAR = datetime.now().year
+	#STARTING_YEAR = 2011
+	#CURRENT_YEAR = datetime.now().year
+	scraper.all_matches(2011)
 
-	for year in range(STARTING_YEAR, CURRENT_YEAR + 1):
-		scraper.all_matches(year)
-		scraper.tpids(year)
+	#for year in range(STARTING_YEAR, CURRENT_YEAR + 1):
+	#	scraper.event_names(year)
+	#	scraper.event_details(year)
+	#	scraper.tpids(year)
+
+
+def scrape_teams():
 	scraper.team_details()
 
 
@@ -64,6 +69,8 @@ commands = {
 	'clear_db': model.db.clear,
 	'scrape': scrape,
 	'scrape_current': scrape_current,
+	'missing_team_list': scraper.get_missing_teams,
+	'backup': model.db.backup,
 }
 
 
