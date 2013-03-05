@@ -3,8 +3,8 @@ from os import urandom
 from time import time
 from passlib.context import CryptContext
 
+from main import app
 from model.db import database as db
-from config import ALLOW_TOKENS_TO_CHANGE_IP, TOKEN_LENGTH
 
 
 pwd_context = CryptContext(
@@ -32,7 +32,7 @@ def token_auth(token, ip=None):
 	user = db.user.find_one({"token": str(token)})
 	if not user:
 		return None
-	if ip and not ALLOW_TOKENS_TO_CHANGE_IP:
+	if ip and not app.config["ALLOW_TOKENS_TO_CHANGE_IP"]:
 		if user.ip != ip:
 			return False
 	else:
@@ -44,9 +44,9 @@ class User(object):
 	raw = MongoI()
 
 	password = MongoI("password")
-	perms =	MongoI("perms", typ=list)
+	perms = MongoI("perms", typ=list)
 
-	token =	MongoI("token")
+	token = MongoI("token")
 	ip = MongoI("ip")
 	startTime = MongoI('startTime')
 
@@ -83,7 +83,7 @@ class User(object):
 	def new_session(self, ip):
 		self.logout()
 
-		self.token = urandom(TOKEN_LENGTH).encode('base64')
+		self.token = urandom(app.config["TOKEN_LENGTH"]).encode('base64')
 		self.ip = ip
 		self.startTime = time()
 
@@ -116,8 +116,10 @@ def new_user(name, password, **kw):
 	model.log.security("New user ", user.oi, " ", str(user.raw))
 	return user
 
+
 def exists(user):
 	return User.db.find_one(user)
+
 
 def defaults():
 	user = new_user("admin", 'mApru', fullname="Kai'ckul")

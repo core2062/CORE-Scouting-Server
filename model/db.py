@@ -5,7 +5,7 @@ from simplejson import dumps, loads
 import tarfile
 import cStringIO as StringIO
 
-from config import DB_NAME, BACKUP_DIR, DEFAULT_DATA_DIR
+from main import app
 
 
 """
@@ -34,7 +34,7 @@ source collections (holds nearly raw data)
 
 c = pymongo.Connection()
 # c = pymongo.Connection("mongodb://admin:jD6jw32sas6@dbh54.mongolab.com:27547/csd-test")
-database = c[DB_NAME]  # variable used in the rest of the code to access the db
+database = c[app.config["DB_NAME"]]  # variable used in the rest of the code to access the db
 
 #this might hold some invisible db decorators later
 
@@ -45,19 +45,18 @@ def clear():
 	data on the site and restore the default user a backup will be made of the
 	current database
 	"""
-
-	backup(DB_NAME, BACKUP_DIR + str(time()))  # backup db
+	backup()  # backup db
 
 	#clear out db
-	c.drop_database(DB_NAME)
-	database = c[DB_NAME]
+	c.drop_database(app.config["DB_NAME"])
+	database = c[app.config["DB_NAME"]]
 
 	#restore default data set
 	for collection in ("sourceEvent", "sourceTeam", "sourceMatch"):
-		_restore_file(database[collection], open(DEFAULT_DATA_DIR + collection))
+		_restore_file(database[collection], open(app.config["DEFAULT_DATA_DIR"] + collection))
 
 
-def backup(db_name=DB_NAME, filename=BACKUP_DIR + str(time())):
+def backup(db_name=app.config["DB_NAME"], filename=app.config["BACKUP_DIR"] + str(time())):
 	"""
 	the filename arg is the full file path that the backup should be saved to, the extension ".tar.bz2" will be automatically added
 	the specified file should be not exist, if it does, the function will overwrite it

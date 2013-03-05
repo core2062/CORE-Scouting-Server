@@ -3,7 +3,7 @@ import urllib2
 import os
 from BeautifulSoup import BeautifulSoup, Comment
 
-from config import CACHE_DIR
+from main import app
 
 # a URL that gives us a result with urls that have session keys in them
 # (response only shows 25 results from FMS DB... pretty small request)
@@ -36,7 +36,7 @@ def url_fetch(url, cache=True, soup=True):
 	"""
 	saved = False
 
-	filename = CACHE_DIR + url[url.index(':') + 3:]
+	filename = app.config["CACHE_DIR"] + url[url.index(':') + 3:]
 	try:
 		#if there's a session key attached, remove it... it shouldn't be in
 		#the file name

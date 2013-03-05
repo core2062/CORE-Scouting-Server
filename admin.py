@@ -2,11 +2,11 @@ from datetime import datetime
 import argparse
 import sys
 
+from main import app
 import model.user
 import model.log
 import model.db
 import scraper.get_data as scraper
-from config import CURRENT_EVENT
 
 
 def add_user():
@@ -39,7 +39,7 @@ def list_users():
 
 
 def scrape_current():
-	scraper.match(CURRENT_EVENT)
+	scraper.match(app.config["CURRENT_EVENT"])
 	print "it worked!"
 
 

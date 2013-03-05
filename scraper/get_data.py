@@ -1,10 +1,10 @@
 from datetime import datetime
 
+from main import app
 import scraper.event as event_scraper
 import scraper.match as match_scraper
 import scraper.team as team_scraper
 from model.db import database as db
-from config import DEFAULT_DATA_DIR
 import os
 
 """
@@ -149,7 +149,7 @@ def team_details():
 
 def get_missing_teams():
 	newest_team = 4859
-	missing_log_path = DEFAULT_DATA_DIR + 'missing_teams'
+	missing_log_path = app.config["DEFAULT_DATA_DIR"] + 'missing_teams'
 	try:
 		os.remove(missing_log_path)
 	except:

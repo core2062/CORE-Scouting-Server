@@ -2,17 +2,16 @@ from mongo_descriptors import Db, MongoI
 from bson.objectid import ObjectId
 from werkzeug import exceptions as ex
 from time import time
-import re
+#import re
 
+#from main import app
 from model.db import database as db
-import model.user
-from collections import defaultdict
-from config import CURRENT_EVENT
+#import model.user
+#from collections import defaultdict
 import jsonschema
 from jsonschema import ValidationError
 import simplejson as json
 import functools
-
 
 
 class Commit(object):
@@ -20,12 +19,12 @@ class Commit(object):
 	raw = MongoI()
 
 	###############
-	public_attrs = ['user','time', 'data', 'data_type', 'enabled']
+	public_attrs = ['user', 'time', 'data', 'data_type', 'enabled']
 	user = MongoI('user')
 	time = MongoI('time')
 	data = MongoI('data', dict)
 	data_type = MongoI('data_type')
-	enabled = MongoI('enabled', default=True)	# A boolean value telling whether or not this commit should be used
+	enabled = MongoI('enabled', default=True)  # A boolean value telling whether or not this commit should be used
 
 	def __init__(self, oi=None, create=False):
 		self.oi = ObjectId(oi)  # Will get random ObjectId if oi is None.
@@ -35,7 +34,7 @@ class Commit(object):
 	def __json__(self):
 		ret = {'id': str(self.oi)}
 		for i in self.public_attrs:
-			ret[i]= getattr(self, i)
+			ret[i] = getattr(self, i)
 		return ret
 
 	def disable(self):
@@ -43,6 +42,7 @@ class Commit(object):
 
 	def remove(self):
 		del self.raw
+
 
 def commit(user, commit):
 	try:
@@ -52,9 +52,11 @@ def commit(user, commit):
 	try:
 		validate_data_type(commit['data_type'], commit['data'])
 	except ValidationError, e:
-		raise ex.BadRequest("Doesn't match "+commit['data_type']+" schema. See /commit/type/"+commit['data_type']+" for a copy. "+str(e))
+		raise ex.BadRequest(
+			"Doesn't match %s schema. See /commit/type/%s for a copy. %s" % (commit['data_type'], commit['data_type'], str(e))
+		)
 
-	c = Commit(create = True)
+	c = Commit(create=True)
 
 	for i in c.public_attrs:
 		if i in commit:
@@ -63,22 +65,26 @@ def commit(user, commit):
 	c.user = user.oi
 	return c
 
+
 def find(expr):
 	for i in db['commits'].find(expr, fields=[]):
 		yield Commit(i['_id'])
 
+
 def find_one(expr):
 	return Commit(db['commits'].find_one(expr, fields=[])["_id"])
 
+
 def by_user(user):
-	if hasattr(user,'oi'):
+	if hasattr(user, 'oi'):
 		user = user.oi
 
-	return (Commit(i['_id']) for i in db['commits'].find({'user':user}, fields=[]))
+	return (Commit(i['_id']) for i in db['commits'].find({'user': user}, fields=[]))
+
 
 def validate_data_type(data_type, data):
 	if data_type in types:
-		globals()["validate_"+str(data_type)](data)
+		globals()["validate_" + str(data_type)](data)
 	else:
 		raise ex.BadRequest("Not a type. See /commit/types for types of data input.")
 
@@ -99,7 +105,7 @@ validate_match = functools.partial(jsonschema.validate, match_schema)
 # 		is_regional(commit.data['regional'])
 # 	except ex.BadRequest:
 # 		d = commit.data
-# 		d['regional'] = CURRENT_EVENT
+# 		d['regional'] = app.config["CURRENT_EVENT"]
 # 		commit.data = d
 
 
