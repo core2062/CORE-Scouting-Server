@@ -4,7 +4,7 @@ from werkzeug import exceptions as ex
 from time import time
 #import re
 
-#from main import app
+from main import app
 from model.db import database as db
 #import model.user
 #from collections import defaultdict
@@ -18,7 +18,6 @@ class Commit(object):
 	db = Db(db=db['commits'])
 	raw = MongoI()
 
-	###############
 	public_attrs = ['user', 'time', 'data', 'data_type', 'enabled']
 	user = MongoI('user')
 	time = MongoI('time')
@@ -89,9 +88,9 @@ def validate_data_type(data_type, data):
 		raise ex.BadRequest("Not a type. See /commit/types for types of data input.")
 
 types = ['match']
-wrapper_schema = json.load(open('schema/commit.schema.json'))
+wrapper_schema = json.load(open(app.config["SCHEMA_DIR"] + 'commit.schema.json'))
 validate_wrapper = functools.partial(jsonschema.validate, wrapper_schema)
-match_schema = json.load(open('schema/match.schema.json'))
+match_schema = json.load(open(app.config["SCHEMA_DIR"] + 'match.schema.json'))
 validate_match = functools.partial(jsonschema.validate, match_schema)
 
 # ##############

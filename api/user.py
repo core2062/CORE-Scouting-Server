@@ -2,8 +2,8 @@ from helper import permission_required, check_args
 from flask import request, g
 from werkzeug import exceptions as ex
 
-import model.user
-import model.commit
+import model.user as user
+import model.commit as commit
 
 
 def mix(app):
@@ -18,13 +18,13 @@ def mix(app):
 
 	@app.route('/user/account/commits')
 	def self_commits():
-		return model.commit.by_user(g.user)
+		return commit.by_user(g.user)
 
 	@app.route('/user/<user>/commits')
 	def user_commits():
-		if not model.user.exists(user):
-			raise ex.NotFound("No user "+user)
-		return model.commit.by_user(user)
+		if not user.exists(user):
+			raise ex.NotFound("No user " + user)
+		return commit.by_user(user)
 
 	@app.route('/user/login', methods=['POST'])
 	def user_login():
@@ -36,7 +36,7 @@ def mix(app):
 
 		check_args('username', 'password')
 		print g.args
-		g.user = model.user.auth(g.args['username'], g.args['password'],
+		g.user = user.auth(g.args['username'], g.args['password'],
 			ip=request.remote_addr)
 		if not g.user:
 			raise ex.Unauthorized('Bad username or password.')
@@ -68,7 +68,7 @@ def mix(app):
 		#other = exUser(user)
 
 		modified = []
-		for i in model.user.User.public_attrs:
+		for i in user.User.public_attrs:
 			if i in g.args.keys():
 				g.user.raw += {i: g.args[i]}
 				modified.append(i)
@@ -83,7 +83,7 @@ def mix(app):
 	@permission_required('make-user')
 	def signup():
 		check_args(g.args, 'name', 'password')
-		u = model.user.new_user(
+		u = user.new_user(
 			g.args['name'],
 			g.args['password'],
 			g.args)
@@ -95,8 +95,10 @@ def mix(app):
 	# 	"""Remove user"""
 	# 	pass
 	# 	# u = exUser(user)
+
+
 def exUser(user):
 	try:
-		return model.user.User(user)
+		return user.User(user)
 	except ValueError:
 		raise ex.NotFound('User ' + user + ' not found')
