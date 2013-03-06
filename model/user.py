@@ -3,7 +3,7 @@ from os import urandom
 from time import time
 from passlib.context import CryptContext
 
-from main import app
+from config import app
 from model.db import database as db
 
 

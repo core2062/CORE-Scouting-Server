@@ -3,8 +3,15 @@ from flask import g, request
 from simplejson import loads
 import os
 
-#from helper import permission_required
 #import model.db as db
+from helper import allow_origins
+import api.commit
+import api.user
+import api.beverages
+
+api.commit.mix(app)
+api.user.mix(app)
+api.beverages.mix(app)
 
 
 @app.before_request
@@ -36,6 +43,7 @@ def index():
 
 
 @app.route('/schema/<name>')
+@allow_origins
 def schema(name):
 	"""return a schema from the schema dir as a dict (so it'll be sent as json)"""
 	return loads(

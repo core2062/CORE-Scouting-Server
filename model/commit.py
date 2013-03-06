@@ -4,7 +4,7 @@ from werkzeug import exceptions as ex
 from time import time
 #import re
 
-from main import app
+from config import app
 from model.db import database as db
 #import model.user
 #from collections import defaultdict

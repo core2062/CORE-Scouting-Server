@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from main import app
+from config import app
 import scraper.event as event_scraper
 import scraper.match as match_scraper
 import scraper.team as team_scraper

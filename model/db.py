@@ -5,7 +5,7 @@ from simplejson import dumps, loads
 import tarfile
 import cStringIO as StringIO
 
-from main import app
+from config import app
 
 
 """

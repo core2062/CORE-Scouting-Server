@@ -42,13 +42,9 @@ app.config["DEFAULT_PASSWORD"] = 'guest'
 # temporary (for development). the client will determine this in the future
 app.config["CURRENT_EVENT"] = 'wi'
 
-from api import commit
-from api import user
-from api import beverages
-
-commit.mix(app)
-user.mix(app)
-beverages.mix(app)
+app.config["ALLOWED_ORIGINS"] = (
+	'http://localhost:1111',
+)
 
 
 def make_json_error(ex):

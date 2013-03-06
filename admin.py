@@ -2,7 +2,7 @@
 import argparse
 import sys
 
-from main import app
+from config import app
 import model.user
 import model.log
 import model.db

@@ -3,7 +3,7 @@ import urllib2
 import os
 from BeautifulSoup import BeautifulSoup, Comment
 
-from main import app
+from config import app
 
 # a URL that gives us a result with urls that have session keys in them
 # (response only shows 25 results from FMS DB... pretty small request)
