@@ -4,6 +4,7 @@ from werkzeug import exceptions as ex
 
 import model.user as user
 import model.commit as commit
+from helper import allow_origins
 
 
 def mix(app):
@@ -27,6 +28,7 @@ def mix(app):
 		return commit.by_user(user)
 
 	@app.route('/user/login', methods=['POST'])
+	@allow_origins
 	def user_login():
 		"""get a token to use for authentication throughout the rest of the site"""
 		#NOTE: no permission required for this part because it uses an
@@ -35,7 +37,6 @@ def mix(app):
 		#CONSIDER: add a delay for password based login to prevent excessive attempts
 
 		check_args('username', 'password')
-		print g.args
 		g.user = user.auth(g.args['username'], g.args['password'],
 			ip=request.remote_addr)
 		if not g.user:
