@@ -23,7 +23,8 @@ def before_request():
 	if request.json:
 		g.args.update(request.json)
 	if request.form:
-		g.args.update(request.form)
+		g.args.update(request.form.to_dict())
+
 	# below stuff (g.notify & g.error) isn't really used... consider removing
 	# an array that holds notifications (like non-fatal errors or important messages)
 	#g.notify = []
