@@ -1,20 +1,9 @@
 {
-	"scout_name": {
-		"title": "Scout Name",
-		"type": "string",
-		"required": true
-	},
 	"match_type": {
 		"title": "Match Type",
 		"type" : "string",
 		"required" : true,
-		"enum":[
-			"p",
-			"q",
-			"qf",
-			"sf",
-			"f"
-		]
+		"enum": ["q", "qf", "sf", "f", "p"]
 	},
 	"match_num": {
 		"title": "Match Number",
@@ -39,26 +28,20 @@
 		"default": false
 	},
 	"climb_attempt": {
-		"title": "Attemps a N-level climb",
-		"type": "integer",
-		"enum": [0, 1, 2, 3],
-		"default":0
-	},
-	"climb_attempt": {
-		"title": "Makes a N-level climb",
+		"title": "Max Climb",
 		"type": "integer",
 		"enum": [0, 1, 2, 3],
 		"default":0
 	},
 	"penalties_red": {
 		"title": "Red cards",
-		"type": "boolean",
-		"default": false
+		"type": "integer",
+		"default": 0
 	},
 	"penalties_yellow": {
 		"title": "Yellow cards",
-		"type": "boolean",
-		"default": false
+		"type": "integer",
+		"default": 0
 	},
 	"fouls": {
 		"title": "fouls",
@@ -70,13 +53,30 @@
 		"type": "integer",
 		"default": 0
 	},
-	"strategy": {
-		"title": "Strategy",
-		"type": "array",
-		"uniqueItems": true,
-		"items": {
-			"enum": ["defense", "climb", "shoot", "disabled / broken"]
-		}
+	"defends": {
+		"title": "defends",
+		"type": "boolean",
+		"default": false
+	},
+	"climbs": {
+		"title": "climbs",
+		"type": "boolean",
+		"default": false
+	},
+	"shoots": {
+		"title": "shoots",
+		"type": "boolean",
+		"default": false
+	},
+	"disabled": {
+		"title": "disabled",
+		"type": "boolean",
+		"default": false
+	},
+	"no_show": {
+		"title": "no show",
+		"type": "boolean",
+		"default": false
 	},
 	"pyramid": {
 		"title": "Frisbees scored in pyramid",
@@ -100,6 +100,26 @@
 	},
 	"miss": {
 		"title": "Frisbees missed",
+		"type": "integer",
+		"default": 0
+	},
+	"auto_high": {
+		"title": "auto_Frisbees scored in high goal",
+		"type": "integer",
+		"default": 0
+	},
+	"auto_middle": {
+		"title": "auto_Frisbees scored in middle goal",
+		"type": "integer",
+		"default": 0
+	},
+	"auto_low": {
+		"title": "auto_Frisbees scored in low goal",
+		"type": "integer",
+		"default": 0
+	},
+	"auto_miss": {
+		"title": "auto_Frisbees missed",
 		"type": "integer",
 		"default": 0
 	},

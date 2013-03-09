@@ -1,7 +1,7 @@
 from werkzeug import exceptions as ex
 import model.commit
 import model.match
-from helper import permission_required
+from helper import permission_required, allow_origins
 #from jsonschema import ValidationError
 from flask import g
 
@@ -10,6 +10,7 @@ from flask import g
 
 def mix(app):
 	@app.route('/commit/submit', methods=["POST"])
+	@allow_origins
 	@permission_required()
 	def submit_commit():
 		a = g.args.copy()

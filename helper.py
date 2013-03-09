@@ -62,7 +62,7 @@ def allow_origins(func=None, origins=app.config["ALLOWED_ORIGINS"]):
 		@wraps(func)
 		def decorated(*args, **kwargs):
 			origin = request.headers.get('Origin')
-			g.cors = origin in origins
+			g.cors = True  # origin in origins
 			if request.method == 'OPTIONS':
 				response = make_response('ok')
 				response.headers['Access-Control-Allow-Origin'] = origin

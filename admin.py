@@ -6,6 +6,7 @@ from config import app
 import model.user
 import model.log
 import model.db
+from model.db import database as db
 import scraper.get_data as scraper
 
 
@@ -59,6 +60,54 @@ def scrape_teams():
 	scraper.team_details()
 
 
+def fix_team_num():
+	current_event = db.sourceEvent.find_one({'short_name': ['mndu'], 'year': 2013})
+	for entry in db.scouting.find():
+		if not str(entry['team']) in current_event['teams']:
+			print str(entry['team']) + " in match " + str(entry["match_num"]) + ' does not exist at this event '
+			entry['team'] = int(raw_input("What is the real team number (\"idk\" to skip)? "))
+			if not entry['team'] == 'idk':
+				db.scouting.update({"_id": entry['_id']}, entry)
+				print 'fixed dat'
+			else:
+				print 'skipped dat shit, bro'
+
+
+def find_double():
+	for entry in db.scouting.find():
+		#finds exact duplicates, deletes all but one
+		del entry['_id']
+		twins = db.scouting.find(entry)
+		new_twins = []
+		for brotha in twins:
+			new_twins += [brotha]
+		if len(new_twins) > 1:
+			del new_twins[0]
+			for brotha in new_twins:
+				print 'killin\' dat brotha'
+				db.scouting.remove(brotha)
+			print 'removed: ' + str(len(new_twins))
+
+
+def check_matches():
+	#count teams per match
+	#check for multiples of one team per match
+	#notifies user, does not take action
+	for match_type in ('q'):  # ('p', 'q', 'qf', 'sf', 'f'):
+		for match_num in range(1, 100):
+			total_entries = len(list(db.scouting.find({'match_num': match_num, 'match_type': match_type})))
+			if not total_entries == 6 and not total_entries == 0:
+				print "oh damn, %s has %s entr(y|ies)" % (match_num, total_entries)
+
+	## number of files for each match
+	#if entries_per_match > 6:
+	#	print "There are too many entries for match number %r" % entries_per_match
+	#elif entries_per_match < 6:
+	#	print "There are not enough entries for match number %r" % entries_per_match
+	#else:
+	#	pass
+
+
 parser = argparse.ArgumentParser(description="A backend admin CLI to the CORE Scouting Database")
 parser.add_argument('command')
 args = parser.parse_args()
@@ -71,6 +120,9 @@ commands = {
 	'missing_team_list': scraper.get_missing_teams,
 	'clear_db': model.db.clear,
 	'backup': model.db.backup,
+	'fix_team_num': fix_team_num,
+	'find_double': find_double,
+	'check_matches': check_matches
 }
 
 
