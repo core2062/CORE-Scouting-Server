@@ -12,8 +12,10 @@ import scraper.event
 #@task
 def scrape_event_names(year=datetime.now().year):
 	"""
-		this task scrapes event names and other basic info which is later used for getting more advanced event info
-		we assume that all previous years have been scraped (however the db setup script can call this for previous years)
+	this task scrapes event names and other basic info which is later used for
+	getting more advanced event info we assume that all previous years have
+	been scraped (however the db setup script can call this for previous
+	years)
 	"""
 
 	event_list = scraper.event.getEventList(year)
