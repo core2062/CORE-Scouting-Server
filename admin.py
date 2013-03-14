@@ -8,6 +8,7 @@ import model.log
 import model.db
 from model.db import database as db
 import scraper.get_data as scraper
+import analysis.opr
 
 
 def add_user():
@@ -112,6 +113,10 @@ def validate():
 	check_matches()
 
 
+def opr():
+	analysis.opr.run_dat()
+
+
 parser = argparse.ArgumentParser(description="A backend admin CLI to the CORE Scouting Database")
 parser.add_argument('command')
 args = parser.parse_args()
@@ -125,6 +130,7 @@ commands = {
 	'clear_db': model.db.clear,
 	'backup': model.db.backup,
 	'validate': validate,
+	'opr': opr,
 }
 
 
