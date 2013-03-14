@@ -2,6 +2,17 @@ from numpy.linalg import lstsq as least_squares
 
 
 def opr(entries):
+	"""
+	This function creates a overdetermined linear system where each equation
+	is an alliance in a match (so there are 2 equations per match). The
+	equations are set equal to the alliance's score for that match. Then,
+	using the least_squares method, the system is solved, giving an
+	approximation of each team's contribution to the score of their alliances.
+
+	entries is an array of tuples formatted like `(alliance_score, team_1,
+	team_2, team_3)` - there are 2 tuples per match
+	returns a dict formatted like `{"team_num": team_opr}`
+	"""
 	# build id map of unique teams
 	team_id_map = []
 	for entry in entries:
