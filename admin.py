@@ -114,6 +114,16 @@ def validate():
 
 
 def opr():
+	entries = []
+	for match in db.sourceMatch.find({'year': 2013}):
+		for color in ('red', 'blue'):
+			entries.append((
+				match['alliance'][color]['score'],
+				match['alliance'][color]['teams'][0],
+				match['alliance'][color]['teams'][1],
+				match['alliance'][color]['teams'][2],
+			))
+	print opr(entries)
 	analysis.opr.run_dat()
 
 
