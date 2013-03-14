@@ -6,16 +6,16 @@
 import model.commit
 from werkzeug import exceptions as ex
 
-# I feel like doing this lazily... 
+
 class Match(object):
 	def __init__(self, match_type, match_num):
 		self.match_type = str(match_type)
 		self.match_num = int(match_num)
-		if not model.commit.find_one({'data.match_type' : self.match_type, 'data.match_num' : self.match_num}):
-			raise ex.NotFound('No commits for match '+self.match_type+str(self.match_num)+".")
+		if not model.commit.find_one({'data.match_type': self.match_type, 'data.match_num': self.match_num}):
+			raise ex.NotFound("No commits for match %s %s." % (self.match_type, self.match_num))
 
 	def __iter__(self):
-		return model.commit.find({'data.match_type' : self.match_type, 'data.match_num' : self.match_num})
+		return model.commit.find({'data.match_type': self.match_type, 'data.match_num': self.match_num})
 
 	def teams(self):
 		t = []

@@ -48,7 +48,7 @@ def scrape():
 	# the FIRST FMS database only lists events back till 2003
 	#STARTING_YEAR = 2011
 	#CURRENT_YEAR = datetime.now().year
-	scraper.all_matches(2011)
+	scraper.all_matches(2013)
 
 	#for year in range(STARTING_YEAR, CURRENT_YEAR + 1):
 	#	scraper.event_names(year)
@@ -65,8 +65,9 @@ def fix_team_num():
 	for entry in db.scouting.find():
 		if not str(entry['team']) in current_event['teams']:
 			print str(entry['team']) + " in match " + str(entry["match_num"]) + ' does not exist at this event '
-			entry['team'] = int(raw_input("What is the real team number (\"idk\" to skip)? "))
+			entry['team'] = raw_input("What is the real team number (\"idk\" to skip)? ")
 			if not entry['team'] == 'idk':
+				entry['team'] = int(entry['team'])
 				db.scouting.update({"_id": entry['_id']}, entry)
 				print 'fixed dat'
 			else:
@@ -99,13 +100,16 @@ def check_matches():
 			if not total_entries == 6 and not total_entries == 0:
 				print "oh damn, %s has %s entr(y|ies)" % (match_num, total_entries)
 
-	## number of files for each match
-	#if entries_per_match > 6:
-	#	print "There are too many entries for match number %r" % entries_per_match
-	#elif entries_per_match < 6:
-	#	print "There are not enough entries for match number %r" % entries_per_match
-	#else:
-	#	pass
+	for entry in db.scouting.find():
+		if entry['match_num'] > 90:
+			print 'match ', entry['match_num'], 'looks wrong'
+
+
+def validate():
+	"""run various validation methods (all at once, in the most efficient order possible)"""
+	find_double()
+	fix_team_num()
+	check_matches()
 
 
 parser = argparse.ArgumentParser(description="A backend admin CLI to the CORE Scouting Database")
@@ -120,9 +124,7 @@ commands = {
 	'missing_team_list': scraper.get_missing_teams,
 	'clear_db': model.db.clear,
 	'backup': model.db.backup,
-	'fix_team_num': fix_team_num,
-	'find_double': find_double,
-	'check_matches': check_matches
+	'validate': validate,
 }
 
 

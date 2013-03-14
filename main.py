@@ -76,7 +76,7 @@ def submit():
 	}
 	data.update(loads(g.args['data']))
 	db.scouting.insert(data)
-	return {"message": "J\'AIME VOTRE DATA"}
+	return {"message": "data inputted, cause YOLO!"}
 
 
 @app.route('/matches.csv')
