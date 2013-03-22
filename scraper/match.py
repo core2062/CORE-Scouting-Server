@@ -1,5 +1,6 @@
 from helper import url_fetch
 from BeautifulSoup import NavigableString
+from datetime import datetime
 
 """
 Facilitates grabbing Match information from USFIRST.org. It enables discovering matches from official FIRST events
@@ -20,6 +21,11 @@ MATCH_SCHEDULE_ELIMS_URL_PATTERN = "http://www2.usfirst.org/%scomp/events/%s/sch
 
 def get_matches(year, event_short_name):
 	"""Return a list of Matches based on the FIRST match results page"""
+	if year == datetime.now().year:
+		cache = False
+	else:
+		cache = True
+
 	page_names = (
 		'sum',
 		'results',
@@ -43,7 +49,7 @@ def get_matches(year, event_short_name):
 				EVENT_SHORT_EXCEPTIONS.get(event_short_name, event_short_name),
 				page_names[page_index - i]
 			)
-			soup = url_fetch(url)
+			soup = url_fetch(url, cache)
 			break
 		except:
 			pass
