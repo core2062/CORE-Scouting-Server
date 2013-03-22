@@ -3,8 +3,9 @@ from BeautifulSoup import NavigableString
 from datetime import datetime
 
 """
-Facilitates grabbing Match information from USFIRST.org. It enables discovering matches from official FIRST events
-It returns Match model objects, but does no database IO itself.
+Facilitates grabbing Match information from USFIRST.org. It enables
+discovering matches from official FIRST events It returns Match model objects,
+but does no database IO itself.
 """
 
 EVENT_SHORT_EXCEPTIONS = {
