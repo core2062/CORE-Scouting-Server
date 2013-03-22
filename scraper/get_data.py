@@ -74,7 +74,10 @@ def all_matches(year=datetime.now().year):
 	for event in event_list:
 		if event['short_name'] != None:
 			for short_name in event['short_name']:
-				match(short_name, year)
+				try:
+					match(short_name, year)
+				except Exception:
+					print "error!"
 		else:
 			print '...no matches'
 
