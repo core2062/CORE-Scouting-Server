@@ -17,17 +17,12 @@
 		"maximum": 9999,
 		"required": true
 	},
-	"alliance": {
-		"title": "Alliance",
-		"enum": ["Red", "Blue"],
-		"required": true
-	},
 	"floor_pickup": {
 		"title": "Can floor pickup",
 		"type": "boolean",
 		"default": false
 	},
-	"climb_attempt": {
+	"max_climb": {
 		"title": "Max Climb",
 		"type": "integer",
 		"enum": [0, 1, 2, 3],
@@ -52,6 +47,11 @@
 		"title": "tech_fouls",
 		"type": "integer",
 		"default": 0
+	},
+	"pyramid_dumper": {
+		"title": "pyramid dumper",
+		"type": "boolean",
+		"default": false
 	},
 	"defends": {
 		"title": "defends",
@@ -79,47 +79,47 @@
 		"default": false
 	},
 	"pyramid": {
-		"title": "Frisbees scored in pyramid",
+		"title": "pyramid",
 		"type": "integer",
 		"default": 0
 	},
 	"high": {
-		"title": "Frisbees scored in high goal",
+		"title": "high",
 		"type": "integer",
 		"default": 0
 	},
 	"middle": {
-		"title": "Frisbees scored in middle goal",
+		"title": "middle",
 		"type": "integer",
 		"default": 0
 	},
 	"low": {
-		"title": "Frisbees scored in low goal",
+		"title": "low",
 		"type": "integer",
 		"default": 0
 	},
 	"miss": {
-		"title": "Frisbees missed",
+		"title": "missed",
 		"type": "integer",
 		"default": 0
 	},
 	"auto_high": {
-		"title": "auto_Frisbees scored in high goal",
+		"title": "auto high",
 		"type": "integer",
 		"default": 0
 	},
 	"auto_middle": {
-		"title": "auto_Frisbees scored in middle goal",
+		"title": "auto middle",
 		"type": "integer",
 		"default": 0
 	},
 	"auto_low": {
-		"title": "auto_Frisbees scored in low goal",
+		"title": "auto low",
 		"type": "integer",
 		"default": 0
 	},
 	"auto_miss": {
-		"title": "auto_Frisbees missed",
+		"title": "auto missed",
 		"type": "integer",
 		"default": 0
 	},
