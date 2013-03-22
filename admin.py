@@ -62,53 +62,79 @@ def scrape_teams():
 
 
 def fix_team_num():
-	current_event = db.sourceEvent.find_one({'short_name': ['mndu'], 'year': 2013})
+	current_event = db.sourceEvent.find_one({'short_name': ['wimi'], 'year': 2013})
 	for entry in db.scouting.find():
 		if not str(entry['team']) in current_event['teams']:
 			print str(entry['team']) + " in match " + str(entry["match_num"]) + ' does not exist at this event '
-			entry['team'] = raw_input("What is the real team number (\"idk\" to skip)? ")
-			if not entry['team'] == 'idk':
+			entry['team'] = raw_input("What is the real team number (\"next\" to skip)? ")
+			if not entry['team'] == 'next':
 				entry['team'] = int(entry['team'])
 				db.scouting.update({"_id": entry['_id']}, entry)
-				print 'fixed dat'
+				print 'fixed'
 			else:
-				print 'skipped dat shit, bro'
+				print 'skipped'
 
 
-def find_double():
+def fix_entries():
+	"""
+	for entry in db.scouting.find():
+		entry['max_climb'] = entry['climb_attempt']
+		del entry['climb_attempt']
+		db.scouting.update({"_id": entry['_id']}, entry)
+	"""
+
+
+def remove_duplicates():
 	for entry in db.scouting.find():
 		#finds exact duplicates, deletes all but one
-		del entry['_id']
-		twins = db.scouting.find(entry)
-		new_twins = []
-		for brotha in twins:
-			new_twins += [brotha]
-		if len(new_twins) > 1:
-			del new_twins[0]
-			for brotha in new_twins:
-				print 'killin\' dat brotha'
-				db.scouting.remove(brotha)
-			print 'removed: ' + str(len(new_twins))
+		del entry['_id']  # ids are always unique
+		entries = list(db.scouting.find(entry))
+
+		# there should be one in the list, so remove it from the list of
+		# entries to be deleted
+		del entries[0]
+		if len(entries) > 0:
+			print 'removed: %s from match %s%s' % (len(entries), entry['match_type'], entry['match_num'])
+			for entry in entries:
+				db.scouting.remove(entry)
 
 
 def check_matches():
-	#count teams per match
-	#check for multiples of one team per match
-	#notifies user, does not take action
-	for match_type in ('q'):  # ('p', 'q', 'qf', 'sf', 'f'):
+	"""
+	insure there are 6 entries per match
+	insure all teams in a match are unique
+	notifies user but doesn't take action
+	"""
+
+	for match_type in ('p', 'q', 'qf', 'sf', 'f'):
 		for match_num in range(1, 100):
-			total_entries = len(list(db.scouting.find({'match_num': match_num, 'match_type': match_type})))
-			if not total_entries == 6 and not total_entries == 0:
-				print "oh damn, %s has %s entr(y|ies)" % (match_num, total_entries)
+			entries = list(db.scouting.find({'match_num': match_num, 'match_type': match_type}))
+			total_entries = len(entries)
+			if not total_entries == 0:
+				if match_type == 'p':
+					continue  # practice matches don't matter :(
+				if not total_entries == 6:
+					if total_entries == 1:
+						suffix = 'y'
+					else:
+						suffix = 'ies'
+					print 'only %s entr%s in {"match_type":"%s", "match_num":%s}' % (total_entries, suffix, match_type, match_num)
+				teams = []
+				for entry in entries:
+					if entry['team'] in teams:
+						print 'caught a wild dupe in {"team":%s, "match_type":"%s", "match_num":%s}' % (entry['team'], match_type, match_num)
+					else:
+						teams += [entry['team']]
 
 	for entry in db.scouting.find():
 		if entry['match_num'] > 90:
-			print 'match ', entry['match_num'], 'looks wrong'
+			print 'match ', entry['match_num'], 'contains an error'
 
 
 def validate():
 	"""run various validation methods (all at once, in the most efficient order possible)"""
-	find_double()
+	fix_entries()
+	remove_duplicates()
 	fix_team_num()
 	check_matches()
 
@@ -124,7 +150,7 @@ def opr():
 				match['alliance'][color]['teams'][2],
 			))
 	print opr(entries)
-	analysis.opr.run_dat()
+	analysis.opr()
 
 
 parser = argparse.ArgumentParser(description="A backend admin CLI to the CORE Scouting Database")
