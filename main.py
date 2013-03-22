@@ -57,7 +57,7 @@ def submit():
 		"tech_fouls": 0,
 		"match_num": 0,
 		"no_show": False,
-		"climb_attempt": 0,
+		"max_climb": 0,
 		"climbs": False,
 		"pyramid": 0,
 		"high": 0,
@@ -76,7 +76,7 @@ def submit():
 	}
 	data.update(loads(g.args['data']))
 	db.scouting.insert(data)
-	return {"message": "data inputted, cause YOLO!"}
+	return {"message": "Thanks for the data, Bro."}
 
 
 @app.route('/matches.csv')
@@ -90,7 +90,7 @@ def make_csv():
 		"tech_fouls",
 		"match_num",
 		"no_show",
-		"climb_attempt",
+		"max_climb",
 		"climbs",
 		"pyramid",
 		"high",
