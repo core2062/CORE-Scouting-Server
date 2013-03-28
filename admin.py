@@ -94,7 +94,7 @@ def remove_duplicates():
 		# entries to be deleted
 		del entries[0]
 		if len(entries) > 0:
-			print 'removed: %s from match %s%s' % (len(entries), entry['match_type'], entry['match_num'])
+			print 'removed: %s duplicate entry from match %s%s' % (len(entries), entry['match_type'], entry['match_num'])
 			for entry in entries:
 				db.scouting.remove(entry)
 
@@ -113,21 +113,22 @@ def check_matches():
 			if not total_entries == 0:
 				if match_type == 'p':
 					continue  # practice matches don't matter :(
-				if not total_entries == 6:
-					if total_entries == 1:
-						suffix = 'y'
-					else:
-						suffix = 'ies'
-					print 'only %s entr%s in {"match_type":"%s", "match_num":%s}' % (total_entries, suffix, match_type, match_num)
 				teams = []
 				for entry in entries:
 					if entry['team'] in teams:
 						print 'caught a wild dupe in {"team":%s, "match_type":"%s", "match_num":%s}' % (entry['team'], match_type, match_num)
 					else:
 						teams += [entry['team']]
+				if not total_entries == 6:
+					if total_entries == 1:
+						suffix = 'y'
+					else:
+						suffix = 'ies'
+					print '%s entr%s in {"match_type":"%s", "match_num":%s}' % (total_entries, suffix, match_type, match_num)
+					print '\tteams: ' + str(teams)
 
 	for entry in db.scouting.find():
-		if entry['match_num'] > 90:
+		if entry['match_num'] > 100:
 			print 'match ', entry['match_num'], 'contains an error'
 
 
