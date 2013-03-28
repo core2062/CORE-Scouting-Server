@@ -81,7 +81,7 @@ def submit():
 
 @app.route('/matches.csv')
 def make_csv():
-	matches = db.scouting.find({'match_type': 'q'})
+	matches = db.scouting.find({'match_type': 'q'}).sort('match_num')
 	cols = [
 		"comment",
 		"disabled",
