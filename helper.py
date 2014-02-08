@@ -26,37 +26,6 @@ def args_required(*args):
 	return decorator
 
 
-def permission_required(*permissions):
-	"""
-	defines a decorator for checking a user's token. permissions may also be
-	checked by passing all required permissions as args.
-	"""
-	def decorator(f):
-		@wraps(f)
-		def decorated_function(*args, **kwargs):
-			check_args('token')
-			token = g.args['token']
-
-			# store user object in g (thread safe context) users may only
-			# authenticate with a token, this is to prevent users from
-			# transmitting their username & password with every request
-
-			#the token gets escaped when sent, so decode it first
-			g.user = user.token_auth(
-				token,
-				ip=request.remote_addr,
-			)
-
-			if not g.user:
-				raise ex.Unauthorized('bad token')
-			for permission in permissions:
-				if not g.user.has_perm(permission):
-					raise ex.Forbidden()
-			return f(*args, **kwargs)
-		return decorated_function
-	return decorator
-
-
 def allow_origins(func=None, origins=app.config["ALLOWED_ORIGINS"]):
 	def wrapped(func):
 		@wraps(func)
@@ -81,6 +50,6 @@ def after_request(response):
 	if getattr(g, 'cors', False):
 		response.headers['Access-Control-Allow-Origin'] = (
 			request.headers['Origin']
-			)
+		)
 		response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
 	return response
