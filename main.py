@@ -2,15 +2,14 @@ from config import app
 from flask import g, request, send_from_directory
 from simplejson import loads
 import os
+from copy import copy
 
 from model.db import database as db
 from helper import allow_origins, check_args
 import api.commit
-import api.user
 import api.beverages
 
 api.commit.mix(app)
-api.user.mix(app)
 api.beverages.mix(app)
 
 
@@ -38,6 +37,44 @@ def before_request():
 # 	#put stuff from g in response
 # 	return
 
+#data section needs to be cleared for the new season
+
+data = {
+	"match_num": 0,
+	"team_num": 0,
+	"match_type": "p",
+	"alliance": "red",
+	"auto_goal": False,
+	"auto_hot": False,
+	"auto_move": False,
+	"auto_goalie": False,
+	"auto_shots": 0,
+	"cycles": 0,
+	"total_cycles": 0,
+	"truss_att": 0,
+	"truss_made": 0,
+	"catch_att": 0,
+	"catch_made": 0,
+	"high_att": 0,
+	"high_made": 0,
+	"low_att": 0,
+	"low_made": 0,
+	"pass": 0,
+	"receive": 0,
+	"block": 0,
+	"percent_active": 0,
+	"defense": "NO",
+	"zones": "ALL"
+	"gblocker": False,
+	"pickup": False,
+	"no_show": False,
+	"yellow": 0,
+	"red": 0,
+	"fouls": 0,
+	"tech_fouls": 0,
+	"comments":""
+}
+
 
 @app.route('/')
 def index():
@@ -45,68 +82,39 @@ def index():
 	return {"message": "huh."}
 
 
+from validate import validate
+
+
+@app.route('/validate')
+@allow_origins
+def run_validate():
+	out = validate()
+	return out
+
+
+@app.route('/finalcountdown')
+@allow_origins
+def finalcountdown():
+	pass
+
+
 @app.route('/submit', methods=['POST'])
 @allow_origins
 def submit():
+	submission = copy(data)
 	check_args('data')
-	data = {
-		"comment": "",
-		"disabled": False,
-		"penalties_yellow": 0,
-		"shoots": False,
-		"tech_fouls": 0,
-		"match_num": 0,
-		"no_show": False,
-		"max_climb": 0,
-		"climbs": False,
-		"pyramid": 0,
-		"high": 0,
-		"middle": 0,
-		"low": 0,
-		"miss": 0,
-		"auto_high": 0,
-		"auto_middle": 0,
-		"auto_low": 0,
-		"auto_miss": 0,
-		"fouls": 0,
-		"defends": False,
-		"penalties_red": 0,
-		"team": 0,
-		"floor_pickup": False
-	}
-	data.update(loads(g.args['data']))
-	db.scouting.insert(data)
-	return {"message": "Thanks for the data, Bro."}
+	submission.update(loads(g.args['data']))
+	if len(list(db.scouting.find(submission))) > 0:
+		return {"message": "exact duplicate... rejected"}
+	else:
+		db.scouting.insert(submission)
+		return {"message": "Congratulations, you're fabulous!"}
 
 
 @app.route('/matches.csv')
 def make_csv():
+	cols = data.keys()
 	matches = db.scouting.find({'match_type': 'q'}).sort('match_num')
-	cols = [
-		"comment",
-		"disabled",
-		"penalties_yellow",
-		"shoots",
-		"tech_fouls",
-		"match_num",
-		"no_show",
-		"max_climb",
-		"climbs",
-		"pyramid",
-		"high",
-		"middle",
-		"low",
-		"miss",
-		"auto_high",
-		"auto_middle",
-		"auto_low",
-		"auto_miss",
-		"fouls",
-		"defends",
-		"penalties_red",
-		"team",
-		"floor_pickup",
-	]
 	rows = []
 	for match in matches:
 		del match['_id']
