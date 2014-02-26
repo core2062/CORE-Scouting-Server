@@ -1,5 +1,4 @@
 
-from config import jinja_env
 from collections import defaultdict
 from datetime import datetime
 
@@ -7,18 +6,6 @@ from model.db import database as db
 from model.log import log
 
 date_format = "%Y-%m-%dT%H:%M:%S"
-tmplt = jinja_env.from_string("""
-<h2> Regionals_to_watch results for {{event}} </h2>
-There are {{total}} teams at this regional.
-{{loners}} teams are only attending the one regional.
-Here is the breakdown for the remaining {{total - loners}}:
-
-{% for i in regionals %}
-<h3><a href="https://thebluealliance.com/events/{{i.key}}">{{ i.name }}</a> 
-{{i.date.month}}/{{i.date.day}} ({{i.n_teams}} team{{"s" if i.n_teams > 1 else ""}} in common)</h3>
-{{i.team_str}}
-
-{% endfor %}""")
 
 def regionals_to_watch(event_key):
     n = db.fms.find_one(event_key)
@@ -56,4 +43,4 @@ def regionals_to_watch(event_key):
             'team_str': ", ".join(i['nickname'] + 
                 " ({})".format(i['team_number']) for i in tms)
         })
-    return tmplt.render(data)
+    return data

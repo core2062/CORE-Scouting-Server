@@ -9,11 +9,13 @@ from helper import allow_origins, check_args
 import api.beverages
 import api.commit
 import api.user
+import api.analysis
 from config import app
 
 app.register_blueprint(api.beverages.blueprint)
 app.register_blueprint(api.commit.blueprint)
 app.register_blueprint(api.user.blueprint)
+app.register_blueprint(api.analysis.blueprint)
 
 @app.before_request
 def before_request():
