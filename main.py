@@ -40,44 +40,6 @@ def before_request():
 #   #put stuff from g in response
 #   return
 
-#data section needs to be cleared for the new season
-
-data = {
-    "match_num": 0,
-    "team_num": 0,
-    "match_type": "p",
-    "alliance": "red",
-    "auto_goal": False,
-    "auto_hot": False,
-    "auto_move": False,
-    "auto_goalie": False,
-    "auto_shots": 0,
-    "cycles": 0,
-    "total_cycles": 0,
-    "truss_att": 0,
-    "truss_made": 0,
-    "catch_att": 0,
-    "catch_made": 0,
-    "high_att": 0,
-    "high_made": 0,
-    "low_att": 0,
-    "low_made": 0,
-    "pass": 0,
-    "receive": 0,
-    "block": 0,
-    "percent_active": 0,
-    "defense": "NO",
-    "zones": "ALL",
-    "gblocker": False,
-    "pickup": False,
-    "no_show": False,
-    "yellow": 0,
-    "red": 0,
-    "fouls": 0,
-    "tech_fouls": 0,
-    "comments":""
-}
-
 @app.route('/matches.csv')
 def make_csv():
     cols = data.keys()

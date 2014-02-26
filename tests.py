@@ -77,8 +77,7 @@ def test_type():
     assert r.status_code == 200
     assert r.json
 
-#edit this before the season starts
-
+# This should be filled in from json_schema...
 match_data = {
     "match_num": 0,
     "team_num": 0,
