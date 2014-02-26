@@ -39,29 +39,14 @@ def list_users():
 		for key, value in i.raw.items():
 			print "  ", key, ": ", value
 
-
-def scrape_current():
-	scraper.match(app.config["CURRENT_EVENT"])
-	print "it worked!"
-
-
-def scrape():
-	# the FIRST FMS database only lists events back till 2003
-	#STARTING_YEAR = 2011
-	#CURRENT_YEAR = datetime.now().year
-	scraper.all_matches(2013)
-
-	#for year in range(STARTING_YEAR, CURRENT_YEAR + 1):
-	#	scraper.event_names(year)
-	#	scraper.event_details(year)
-	#	scraper.tpids(year)
-
+def scrape_events():
+	scraper.events()
 
 def scrape_teams():
-	scraper.team_details()
-
+	scraper.teams()
 
 def fix_team_num():
+	raise Exception("Needs to be updated for new db")
 	current_event = db.sourceEvent.find_one({'short_name': ['wimi'], 'year': 2013})
 	for entry in db.scouting.find():
 		if not str(entry['team']) in current_event['teams']:
@@ -141,6 +126,7 @@ def validate():
 
 
 def opr():
+	raise Exception("Needs to be updated for new db")
 	entries = []
 	for match in db.sourceMatch.find({'year': 2013}):
 		for color in ('red', 'blue'):
@@ -153,22 +139,22 @@ def opr():
 	print opr(entries)
 	analysis.opr()
 
-
-parser = argparse.ArgumentParser(description="A backend admin CLI to the CORE Scouting Database")
-parser.add_argument('command')
-args = parser.parse_args()
 commands = {
 	'list_users': list_users,
 	'add_user': add_user,
 	'defaults': defaults,
-	'scrape': scrape,
+	'scrape_events': scrape_events,
+	'scrape_teams': scrape_teams,
 	'scrape_current': scrape_current,
-	'missing_team_list': scraper.get_missing_teams,
+	# 'missing_team_list': scraper.get_missing_teams,
 	'clear_db': model.db.clear,
 	'backup': model.db.backup,
 	'validate': validate,
 	'opr': opr,
 }
 
+parser = argparse.ArgumentParser(description="A backend admin CLI to the CORE Scouting Database")
+parser.add_argument('command',help=', '.join(commands.keys()))
+args = parser.parse_args()
 
 commands[args.command]()

@@ -3,6 +3,7 @@ from flask import jsonify
 from override_flask import NewFlask as Flask
 from werkzeug.exceptions import default_exceptions
 from werkzeug.exceptions import HTTPException
+import jinja2
 import os
 
 """
@@ -12,7 +13,6 @@ easier.
 """
 
 app = Flask(__name__)
-
 
 #filesystem
 
@@ -43,18 +43,22 @@ app.config["DEFAULT_PASSWORD"] = 'guest'
 app.config["CURRENT_EVENT"] = 'wi'
 
 app.config["ALLOWED_ORIGINS"] = (
-	'http://localhost:1111',
+    'http://localhost:1111',
 )
 
+jinja_env = jinja2.Environment(
+    trim_blocks = True,
+    lstrip_blocks = True
+)
 
 def make_json_error(ex):
-	"""
-	creates json-parseable error messages such as:
-	{"message": "405: Method Not Allowed"}
-	"""
-	response = jsonify(message=str(ex))
-	response.status_code = (ex.code if isinstance(ex, HTTPException) else 500)
-	return response
+    """
+    creates json-parseable error messages such as:
+    {"message": "405: Method Not Allowed"}
+    """
+    response = jsonify(message=str(ex))
+    response.status_code = (ex.code if isinstance(ex, HTTPException) else 500)
+    return response
 
 for code in default_exceptions.iterkeys():
-	app.error_handler_spec[None][code] = make_json_error
+    app.error_handler_spec[None][code] = make_json_error
