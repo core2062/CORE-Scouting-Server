@@ -59,16 +59,6 @@ def fix_team_num():
 			else:
 				print 'skipped'
 
-
-def fix_entries():
-	"""
-	for entry in db.scouting.find():
-		entry['max_climb'] = entry['climb_attempt']
-		del entry['climb_attempt']
-		db.scouting.update({"_id": entry['_id']}, entry)
-	"""
-
-
 def remove_duplicates():
 	for entry in db.scouting.find():
 		#finds exact duplicates, deletes all but one
@@ -146,7 +136,6 @@ commands = {
 	'scrape_events': scrape_events,
 	'scrape_teams': scrape_teams,
 	'scrape_current': scrape_current,
-	# 'missing_team_list': scraper.get_missing_teams,
 	'clear_db': model.db.clear,
 	'backup': model.db.backup,
 	'validate': validate,
