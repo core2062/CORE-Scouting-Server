@@ -9,7 +9,7 @@ date_format = "%Y-%m-%dT%H:%M:%S"
 
 def regionals_to_watch(event_key):
     n = db.fms.find_one(event_key)
-    if not event_key:
+    if not n:
         raise ValueError("No event "+event_key)
     teams = n["_teams"]
     data = {}

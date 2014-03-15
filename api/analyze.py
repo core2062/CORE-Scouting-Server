@@ -1,17 +1,9 @@
 import flask
-
-import analysis
-from config import jinja_env
 from werkzeug import exceptions as ex
+import analysis.event
+from config import jinja_env
 
-blueprint = flask.Blueprint("analysis", __name__, url_prefix="analysis")
-
-@blueprint.route("/event/<key>/other_teams")
-def event_json(key):
-	try:
-		return analysis.event.regionals_to_watch(key)
-	except ValueError, e:
-		return ex.NotFound("Event {} not found.".format(key))
+blueprint = flask.Blueprint("analysis", __name__, url_prefix="/analysis")
 
 other_teams_tmpl = jinja_env.from_string("""
 <h2> Regionals_to_watch results for {{event}} </h2>

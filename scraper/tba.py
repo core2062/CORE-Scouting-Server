@@ -43,3 +43,6 @@ def teams(year):
         yield t
         if i%10 == 0:
             print "({} / {})".format(i, l)
+
+def matches(event, completed_only):
+    
