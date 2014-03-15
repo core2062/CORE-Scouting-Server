@@ -5,6 +5,7 @@ from werkzeug.exceptions import default_exceptions
 from werkzeug.exceptions import HTTPException
 import jinja2
 import os
+import mongoengine
 
 """
 This file holds configuration variables for the csd. these variables are used
@@ -17,12 +18,10 @@ app = Flask(__name__)
 #filesystem
 
 # get current working directory (top level of the csd server folder)
-app.config["CWD"] = os.path.dirname(__file__) + '/'
-
-app.config["BACKUP_DIR"] = app.config["CWD"] + 'backup/'  # where db backups are put
-app.config["SCHEMA_DIR"] = app.config["CWD"] + 'schema/'
-app.config["CACHE_DIR"] = app.config["CWD"] + 'scraper/cache/'  # used by scraper
-app.config["DEFAULT_DATA_DIR"] = app.config["CWD"] + 'scraper/data/'  # used by scraper
+app.config["BACKUP_DIR"] = 'backup/'  # where db backups are put
+app.config["SCHEMA_DIR"] = 'schema/'
+app.config["CACHE_DIR"] = 'scraper/cache/'  # used by scraper
+app.config["DEFAULT_DATA_DIR"] = 'scraper/data/'  # used by scraper
 
 #MongoDB
 app.config["DB_NAME"] = 'csd'

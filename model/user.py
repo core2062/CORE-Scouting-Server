@@ -97,10 +97,10 @@ class User(object):
 	def __repr__(self):
 		return str(self.oi) + " (" + self.fullname + ")"
 
-	def __json__(self):
-		ret = CatDict({'name': self.oi})
+	def to_dict(self):
+		ret = {'name': self.oi}
 		for i in self.public_attrs:
-			ret += {i: getattr(self, i)}
+			ret[i] = getattr(self, i)
 		return ret
 
 

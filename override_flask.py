@@ -1,5 +1,7 @@
 from flask import Flask, Response, request
 from simplejson import dumps
+from bson import json_util
+from bson.son import SON
 
 """this holds overrides to modify flask"""
 
@@ -52,16 +54,13 @@ class NewFlask(Flask):
 				break
 
 		# format in json if it is a variable (not html being returned)
-		if type(rv) in (dict, list) or hasattr(rv, '__json__'):
+		if type(rv) in (dict, list):
 			# pretty print json in dev mode, else dump compressed json
-			if hasattr(rv, "__json__"):
-				rv = rv.__json__()
 			if self.debug:
-				json = dumps(rv, sort_keys=True, indent=4)
+				json = dumps(rv, indent=4, default=json_util.default)
 			else:
-				json = dumps(rv, separators=(',', ':'))
+				json = dumps(rv, separators=(',', ':'), default=json_util.default)
 			rv = Response(json, mimetype='application/json')
-
 		if rv is None:
 			raise ValueError('View function did not return a response')
 		if isinstance(rv, self.response_class):

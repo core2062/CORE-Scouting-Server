@@ -1,29 +1,29 @@
 from helper import permission_required, check_args
-from flask import request, g
+import flask; from flask import request, g
 from werkzeug import exceptions as ex
-
-import model.user as user
-import model.commit as commit
+    
+import model
+from model import user, commit
 from helper import allow_origins
 
-blueprint = flask.Blueprint("users", __name__, url_prefix="user")
+blueprint = flask.Blueprint("users", __name__, url_prefix="/user")
 
 @blueprint.route('/account')
 @permission_required()
 def self_account():
-    return g.user
+    return g.user.to_dict()
 
 @blueprint.route('/<user>')
 def user_account(user):
-    return exUser(user)
+    return exUser(user).to_dict()
 
 @blueprint.route('/account/commits')
 def self_commits():
-    return commit.by_user(g.user)
+    return commit.by_user(g.user).to_dict()
 
 @blueprint.route('/<user>/commits')
 def user_commits():
-    if not user.exists(user):
+    if not model.user.exists(user):
         raise ex.NotFound("No user " + user)
     return commit.by_user(user)
 

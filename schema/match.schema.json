@@ -20,6 +20,11 @@
         "maximum": 9999,
         "required": true
     },
+    "scout": {
+        "title": "The scout for the commit",
+        "type": "string",
+        "required": true
+    },
     "penalties_red": {
         "title": "Red card received",
         "type": "boolean",

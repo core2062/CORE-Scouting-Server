@@ -1,97 +1,57 @@
-from mongo_descriptors import Db, MongoI
-from bson.objectid import ObjectId
+
 from werkzeug import exceptions as ex
-from time import time
+from datetime import datetime
 #import re
 
 from config import app
 from model.db import database as db
-#import model.user
+import jsonhelper
 #from collections import defaultdict
-import jsonschema
-from jsonschema import ValidationError
+import jsonschema; from jsonschema import ValidationError
 import simplejson as json
-import functools
+import mongoengine as me
+import os.path
 
 
-class Commit(object):
-	db = Db(db=db['commits'])
-	raw = MongoI()
+class Commit(me.DynamicDocument):
 
-	public_attrs = ['user', 'time', 'data', 'data_type', 'enabled']
-	user = MongoI('user')
-	time = MongoI('time')
-	data = MongoI('data', dict)
-	data_type = MongoI('data_type')
-	enabled = MongoI('enabled', default=True)  # A boolean value telling whether or not this commit should be used
-
-	def __init__(self, oi=None, create=False):
-		self.oi = ObjectId(oi)  # Will get random ObjectId if oi is None.
-		if not self.db.find_one(self.oi):
-			self.db.insert({"_id": self.oi})
-
-	def __json__(self):
-		ret = {'id': str(self.oi)}
-		for i in self.public_attrs:
-			ret[i] = getattr(self, i)
-		return ret
-
-	def disable(self):
-		self.enabled = False
-
-	def remove(self):
-		del self.raw
-
-
-def commit(user, commit):
-	try:
-		validate_wrapper(commit)
-	except ValidationError, e:
-		raise ex.BadRequest("Doesn't match schema. See /commit/schema for a copy." + str(e))
-	try:
-		validate_data_type(commit['data_type'], commit['data'])
-	except ValidationError, e:
-		raise ex.BadRequest(
-			"Doesn't match %s schema. See /commit/type/%s for a copy. %s" % (commit['data_type'], commit['data_type'], str(e))
-		)
-
-	c = Commit(create=True)
-
-	for i in c.public_attrs:
-		if i in commit:
-			c.raw += {i: commit[i]}
-	c.time = time()
-	c.user = user.oi
-	return c
-
+	time = me.DateTimeField(default=datetime.now)
+	data_type = me.StringField()
+	enabled = me.BooleanField(default=True)
+	user = me.StringField()
 
 def find(expr):
+	raise Exception("update needed")
+
 	for i in db['commits'].find(expr, fields=[]):
 		yield Commit(i['_id'])
 
 
 def find_one(expr):
+	raise Exception("update needed")
+
 	return Commit(db['commits'].find_one(expr, fields=[])["_id"])
 
 
 def by_user(user):
-	if hasattr(user, 'oi'):
-		user = user.oi
+	raise Exception("update needed")
 
+	if hasattr(user, '_id'):
+		user = user.oi
 	return (Commit(i['_id']) for i in db['commits'].find({'user': user}, fields=[]))
 
 
 def validate_data_type(data_type, data):
 	if data_type in types:
-		globals()["validate_" + str(data_type)](data)
+		jsonschema.validate(data, types[data_type])
 	else:
 		raise ex.BadRequest("Not a type. See /commit/types for types of data input.")
 
-types = ['match']
-wrapper_schema = json.load(open(app.config["SCHEMA_DIR"] + 'commit.schema.json'))
-validate_wrapper = functools.partial(jsonschema.validate, wrapper_schema)
-match_schema = json.load(open(app.config["SCHEMA_DIR"] + 'match.schema.json'))
-validate_match = functools.partial(jsonschema.validate, match_schema)
+types = {
+	'match': json.loads(jsonhelper.remove_comments(
+		open(os.path.join(app.config["SCHEMA_DIR"], 'match.schema.json')).read()))
+}
+
 
 # ##############
 # # Validators for differnt types (Should call schema-specific validation)

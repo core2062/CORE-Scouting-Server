@@ -4,6 +4,7 @@ import os
 from simplejson import dumps, loads
 import tarfile
 import cStringIO as StringIO
+import mongoengine
 
 from config import app
 
@@ -35,7 +36,7 @@ source collections (holds nearly raw data)
 c = pymongo.Connection()
 # c = pymongo.Connection("mongodb://admin:jD6jw32sas6@dbh54.mongolab.com:27547/csd-test")
 database = c[app.config["DB_NAME"]]  # variable used in the rest of the code to access the db
-
+mongoengine.connect(app.config["DB_NAME"])
 #this might hold some invisible db decorators later
 
 
