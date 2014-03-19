@@ -3,6 +3,7 @@ Flask==0.10.1
 Jinja2==2.7.2
 MarkupSafe==0.18
 MongoDescriptors==0.2.2
+WTForms==1.0.5
 Werkzeug==0.9.4
 argparse==1.2.1
 itsdangerous==0.23

@@ -3,7 +3,7 @@ from os import urandom
 from time import time
 from passlib.context import CryptContext
 
-from config import app
+import config
 from model.db import database as db
 
 
@@ -32,7 +32,7 @@ def token_auth(token, ip=None):
 	user = db.user.find_one({"token": str(token)})
 	if not user:
 		return None
-	if ip and not app.config["ALLOW_TOKENS_TO_CHANGE_IP"]:
+	if ip and not config.ALLOW_TOKENS_TO_CHANGE_IP:
 		if user.ip != ip:
 			return False
 	else:
@@ -83,7 +83,7 @@ class User(object):
 	def new_session(self, ip):
 		self.logout()
 
-		self.token = urandom(app.config["TOKEN_LENGTH"]).encode('base64')
+		self.token = urandom(config.TOKEN_LENGTH).encode('base64')
 		self.ip = ip
 		self.startTime = time()
 

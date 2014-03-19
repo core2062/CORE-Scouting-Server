@@ -1,0 +1,224 @@
+{% macro render_field(field) %}
+    <div class="field">
+    {{ field.label }}
+    {{ field(title=field.description, **kwargs)|safe }}
+    {% if field.errors %}
+        <ul class="form-error">
+        {% for error in field.errors %}
+            <li class="flash error">{{ error }}</li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+    </div>  
+{% endmacro %}
+{% macro render_split(field1, field2) %}
+    <div class="field" >
+    <label for="{{field1.id}}">{{field1.label.text.split(" ")[:-1]|join(" ")}}</label> 
+    {{ field1(class="split", title=field1.description, **kwargs)|safe }}
+    <label for="{{field2.id}}" class="split">out of</label>
+    {{ field2(class="split", title=field2.description, **kwargs)|safe }}
+    {% if field1.errors or field2.errors %}
+        <ul class="form-error">
+        {% for error in field1.errors %}
+            <li class="flash error">{{ error }}</li>
+        {% endfor %}
+        {% for error in field2.errors %}
+            <li class="flash error">{{ error }}</li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+    </div>
+{% endmacro %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CORE Scouting—Commit Submission</title>
+    <link rel="icon" href="/static/favicon.ico">
+    <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript">
+        $(function(){
+            setTimeout(function(){
+                $("#messages").fadeOut({duration: 700, queue: false}).delay(500).slideUp(300);
+            }, 2000)
+        })
+    </script>
+    <style type="text/css" media="screen">
+        @import url(http://fonts.googleapis.com/css?family=Open+Sans:400,300,600,700,800,300italic,400italic,600italic,700italic,800italic|Orbitron:400,500,700,900);
+        #messages {
+            list-style: none;
+        }
+        .flash {
+            display:inline;
+            min-width: 40px;
+            background-color: #9EE0E0;
+            padding: 4px 15px;
+            border: solid 2px #48BFBF;
+            border-radius: 8px;
+            white-space: nowrap;
+        }
+        .form-error {
+            list-style: none;
+            margin-top: .5em;
+            margin-bottom: 0;
+        }
+        .flash.error {
+            font-size: 13px;
+            background-color: #FF7452;
+            border: solid 2px #E33D3B;
+        }
+        body {
+            font-family: Open Sans, Arial, sans-serif;
+            background: #f2f2f2;
+        }
+        h1, legend {
+            font-family: Orbitron;
+        }
+        legend {
+            text-align: left;
+            font-size: 1.3em;
+            margin-left: 1.3em;
+        }
+        #header {
+            margin: 1em 0 .4em 35px;
+        }
+        hr {
+            border-style: dashed;
+            border-width: 3px;
+            margin-bottom: 2em;
+        }
+        form {
+            width: 90%;
+            margin: .5em auto;
+        }
+        fieldset {
+            background-color: white;
+            float: right;
+            clear: right;
+            text-align: left;
+            margin-top: 1em;
+            margin-bottom: 0;
+            max-width: 630px;
+        }
+        fieldset#general {
+            float: left;
+            text-align: right;
+            max-width: 400px;
+        }
+        fieldset hr {
+            width:70%;
+            border-width: 1px;
+            margin:1.5em auto;
+        }
+        div.field {
+            display: inline-block;
+            padding: 10px 15px;
+            /*border: solid 1px #ddd;*/
+            vertical-align: middle;
+        }
+        input[type="submit"] {
+            display: block;
+            font-size: 1.5em;
+            margin: 1em auto;
+            font-family: Orbitron;
+            font-weight: 400;
+            padding: .4em .2em;
+            vertical-align: middle;
+        }
+        textarea{
+            width: 100%;
+            min-height: 3.5em;
+            margin-top: .8em;
+        }
+        select {
+            font-size: 1em;
+            padding-top: .2em;
+            padding-bottom: .2em;
+            border-radius: 7px;
+            border: solid 2px #bbb;
+            background: white;
+        }
+        .field label {
+            padding-left: 10px;
+            padding-right: 10px;
+            font-weight: 600;
+        }
+        .field label:first-of-type::after {
+            content:": ";
+        }
+        input {
+            vertical-align: middle;
+            max-width: 10em;
+        }
+        input.split {
+            max-width: 2.5em;
+        }
+        label.split {
+            padding-left: .2em;
+            padding-right: .2em;
+        }
+    </style>
+</head>
+<body>
+    <h1 id="header">{{type|title}} Commit Submission</h1>
+    <ul id="messages">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages -%}
+            <li class="flash {{category}}">{{ message }}</li>
+        {%- endfor %}
+        {% endwith %}
+    </ul>
+    <hr />
+    <form method="post" action="/commit/submit/{{type}}">
+        <fieldset id="general">
+            <legend>General</legend>
+            {{ render_field(form.scout, tabindex=1, autofocus=None) }}
+            {{ render_field(form.match_num, tabindex=1) }}
+            {{ render_field(form.match_type, tabindex=1) }}
+            {{ render_field(form.team, tabindex=1) }}
+            {{ render_field(form.alliance, tabindex=1) }}
+            <hr />
+            {{ render_field(form.disabled, tabindex=2) }}
+            {{ render_field(form.no_show, tabindex=2) }}
+            {{ render_field(form.tech_fouls, tabindex=2) }}
+            {{ render_field(form.fouls, tabindex=2) }}
+            {{ render_field(form.yellow, tabindex=2) }}
+            {{ render_field(form.red, tabindex=2) }}
+            {{ render_field(form.comments, tabindex=2) }}
+        </fieldset>
+        <fieldset id="auto">
+            <legend>Auto</legend>
+            {{ render_field(form.auto_high, tabindex=1) }}
+            {{ render_field(form.auto_low, tabindex=1) }}
+            {{ render_field(form.auto_hot, tabindex=1) }}
+            {{ render_field(form.auto_mobility, tabindex=1) }}
+            {{ render_field(form.auto_goalie, tabindex=1) }}
+            {{ render_field(form.auto_balls, tabindex=1) }}
+        </fieldset>
+        <fieldset id="teleop">
+            <legend>Teleop</legend>
+            {{ render_field(form.team_cycles, tabindex=1) }}
+            {{ render_field(form.alliance_cycles, tabindex=1) }}
+            {{ render_split(form.truss_total, form.truss_made, tabindex=1) }}
+            {{ render_split(form.catch_total, form.catch_made, tabindex=1) }}
+            {{ render_split(form.high_total, form.high_made, tabindex=1) }}
+            {{ render_split(form.low_total, form.low_made, tabindex=1) }}
+            {{ render_split(form.pickup_total, form.pickup_made, tabindex=1) }}
+            {{ render_split(form.pass_total, form.pass_made, tabindex=1) }}
+            {{ render_split(form.inbound_total, form.inbound_made, tabindex=1) }}
+            {{ render_field(form.defense, tabindex=1) }}
+        </fieldset>
+        <fieldset id="robot">
+            <legend>Robot</legend>
+            {{ render_field(form.shooter, tabindex=1) }}
+            {{ render_field(form.catcher, tabindex=1) }}
+            {{ render_field(form.pickup, tabindex=1) }}
+            {{ render_field(form.blocker, tabindex=1) }}
+            {{ render_field(form.goalie, tabindex=1) }}
+            {{ render_field(form.drive_type, tabindex=1) }}
+        </fieldset>
+        <div style="clear:both"></div>
+        <input type="submit" value="Commit!">
+    </form>
+</body>
+</html>

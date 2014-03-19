@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>CORE Scouting—Commit Search</title>
+    <style type="text/css" media="screen">
+    @import url(http://fonts.googleapis.com/css?family=Open+Sans:400,300,600,700,800,300italic,400italic,600italic,700italic,800italic|Orbitron:400,500,700,900);
+        body {
+            font-family: Open Sans, Arial, sans-serif;
+            background: #eee;
+        }
+        ul {
+            list-style: none;   
+        }
+        h1, h2, h3 {
+            font-family: Orbitron;
+        }
+        #messages {
+            list-style: none;
+        }
+        .flash {
+            display:inline;
+            min-width: 40px;
+            background-color: #9EE0E0;
+            padding: 4px 15px;
+            border: solid 2px #48BFBF;
+            border-radius: 8px;
+            white-space: nowrap;
+        }
+        .flash.error {
+            font-size: 13px;
+            background-color: #FF7452;
+            border: solid 2px #E33D3B;
+        }
+        pre {
+            display: block;
+            width: 50%;
+            margin: 1em auto;
+            padding: 20px 30px;
+            background: white;
+            white-space: pre-line;
+        }
+        input[type="text"]{
+            width: 70%;
+            display: block;
+            margin: 1em auto;
+            font-size: 2em;
+            text-align: center;
+            padding: .3em;
+            color: #444;
+        }
+    </style>
+    <link rel="icon" href="/static/favicon.ico">
+</head>
+<body>
+    <form action="/commit/show" method="POST" accept-charset="utf-8">
+    <input type="text" name="query" value="{{query}}">
+    </form>
+    <ul id="messages">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages -%}
+            <li class="flash {{category}}">{{ message }}</li>
+        {%- endfor %}
+        {% endwith %}
+        {% for message in errors -%}
+            <li class="error flash">{{ message }}</li>
+        {%- endfor %}
+    </ul>
+    {% for i in objects %}
+    <pre>{{i.to_json()}}</pre>
+    {% endfor %}
+</body>
+</html>

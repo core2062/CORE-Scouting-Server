@@ -1,0 +1,278 @@
+
+{% macro render_team(team) %}
+<table>
+    <tr>
+        <td class="subtitle left right title_emph">Record</td>
+        <td class="value_emph">6 out of 6</td>
+        <td class="title left" rowspan="2">2062</td>
+        <td class="title right" rowspan="2" colspan="2">C.O.R.E. Robotics</td>
+    </tr>
+    <tr>
+        <td class="subtitle" colspan="2">Autonomous Info</td>
+    </tr>
+    <tr>
+        <td class="left">High Goal</td>
+        <td class="right">12 out of 6</td>
+        <td class="subtitle" colspan="2">Teleop. Info</td>
+        <td class="subtitle">Robot Info</td>
+    </tr>
+    <tr>
+        <td class="left">Low Goal</td>
+        <td class="right">0 out of 6</td>
+        <td class="left">Truss</td>
+        <td class="right">12 out of 12</td>
+        <td>Shooter</td>
+    </tr>
+    <tr>
+        <td class="left">Hot Goal</td>
+        <td class="right">12 out of 6</td>
+        <td class="left">Catches</td>
+        <td class="right">6 out of 6 </td>
+        <td>2-Speed Tank</td>
+    </tr>
+    <tr>
+        <td class="left">Mobility</td>
+        <td class="right">6 out of 6</td>
+        <td class="left">High Goal</td>
+        <td class="right">36 out of 36</td>
+        <td>Catcher</td>
+    </tr>
+    <tr>
+        <td class="left">Goalie Zone</td>
+        <td class="right">0 out of 6</td>
+        <td class="left">Low Goal</td>
+        <td class="right">10 out of 10</td>
+        <td>Pickup</td>
+    </tr>
+    <tr>
+        <td class="left">Balls</td>
+        <td class="right">2</td>
+        <td class="left">Passes</td>
+        <td class="right">36 out of 36</td>
+        <td>Goalie Mech</td>
+    </tr>
+    <tr>
+        <td class="left title_emph">Auto Contrib</td>
+        <td class="right value_emph">50</td>
+        <td class="left">Pickup</td>
+        <td class="right">36 out of 36</td>
+        <td>Blocker</td>
+    </tr>
+    <tr>
+        <td class="subtitle" colspan="2">Penalties</td>
+        <td class="left">Inbounds</td>
+        <td class="right">36 out of 36</td>
+        <td>Disabled/Dead</td>
+    </tr>
+    <tr>
+        <td class="left">Fouls</td>
+        <td class="right">0</td>
+        <td class="left">Defense</td>
+        <td class="right">6 out of 6</td>
+        <td>0 out of 6</td>
+    </tr>
+    <tr>
+        <td class="left">Tech Fouls</td>
+        <td class="right">0</td>
+        <td class="left title_emph">Tele Contrib</td>
+        <td class="right value_emph">12</td>
+        <td class="final subtitle title_emph">Predicted Score</td>
+    </tr>
+    <tr>
+        <td class="left">Yellow Cards</td>
+        <td class="right">0</td>
+        <td class="subtitle" colspan="2">Cycles</td>
+        <td class="title value_emph total" rowspan="2">62</td>
+    </tr>
+    <tr>
+        <td class="left">Red Cards</td>
+        <td class="right">0</td>
+        <td class="left">Participated</td>
+        <td class="right">36 out of 36</td>
+    </tr>
+</table>
+{% endmacro %}
+
+<html>
+<head>
+    <title>CORE Scouting—Drive Report</title>
+    <link rel="icon" href="/static/favicon.ico">
+    <style type="text/css">
+        @import url(http://fonts.googleapis.com/css?family=Open+Sans:400,300,600,700,800,300italic,400italic,600italic,700italic,800italic|Orbitron:400,500,700,900);
+        @media print {
+            #header {
+                margin: 0 !important;
+                margin-left: 1em;
+            }
+            #subtitle {
+                margin: 0 !important;
+                margin-left: 1em;
+            }
+            hr {
+                margin: 0 !important;
+            }
+            table {
+                margin: .5em .5em !important;
+                height: 40%;
+            }
+            body {
+                -webkit-print-color-adjust: exact;
+                background: white;
+            }
+            #header {
+                margin-top: 0;
+            }
+        }
+        @media screen {
+            body {
+                background: #f2f2f2;
+            }
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Open Sans, Arial, sans-serif;
+        }
+        h1 {
+            font-family: Orbitron;
+        }
+        #header {
+            margin: 1em 0 .1em 35px;
+        }
+        #subtitle {
+            /*font-style: italic;*/
+            font-family: monospace;
+            font-size: 1.3em;
+            margin-left: 4em;
+            margin-bottom: .4em;
+        }
+        hr {
+            border-style: dashed;
+            border-width: 3px;
+            margin-bottom: 2em;
+        }
+        #messages {
+            list-style: none;
+        }
+        .flash {
+            display: inline;
+            min-width: 40px;
+            background-color: #9EE0E0;
+            padding: 4px 15px;
+            border: solid 2px #48BFBF;
+            border-radius: 8px;
+            white-space: nowrap;
+        }
+        .flash.error {
+            font-size: 13px;
+            background-color: #FF7452;
+            border: solid 2px #E33D3B;
+        }
+        table {
+            margin: 1em;
+            border: 2px black solid;
+            background-color:#7D7D7D;
+            page-break-inside: avoid;
+            page-break-after: always;
+        }
+        td {
+            border: 1px black solid;
+            font-size:.8em;
+            padding:2px;
+            font-family: 'Open Sans', sans-serif;
+            background-color:#fff;
+            vertical-align: middle;
+        }
+        td {
+            text-align: center;
+        }
+        td.left {
+            text-align: right;
+        }
+        td.right {
+            text-align: left;
+        }
+        .alliance {
+            display: inline-flex;
+            flex-direction: row;
+            margin: 1em auto;
+            text-align: left;
+        }
+        @media screen {
+            td {
+                width: 110px;
+            }
+            .alliance {
+                flex-direction: column;
+            }
+        }
+        #container {
+            text-align: center;
+        }
+        .title {
+            text-align: center;
+            font-size: 1em; 
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bolder;
+            color:#fff;
+        }
+        .title.total {
+            font-size: 1.8em;
+        }
+        .red .title {
+            background-color:#f34756;
+        }
+        .blue .title {
+            background-color:#3c78d8;
+        }
+        .red .value_emph {
+            background-color:#ff7b7b;
+        }
+        .blue .value_emph {
+            background-color:#6d9eeb;
+        }
+        .subtitle {
+            text-align: center;
+            font-weight: bold;
+        }
+        .value_emph {
+            font-weight: bold;
+        }
+        .final {
+            border-bottom-style:dashed;
+        }
+        .title_emph {
+            background-color:#CACACA;
+            border-right-color:black;
+        }
+        .total {
+            color: black;
+        }
+    </style>
+</head>
+<body>
+
+    <h1 id="header">Match {{match|upper}} Driver Report</h1>
+    <span id="subtitle">Generated {{date}} with {{reports}} reports</span>
+    <ul id="messages">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages -%}
+            <li class="flash {{category}}">{{ message }}</li>
+        {%- endfor %}
+        {% endwith %}
+    </ul>
+    <hr />
+    <div id="container">
+        <div class="red alliance">
+            {{render_team(2062)}}
+            {{render_team(2062)}}
+            {{render_team(2062)}}
+        </div>
+        <div class="blue alliance">
+            {{render_team(2062)}}
+            {{render_team(2062)}}
+            {{render_team(2062)}}
+        </div>
+    </div>
+</body>
+</html>

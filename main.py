@@ -1,56 +1,52 @@
-import os
-from copy import copy
 
-from flask import g, request, send_from_directory
+from flask import Flask, g, request, send_from_directory, render_template_string
 from simplejson import loads
 
 from model.db import database as db
-from helper import allow_origins, check_args
-import api.beverages
-import api.commit
-import api.user
-import api.analyze
-from config import app
+import config
+import views.beverages, views.commit, views.user, views.analyze
 
-app.register_blueprint(api.beverages.blueprint)
-app.register_blueprint(api.commit.blueprint)
-app.register_blueprint(api.user.blueprint)
-app.register_blueprint(api.analyze.blueprint)
+class LocalFlask(Flask):
+    jinja_options = {
+        "extensions": ['jinja2.ext.autoescape', 'jinja2.ext.with_'],
+        "trim_blocks": True,
+        "lstrip_blocks": True
+    }
 
-@app.before_request
-def before_request():
-    # put the request args in a mutable dict so we can pre-process them
-    g.args = dict(request.args.to_dict())
-    # if POST args or json are sent, merge that into the args
-    if request.json:
-        g.args.update(request.json)
-    if request.form:
-        g.args.update(request.form.to_dict())
+app = LocalFlask(__name__)
 
-    # below stuff (g.notify & g.error) isn't really used... consider removing
-    # an array that holds notifications (like non-fatal errors or important messages)
-    #g.notify = []
+app.secret_key = config.SECRET_KEY
 
+app.register_blueprint(views.beverages.blueprint)
+app.register_blueprint(views.commit.blueprint)
+# app.register_blueprint(views.user.blueprint)
+app.register_blueprint(views.analyze.blueprint)
 
-# @app.after_view
-# def after_view(rv):
-#   # check to see that it's json, if not then return
-#   if not type(rv) in (dict, list):
-#       return
-#   #put stuff from g in response
-#   return
+index_tmpl = """
+    <style> @import url(http://fonts.googleapis.com/css?family=Orbitron:500);
+    body {
+        padding: 1.5em 3em;
+    }
+    h3 {
+        font-family: Orbitron;
+    }
+    a {
+        color: #ff731c;
+        text-decoration: underline;
+    }
+    </style>
+<h3><a href="/commit/submit/match">Submit a match scouting report</a></h3>
+"""
+@app.route("/")
+def index():
+    return render_template_string(index_tmpl)
 
 @app.route('/matches.csv')
 def make_csv():
     cols = data.keys()
-    matches = db.scouting.find({'match_type': 'q'}).sort('match_num')
+    matches = db.commit.find({'match_type': 'q'}).sort('match_num')
     rows = []
     for match in matches:
-        del match['_id']
-        try:
-            del match['auto_pyramid']
-        except:
-            pass
         row = [None] * 30
         for k, v in match.items():
             if not k in cols:

@@ -1,10 +1,9 @@
-from config import app
 from functools import wraps
 from werkzeug import exceptions as ex
 from flask import request, g, make_response
 
 import model.user as user
-
+import config
 
 def check_args(*required_args):
     """
@@ -12,7 +11,7 @@ def check_args(*required_args):
     the supplied data if they don't exist, then an exception is raised
     """
     for arg in required_args:
-        if arg not in g.args:
+        if arg not in request.args:
             raise ex.BadRequest('the argument "%s" was not supplied in your request' % arg)
 
 
@@ -55,7 +54,7 @@ def permission_required(*permissions):
         return decorated_function
     return decorator
 
-def allow_origins(func=None, origins=app.config["ALLOWED_ORIGINS"]):
+def allow_origins(func=None, origins=config.ALLOWED_ORIGINS):
     def wrapped(func):
         @wraps(func)
         def decorated(*args, **kwargs):
@@ -73,8 +72,7 @@ def allow_origins(func=None, origins=app.config["ALLOWED_ORIGINS"]):
     else:
         return wrapped
 
-@app.after_request
-def after_request(response):
+def cors(response):
     if getattr(g, 'cors', False):
         response.headers['Access-Control-Allow-Origin'] = (
             request.headers.get('Origin')

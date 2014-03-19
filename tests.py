@@ -6,13 +6,6 @@ import jsonhelper
 
 base = lambda x: 'http://localhost' + str(x)
 
-json_headers = {'content-type': 'application/json'}
-
-##################
-# User api tests
-##################
-
-
 @pytest.fixture
 def login(scope="module"):
     loginParams = {'username': 'test-user', 'password': 'm3jhrk4'}
@@ -21,78 +14,26 @@ def login(scope="module"):
     assert token
     return token
 
+def login():
+    pass
 
-def test_login():
-    loginParams = {'username': 'test-user', 'password': 'm3jhrk4'}
-    login = requests.post(base('/user/login'), params=loginParams)
-    # print login.status_code
-    # print login.json()
-    assert login.status_code == 200
-    return login.json()['token']
-
-
-def test_accountDetails(login):
-    acctParams = {'token': login}
-    acct = requests.get(base('/user/account'), params=acctParams)
-    # print acct.status_code
-    print acct.text
-    assert acct.json()['name'] == 'test-user'
-    assert acct.json()['team'] == 0
-
-
-def test_modify(login):
-    from random import random
-
-    newmail = 'newmail' + str(random())
-    modifyData = json.dumps({'email': newmail, 'token': login})
-
-    modify = requests.post(base('/user/update'), data=modifyData, headers=json_headers)
-
-    # print modify.status_code
-    # print modify.json
-    assert modify.status_code == 200
-    assert 'email' in modify.json()['modified']
 
 ###################
 # Commit api tests
 ###################
 
 @pytest.fixture
-def schema():
-    return json.loads(jsonhelper.remove_comments(open('schema/match.schema.json').read()))
-
-@pytest.fixture
-def schema_defaults(scope="module"):
-    defaults = {
+def submit_defaults(scope="module"):
+    return {
         "match_num": 1,
         "team": 2062,
         "match_type": "p",
         "scout": "xxBADxx"
     }
-    x = schema()
-    return { k: (v['default'] if 'default' in v else defaults[k]) for k, v in x.iteritems() }
 
-def test_schema(schema):
-    r = requests.get(base('/commit/type/match'))
-    assert r.status_code == 200
-    assert r.json()
-    assert r.json() == schema
-
-
-def test_types():
-    r = requests.get(base('/commit/types'))
-    assert r.status_code == 200
-    assert r.json()
-
-
-def test_type():
-    r = requests.get(base('/commit/type/match'))
-    assert r.status_code == 200
-    assert r.json()
-
-def test_submission(login, schema_defaults):
-    d = schema_defaults.copy()
-    d.update({'token': login})
+def test_submission(submit_defaults):
+    args = schema_defaults.copy()
+    page = requests.get(base('/commit.submit/match'))
     submit = requests.post(base('/commit/submit/match'), data=json.dumps(d), headers=json_headers)
     assert submit.status_code == 200
     # print submit.json()
