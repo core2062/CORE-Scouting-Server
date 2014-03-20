@@ -171,6 +171,7 @@
     <hr />
     <form method="post" action="/commit/submit/{{type}}">
         <fieldset id="general">
+            {{form.event()}}
             <legend>General</legend>
             {{ render_field(form.scout, tabindex=1, autofocus=None) }}
             {{ render_field(form.match_num, tabindex=1) }}
@@ -199,13 +200,13 @@
             <legend>Teleop</legend>
             {{ render_field(form.team_cycles, tabindex=1) }}
             {{ render_field(form.alliance_cycles, tabindex=1) }}
-            {{ render_split(form.truss_total, form.truss_made, tabindex=1) }}
-            {{ render_split(form.catch_total, form.catch_made, tabindex=1) }}
-            {{ render_split(form.high_total, form.high_made, tabindex=1) }}
-            {{ render_split(form.low_total, form.low_made, tabindex=1) }}
-            {{ render_split(form.pickup_total, form.pickup_made, tabindex=1) }}
-            {{ render_split(form.pass_total, form.pass_made, tabindex=1) }}
-            {{ render_split(form.inbound_total, form.inbound_made, tabindex=1) }}
+            {{ render_split(form.truss_made, form.truss_total, tabindex=1) }}
+            {{ render_split(form.catch_made, form.catch_total, tabindex=1) }}
+            {{ render_split(form.high_made, form.high_total, tabindex=1) }}
+            {{ render_split(form.low_made, form.low_total, tabindex=1) }}
+            {{ render_split(form.pickup_made, form.pickup_total, tabindex=1) }}
+            {{ render_split(form.pass_made, form.pass_total, tabindex=1) }}
+            {{ render_split(form.inbound_made, form.inbound_total, tabindex=1) }}
             {{ render_field(form.defense, tabindex=1) }}
         </fieldset>
         <fieldset id="robot">

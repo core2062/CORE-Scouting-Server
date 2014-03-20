@@ -25,10 +25,11 @@ class MatchCommit(Commit):
         choices=[("p", "Practice"),("q","Quals"),("qf","Quater Finals"),("sf","Semi Finals"),("f","Finals")],
         verbose_name = "Match Type",
         help_text = "The type of match scouted",
-        required = "true",
+        required = True,
     )
     event = StringField(
-        default = "practice"
+        default = "practice",
+        required= "true"
     )
     scout = StringField(
         verbose_name = "Scout Name",
@@ -122,14 +123,19 @@ class MatchCommit(Commit):
         default= 0
     )
 
+    @property
+    def auto_contrib(self):
+        pass
+
     ###########
     ## Teleop
     ###########
 
-    team_cycles = IntField(
+    team_cycles = LessThanField(
         verbose_name =  "Team Cycles",
         help_text =  "The number of times the team contributes assist points.",
         min_value = 0,
+        less_than = "alliance_cycles",
         default = 0
     )
     alliance_cycles = IntField(
@@ -144,10 +150,11 @@ class MatchCommit(Commit):
         min_value = 0,
         default = 0
     )
-    truss_made = IntField(
+    truss_made = LessThanField(
         verbose_name =  "Truss Shots Made",
         help_text =  "The number of times the team scouted successfully scored a truss shot",
         min_value = 0,
+        less_than = "truss_total",
         default = 0
     )
     catch_total = IntField(
@@ -156,10 +163,11 @@ class MatchCommit(Commit):
         min_value = 0,
         default = 0
     )
-    catch_made = IntField(
+    catch_made = LessThanField(
         verbose_name =  "Catches Made",
         help_text =  "The number of times the team scouted successfully caught a ball over the truss",
         min_value = 0,
+        less_than = "catch_total",
         default = 0
     )
     high_total = IntField(
@@ -168,10 +176,11 @@ class MatchCommit(Commit):
         min_value = 0,
         default = 0
     )
-    high_made = IntField(
+    high_made = LessThanField(
         verbose_name =  "High Goals Made",
         help_text =  "The number of times the team scouted successfully scored in the high goal",
         min_value = 0,
+        less_than = "high_total",
         default = 0
     )
     low_total = IntField(
@@ -180,10 +189,11 @@ class MatchCommit(Commit):
         min_value = 0,
         default = 0
     )
-    low_made = IntField(
+    low_made = LessThanField(
         verbose_name =  "Low Goals Made",
         help_text =  "The number of times the tea, scouted successfully scored in the low goal",
         min_value = 0,
+        less_than = "low_total",
         default = 0
     )
     pickup_total = IntField(
@@ -192,10 +202,11 @@ class MatchCommit(Commit):
         min_value = 0,
         default = 0
     )
-    pickup_made = IntField(
+    pickup_made = LessThanField(
         verbose_name =  "Pickups Made",
         help_text =  "The number of times the team scouted successfully picked up a ball",
         min_value = 0,
+        less_than = "pickup_total",
         default = 0
     )
     pass_total = IntField(
@@ -204,10 +215,11 @@ class MatchCommit(Commit):
         min_value = 0,
         default = 0
     )
-    pass_made = IntField(
+    pass_made = LessThanField(
         verbose_name =  "Passes Made",
         help_text =  "The number of times the team scouted successfully passed the ball",
         min_value = 0,
+        less_than = "pass_total",
         default = 0
     )
     inbound_total = IntField(
@@ -216,10 +228,11 @@ class MatchCommit(Commit):
         min_value = 0,
         default = 0
     )
-    inbound_made = IntField(
+    inbound_made = LessThanField(
         verbose_name =  "Inbounds Made",
         help_text =  "The number of times the team successfully inbounded a ball",
         min_value = 0,
+        less_than = "inbound_total",
         default = 0
     )
     defense = BooleanField(
@@ -263,7 +276,6 @@ class MatchCommit(Commit):
         max_length = 999,
         default = ""
     )
-
     
 # ##############
 # # Validators for differnt types

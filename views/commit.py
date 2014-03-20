@@ -2,6 +2,7 @@ from werkzeug import exceptions as ex
 import simplejson as json
 import flask
 import wtforms_me
+import wtforms.fields
 
 import model.commit
 """api used for submitting commits"""
@@ -9,6 +10,7 @@ import model.commit
 blueprint = flask.Blueprint("commits", __name__, url_prefix="/commit")
 
 MatchForm = wtforms_me.model_form(model.commit.MatchCommit)
+MatchForm.event = wtforms.fields.HiddenField(**MatchForm.event.kwargs)
 @blueprint.route('/submit/match', methods=["GET","POST"])
 def submit_commit():
     form = MatchForm(flask.request.form)
@@ -30,7 +32,7 @@ def commit_search():
             errors.append(e.message)
     objects = []
     try:
-        objects = list(model.commit.MatchCommit.objects(**query))
+        objects = list(model.commit.MatchCommit.objects(**query).order_by("-time"))
     except Exception, e:
         print e
         errors.append(e.message)

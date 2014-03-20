@@ -4,6 +4,23 @@ from flask import request, g, make_response
 
 import model.user as user
 import config
+import math
+
+class JinjaTest(object):
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
+    def __getattr__(self, attr):
+        if attr in self.__dict__:
+            return self.__dict__[attr]
+        return attr
+
+def percent(val, digits = 0):
+    if isinstance(val, basestring):
+        return val
+    # if val != 0: print val
+    val *= 10 ** (digits + 2)
+    return '{1:.{0}f}%'.format(digits, math.floor(val) / 10 ** digits)
+
 
 def check_args(*required_args):
     """
@@ -13,7 +30,6 @@ def check_args(*required_args):
     for arg in required_args:
         if arg not in request.args:
             raise ex.BadRequest('the argument "%s" was not supplied in your request' % arg)
-
 
 def args_required(*args):
     def decorator(f):

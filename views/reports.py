@@ -2,16 +2,27 @@ import flask
 from werkzeug import exceptions as ex
 from datetime import datetime
 import analysis.event
-import model.commit
+import model.commit, model.team
+from model.team import Team
 
 
 blueprint = flask.Blueprint("analysis", __name__, url_prefix="/analysis")
 
 @blueprint.route("/<e_key>/match/<key>")
 def driver_report(e_key, key):
-	return flask.render_template("driver_report.html", 
-		date=datetime.now().strftime("%a %H:%M"), match=key, reports=len(model.commit.MatchCommit.objects))
+    
+    teams = {
+        "red1" : Team(2062, e_key),
+        "red2" : Team(2062, e_key),
+        "red3" : Team(2062, e_key),
 
+        "blue1" : Team(2062, e_key),
+        "blue2" : Team(2062, e_key),
+        "blue3" : Team(2062, e_key),
+    }
+    return flask.render_template("driver_report.html", 
+        teams=teams, date=datetime.now().strftime("%a %H:%M"), match=key, 
+        reports=len(model.commit.MatchCommit.objects(event=e_key)))
 
 
 other_teams_tmpl = """
@@ -28,7 +39,7 @@ Here is the breakdown for the remaining {{total - loners}}:
 {% endfor %}"""
 @blueprint.route("/event/<key>/other_teams.html")
 def event_html(key):
-	try:
-		return flask.render_template_string(analysis.event.regionals_to_watch(key))
-	except ValueError, e:
-		return ex.NotFound("Event {} not found.".format(key))
+    try:
+        return flask.render_template_string(analysis.event.regionals_to_watch(key))
+    except ValueError, e:
+        return ex.NotFound("Event {} not found.".format(key))

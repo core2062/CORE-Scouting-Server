@@ -4,7 +4,8 @@ from simplejson import loads
 
 from model.db import database as db
 import config
-import views.beverages, views.commit, views.user, views.analyze
+import views.beverages, views.commit, views.user, views.reports
+import helper
 
 class LocalFlask(Flask):
     jinja_options = {
@@ -14,13 +15,14 @@ class LocalFlask(Flask):
     }
 
 app = LocalFlask(__name__)
+app.jinja_env.filters['percent'] = helper.percent
 
 app.secret_key = config.SECRET_KEY
 
 app.register_blueprint(views.beverages.blueprint)
 app.register_blueprint(views.commit.blueprint)
 # app.register_blueprint(views.user.blueprint)
-app.register_blueprint(views.analyze.blueprint)
+app.register_blueprint(views.reports.blueprint)
 
 index_tmpl = """
     <style> @import url(http://fonts.googleapis.com/css?family=Orbitron:500);

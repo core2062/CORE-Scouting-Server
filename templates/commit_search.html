@@ -15,6 +15,13 @@
         h1, h2, h3 {
             font-family: Orbitron;
         }
+        #subtitle {
+            font-family: monospace;
+            font-size: 1.3em;
+            margin: .5em;
+            display: block;
+            text-align: center;
+        }
         #messages {
             list-style: none;
         }
@@ -38,7 +45,7 @@
             margin: 1em auto;
             padding: 20px 30px;
             background: white;
-            white-space: pre-line;
+            white-space: pre-wrap;
         }
         input[type="text"]{
             width: 70%;
@@ -47,7 +54,11 @@
             font-size: 2em;
             text-align: center;
             padding: .3em;
-            color: #444;
+            color: #aaa;
+            border: thin #aaa solid;
+        }
+        input[type="text"]:focus{
+            color:#444;
         }
     </style>
     <link rel="icon" href="/static/favicon.ico">
@@ -56,6 +67,7 @@
     <form action="/commit/show" method="POST" accept-charset="utf-8">
     <input type="text" name="query" value="{{query}}">
     </form>
+    <span id="subtitle">{{objects|length}} results</span>
     <ul id="messages">
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% for category, message in messages -%}
@@ -67,7 +79,7 @@
         {%- endfor %}
     </ul>
     {% for i in objects %}
-    <pre>{{i.to_json()}}</pre>
+    <pre>{{i.to_json(indent=4)}}</pre>
     {% endfor %}
 </body>
 </html>
