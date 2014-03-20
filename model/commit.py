@@ -272,6 +272,7 @@ class MatchCommit(Commit):
     )
     drive_type = StringField(
         verbose_name =  "Drive Type",
+        choices = [("tank", "Tank"), ("strafe", "Strafe")],
         help_text =  "what kind of drive did the robot scouted have?",
         max_length = 999,
         default = ""
