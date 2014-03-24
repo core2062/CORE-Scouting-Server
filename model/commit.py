@@ -25,10 +25,11 @@ class MatchCommit(Commit):
         choices=[("p", "Practice"),("q","Quals"),("qf","Quater Finals"),("sf","Semi Finals"),("f","Finals")],
         verbose_name = "Match Type",
         help_text = "The type of match scouted",
+        default="q",
         required = True,
     )
     event = StringField(
-        default = "practice",
+        default = "2014wimi",
         required= "true"
     )
     scout = StringField(
@@ -125,7 +126,12 @@ class MatchCommit(Commit):
 
     @property
     def auto_contrib(self):
-        pass
+        return sum((
+            self.auto_hot*5,
+            self.auto_high*self.auto_balls*10,
+            self.auto_low*self.auto_balls*5,
+            self.auto_mobility * 5
+        ))
 
     ###########
     ## Teleop
@@ -241,10 +247,21 @@ class MatchCommit(Commit):
         default = False
     )
 
+    @property
+    def tele_contrib(self):
+        return sum((
+            self.team_cycles*5,
+            self.truss_made*10,
+            self.catch_made*10,
+            self.low_made*1,
+            self.high_made*10
+        ))
+
 
     #############
     ## Robot Info
     #############
+    r_infos = ["shooter", "catcher", "pickup", "blocker", "goalie"]
     shooter = BooleanField(
         verbose_name =  "Shooter",
         help_text =  "Did the robot being scouted have a shooter mechanism?",
@@ -277,7 +294,16 @@ class MatchCommit(Commit):
         max_length = 999,
         default = ""
     )
+
+    @property
+    def match(self):
+        from model import fms
+        match_num = int(self.match_num.split('.')[0])
+        comp_level = "qm" if self.match_type == 'q' else self.match_type
+        return fms.Match.objects.get(event=self.event,
+            match_number=match_num, comp_level=comp_level)
     
+
 # ##############
 # # Validators for differnt types
 # ##############

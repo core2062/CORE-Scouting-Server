@@ -31,9 +31,8 @@ def event(ev):
     event = fms.Event(**event_doc)
     for i in event.teams:
         i.save()
-    for i in event.matches:
-        i.save()
     event.save()
+    matches(ev)
     return event
 
 def team(key):

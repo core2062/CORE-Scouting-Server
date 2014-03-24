@@ -1,15 +1,14 @@
 
 {% macro get_val(team, attr) %}
-{# {{team["sum_"+attr]}} #} 
-{{team["avg_"+attr]|percent}}
+{{team["sum_"+attr]}}{# {{team["avg_"+attr]|percent}} #}
 {% endmacro %}
 
 {% macro render_team(team) %}
 <table>
     <tr>
         <td class="subtitle left right title_emph">Record</td>
-        <td class="value_emph">{{team.matches_won}} out of {{team.matches_played}}</td>
-        <td class="title left" rowspan="2">{{team.team_num}}</td>
+        <td class="value_emph">{{team.win_record}} out of {{team.matches_played}}</td>
+        <td class="title left" rowspan="2">{{team.team_number}}</td>
         <td class="title right" rowspan="2" colspan="2">{{team.nickname}}</td>
     </tr>
     <tr>
@@ -26,48 +25,48 @@
         <td class="right">{{get_val(team, "auto_low")}} out of {{team.matches_played}}</td>
         <td class="left">Truss</td>
         <td class="right">{{get_val(team, "truss_made")}} out of {{team.sum_truss_total}}</td>
-        <td>{{team.attrs[0]}}</td>
+        <td>{{team.get_info(0)}}</td>
     </tr>
     <tr>
         <td class="left">Hot Goal</td>
         <td class="right">{{get_val(team, "auto_hot")}} out of {{team.matches_played}}</td>
         <td class="left">Catches</td>
         <td class="right">{{get_val(team, "catch_made")}} out of {{team.sum_catch_total}}</td>
-        <td>{{team.attrs[1]}}</td>
+        <td>{{team.get_info(1)}}</td>
     </tr>
     <tr>
         <td class="left">Mobility</td>
         <td class="right">{{get_val(team, "auto_mobility")}} out of {{team.matches_played}}</td>
         <td class="left">High Goal</td>
         <td class="right">{{get_val(team, "high_made")}} out of {{team.sum_high_total}}</td>
-        <td>{{team.attrs[2]}}</td>
+        <td>{{team.get_info(2)}}</td>
     </tr>
     <tr>
         <td class="left">Goalie Zone</td>
         <td class="right">{{get_val(team, "auto_goalie")}} out of {{team.matches_played}}</td>
         <td class="left">Low Goal</td>
         <td class="right">{{get_val(team, "low_made")}} out of {{team.sum_low_total}}</td>
-        <td>{{team.attrs[3]}}</td>
+        <td>{{team.get_info(3)}}</td>
     </tr>
     <tr>
         <td class="left">Balls</td>
-        <td class="right">{{team.avg_auto_balls}}</td>
+        <td class="right">{{(team.avg_auto_balls|round(3)) if team.avg_auto_balls != "N/A" else team.avg_auto_balls }}</td>
         <td class="left">Passes</td>
         <td class="right">{{get_val(team, "pass_made")}} out of {{team.sum_pass_total}}</td>
-        <td>{{team.attrs[4]}}</td>
+        <td>{{team.get_info(4)}}</td>
     </tr>
     <tr>
         <td class="left title_emph">Auto Contrib</td>
-        <td class="right value_emph">{{team.auto_contrib}}</td>
+        <td class="right value_emph">{{team.avg_auto_contrib|round|int}}</td>
         <td class="left">Pickup</td>
         <td class="right">{{get_val(team, "pickup_made")}} out of {{team.sum_pickup_total}}</td>
-        <td>{{team.attrs[5]}}</td>
+        <td>{{team.get_info(5)}}</td>
     </tr>
     <tr>
         <td class="subtitle" colspan="2">Penalties</td>
         <td class="left">Inbounds</td>
         <td class="right">{{get_val(team, "inbound_made")}} out of {{team.sum_inbound_total}}</td>
-        <td>{{team.attrs[6]}}</td>
+        <td>{{team.get_info(6)}}</td>
     </tr>
     <tr>
         <td class="left">Fouls</td>
@@ -80,20 +79,21 @@
         <td class="left">Tech Fouls</td>
         <td class="right">{{team.avg_tech_fouls}}</td>
         <td class="left title_emph">Tele Contrib</td>
-        <td class="right value_emph">{{team.tele_contrib}}</td>
+        <td class="right value_emph">{{team.avg_tele_contrib|round|int}}</td>
         <td class="final subtitle title_emph">Predicted Score</td>
     </tr>
     <tr>
         <td class="left">Yellow Cards</td>
         <td class="right">{{team.avg_yellow}}</td>
         <td class="subtitle" colspan="2">Cycles</td>
-        <td class="title value_emph total" rowspan="2">{{team.contrib}}</td>
+        <td class="title value_emph total" rowspan="2">{{team.contrib|round|int}}</td>
     </tr>
     <tr>
         <td class="left">Red Cards</td>
         <td class="right">{{team.avg_red}}</td>
         <td class="left">Participated</td>
-        <td class="right">{{(team.sum_team_cycles / team.sum_alliance_cycles) | percent}} out of {{team.sum_alliance_cycles}}</td>
+        <td class="right">{{((team.sum_team_cycles / team.sum_alliance_cycles)
+            if team.sum_alliance_cycles else 0) | percent}} out of {{team.sum_alliance_cycles}}</td>
     </tr>
 </table>
 {% endmacro %}
@@ -103,7 +103,7 @@
     <title>CORE Scouting—Drive Report</title>
     <link rel="icon" href="/static/favicon.ico">
     <style type="text/css">
-        @import url(http://fonts.googleapis.com/css?family=Open+Sans:400,300,600,700,800,300italic,400italic,600italic,700italic,800italic|Orbitron:400,500,700,900);
+        @import url(/static/fonts.css);
         @media print {
             #header {
                 margin: 0 !important;
@@ -132,14 +132,6 @@
             body {
                 background: #f2f2f2;
             }
-        }
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: Open Sans, Arial, sans-serif;
-        }
-        h1 {
-            font-family: Orbitron;
         }
         #header {
             margin: 1em 0 .1em 35px;
@@ -219,21 +211,22 @@
             font-size: 1em; 
             font-family: 'Orbitron', sans-serif;
             font-weight: bolder;
-            color:#fff;
+            color: black;
+            max-width: 10em;
         }
         .title.total {
             font-size: 1.8em;
         }
-        .red .title {
+        .alliance.red .title {
             background-color:#f34756;
         }
-        .blue .title {
+        .alliance.blue .title {
             background-color:#3c78d8;
         }
-        .red .value_emph {
+        .alliance.red .value_emph {
             background-color:#ff7b7b;
         }
-        .blue .value_emph {
+        .alliance.blue .value_emph {
             background-color:#6d9eeb;
         }
         .subtitle {
@@ -250,12 +243,35 @@
         .total {
             color: black;
         }
+        #score {
+            color: black;
+            font-size: 2em;
+            font-family: 'Orbitron';
+            position: absolute;
+            top: 1em;
+            right: 4em;
+        }
+        #score span {
+            display: inline-block;
+            padding: 10px;
+        }
+        #score .red {
+            background-color: #f34756;
+            border: 5px solid #B80010;
+        }
+        #score .blue {
+            background-color:#3c78d8;
+            border: 5px solid #003B99;
+        }
     </style>
 </head>
 <body>
 
     <h1 id="header">Match {{match|upper}} Driver Report</h1>
     <span id="subtitle">Generated {{date}} with {{reports}} reports</span>
+    <div id="score">
+        <span class="red">{{(red[0].contrib + red[1].contrib + red[2].contrib)|round|int}}</span><span class="blue">{{(blue[0].contrib + blue[1].contrib + blue[2].contrib)|round|int}}</span>
+    </div>
     <ul id="messages">
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% for category, message in messages -%}
@@ -266,14 +282,14 @@
     <hr />
     <div id="container">
         <div class="red alliance">
-            {{render_team(teams['red1'])}}
-            {{render_team(teams['red2'])}}
-            {{render_team(teams['red3'])}}
+            {{render_team(red[0])}}
+            {{render_team(red[1])}}
+            {{render_team(red[2])}}
         </div>
         <div class="blue alliance">
-            {{render_team(teams['blue1'])}}
-            {{render_team(teams['blue2'])}}
-            {{render_team(teams['blue3'])}}
+            {{render_team(blue[0])}}
+            {{render_team(blue[1])}}
+            {{render_team(blue[2])}}
         </div>
     </div>
 </body>
