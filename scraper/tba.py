@@ -1,48 +1,66 @@
 import requests
-from model.log import log
+from operator import attrgetter
 
-h_id = {"X-TBA-App-Id": "core2062:scouting:dev"}
+from model.log import log
+from model.db import database as db
+from model import fms
+
+h_id = {"X-TBA-App-Id": "core2062:scouting:2014wimi"}
 domain = "http://thebluealliance.com/api/"
 
 def tba_call(endpoint, *args, **kwargs):
     r = requests.get(domain+(endpoint.format(*args)), headers=h_id, **kwargs)
     if not r.ok:
-        log('error', "tba call error", str(r.status_code), endpoint)
+        log('error', "tba call error", str(r.status_code), endpoint, r.text)
         r.raise_for_status()
-    return r.json
+    return r.json()
 
-def events(year):
-    list_url = "v1/events/list"
+def event(ev):
     ev_url = "v2/event/{}"
     teams_url = "v2/event/{}/teams"
+    matches_url = "v2/event/{}/matches"
 
-    for ev in tba_call(list_url, params={"year": year}):
-        event = tba_call(ev_url, ev['key'])
-        teams = tba_call(teams_url, ev['key'])
+    events = []
+    event_doc = tba_call(ev_url, ev)
+    teams = tba_call(teams_url, ev)
+    matches = tba_call(matches_url, ev)
 
-        event['_teams'] = [ i['key'] for i in teams ]
-        event['_id'] = event['key']; del event['key']
-        event['_type'] = 'event'
+    event_doc['teams'] = [ team(i['key']) for i in teams ]
+    event_doc['matches'] = [ fms.match_from_tba(doc) for doc in matches]
 
-        # print event;raw_input()
-        yield event
+    event = fms.Event(**event_doc)
+    for i in event.teams:
+        i.save()
+    for i in event.matches:
+        i.save()
+    event.save()
+    return event
 
-def teams(year):
-    # Get all teams attending an event, because TBA lacks a team list atm. 
-    #  https://github.com/gregmarra/the-blue-alliance/issues/727
-    from model.db import database as db
-    url = 'v2/team/{}'
-    teams = set()
-    for event in db.fms.find({'_type': 'event', 'year': year}):
-        teams.update(event['_teams'])
-    l = len(teams)
-    for i, team in enumerate(teams):
-        t = tba_call(url, team)
-        t['_id'] = t['key']; del t['key']
-        t['_type'] = 'team'
-        yield t
-        if i%10 == 0:
-            print "({} / {})".format(i, l)
+def team(key):
+    doc = db.fms.find_one(key)
+    doc['key'] = ['_id']
+    return fms.Team(**doc)
 
-def matches(event, completed_only):
-    
+def cmp_match(match1, match2):
+    if match1.comp_level == match2.comp_level:
+        return cmp(match1.match_number, match2.match_number)
+    else:
+        return cmp(cmp_order.index(match1.comp_level), cmp_order.index(match2.comp_level))
+cmp_order = ('qm', 'ef', 'qf', 'sf', 'f')
+
+def matches(event):
+    print "SCRAPER INIT"
+    url = 'v2/event/{}/matches'
+    match_doc = tba_call(url, event)
+    n=0
+    matches = [ fms.match_from_tba(doc) for doc in match_doc]
+    for i in matches:
+        i.save()
+        n+=1
+    e_db = fms.Event.objects.with_id(event)
+    e_db.matches = sorted(matches, cmp=cmp_match)
+    e_db.save()
+    print "========= SCRAPED %s MATCHES =========" % n
+
+if __name__ == '__main__':
+    matches("2014wimi")

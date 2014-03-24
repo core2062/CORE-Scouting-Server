@@ -7,8 +7,7 @@ keys = map(str.strip, list(open(path.join(path.dirname(__file__),"TWITTER_CONFIG
 
 twitter = Twython(keys[0], access_token=keys[2])
 
-def get_matches(year = 2014):
-	twitter.show_user("")
+# Needs to update matches based on new data.
 
 def get_tweets():
 	tweets = []
@@ -30,3 +29,4 @@ def get_tweets():
 	        	print tweet['created_at']
 	print len(tweets)
 	return tweets
+

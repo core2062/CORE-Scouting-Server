@@ -5,6 +5,7 @@ from flask import request, g, make_response
 import model.user as user
 import config
 import math
+import mongoengine
 
 class JinjaTest(object):
     def __init__(self, **kwargs):
@@ -21,6 +22,13 @@ def percent(val, digits = 0):
     val *= 10 ** (digits + 2)
     return '{1:.{0}f}%'.format(digits, math.floor(val) / 10 ** digits)
 
+def average(sequence):
+    n = 0.0
+    m = 0
+    for i in sequence:
+        n += i
+        m += 1
+    return (n / m) if m else 0
 
 def check_args(*required_args):
     """
@@ -95,3 +103,48 @@ def cors(response):
         )
         response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
     return response
+
+class NiceDoc(object):
+    def to_mongo(self):
+        from bson import SON
+        from mongoengine import Document
+        from mongoengine.base.common import ALLOW_INHERITANCE
+        """Return as SON data ready for use with MongoDB.
+        """
+        data = SON()
+        data["_id"] = None
+        data['_cls'] = self._class_name
+
+        for field_name in self._fields_ordered:
+            value = self._data.get(field_name, None)
+            field = self._fields.get(field_name)
+            if field is None and self._dynamic:
+                field = self._dynamic_fields.get(field_name)
+
+            if value is not None:
+                value = field.to_mongo(value)
+
+            # Handle self generating fields
+            if value is None and field._auto_gen:
+                value = field.generate()
+                self._data[field_name] = value
+
+            if value is not None:
+                data[field.db_field] = value
+
+        # If "_id" has not been set, then try and set it
+        if isinstance(self, Document):
+            if data["_id"] is None:
+                data["_id"] = self._data.get("id", None)
+
+        if data['_id'] is None:
+            data.pop('_id')
+
+        # Only add _cls if allow_inheritance is True
+        if (not hasattr(self, '_meta') or
+           not self._meta.get('allow_inheritance', ALLOW_INHERITANCE)):
+            data.pop('_cls')
+
+        return data
+        
+        
