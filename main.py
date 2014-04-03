@@ -37,7 +37,7 @@ index_tmpl = """
         text-decoration: underline;
     }
     </style>
-<h3><a href="/commit/submit/match">Submit a match scouting report</a></h3>
+<h3><a href="/commit/submit">Submit a match scouting report</a></h3>
 """
 @app.route("/")
 def index():
