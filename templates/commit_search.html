@@ -46,6 +46,7 @@
             padding: 20px 30px;
             background: white;
             white-space: pre-wrap;
+            position: relative;
         }
         input[type="text"]{
             width: 70%;
@@ -60,11 +61,21 @@
         input[type="text"]:focus{
             color:#444;
         }
+        pre a{
+            display: inline-block;
+            position: absolute;
+            right:0;
+            top:0;
+            border: 1px solid #aaa;
+            color:black;
+            padding: 1em .5em;
+            background-color: #eee;
+        }
     </style>
     <link rel="icon" href="/static/favicon.ico">
 </head>
 <body>
-    <form action="/commit/show" method="POST" accept-charset="utf-8">
+    <form action="/commit/" method="POST" accept-charset="utf-8">
     <input type="text" name="query" value="{{query}}">
     </form>
     <span id="subtitle">{{objects|length}} results</span>
@@ -79,7 +90,8 @@
         {%- endfor %}
     </ul>
     {% for i in objects %}
-    <pre>{{i.to_json(indent=4)}}</pre>
+    <pre><a href="/commit/{{i.key}}" title="Edit commit">Edit Commit —></a>
+    {{i.to_json(indent=4)}}</pre>
     {% endfor %}
 </body>
 </html>

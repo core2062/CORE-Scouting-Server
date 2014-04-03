@@ -5,6 +5,8 @@ import wtforms_me
 import wtforms.fields
 
 import model.commit
+import config
+
 """api used for submitting commits"""
 
 blueprint = flask.Blueprint("commits", __name__, url_prefix="/commit")
@@ -16,13 +18,14 @@ def submit_commit():
     form = MatchForm(flask.request.form)
     if flask.request.method == "POST" and form.validate():
         form.save()
-        flask.flash("Thanks for your submission!")
+        flask.flash('Thanks for your submission! <a href="/commit/{}">Edit it &mdash;></a>'
+            .format(form.instance.key))
         return flask.redirect("/commit/submit")
     return flask.render_template('commit_submit.html', form=form, type="match")
 
 @blueprint.route('/', methods=["GET","POST"])
 def commit_search():
-    query = {"event":"2014wimi", "match_type":'q'}
+    query = {"event":config.event, "match_type":'p'}
     errors = []
     if flask.request.method == "POST" and flask.request.form.get("query", None):
         try:
@@ -40,15 +43,20 @@ def commit_search():
         query=json.dumps(query), errors=errors)
 
 
-@blueprint.route('/<cid>')
+@blueprint.route('/<cid>', methods=["GET","POST"])
 def get_commit(cid):
-    cid = cid.split("_")
     try:
-        e_key, match, team = cid
-        match_type, match_num = match.split("m")
-    except:
-        return ex.NotFound("Commit id malformated.")
-    c = model.commit.Commit.objects(event=e_key, match_num=match_num, match_type=match_type)
-    if not c:
-        raise ex.NotFound('No commmit ' + match)
-    return flask.render_template("commit.html")
+        c = model.commit.get_commit(cid)
+        e_key, match_type, match_num, team = model.commit.parse_cid(cid)
+        obj = {"event":e_key, "match_type":match_type, "match_num": match_num, "team": team}
+        print c
+        form = MatchForm(flask.request.form, instance=c) if c else MatchForm(flask.request.form, **obj)
+    except ValueError:
+        raise ex.BadRequest("Commit id %s malformatted." % cid)
+    if flask.request.method == "POST" and form.validate():
+        if c: print c; c.delete()
+        form = MatchForm(flask.request.form)
+        form.save()
+        flask.flash("Thanks for your submission!")
+        return flask.redirect("/commit/submit")
+    return flask.render_template("commit_submit.html", form=form, type="match", furl=flask.request.url)

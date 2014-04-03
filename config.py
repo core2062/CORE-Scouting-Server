@@ -30,13 +30,7 @@ ALLOW_TOKENS_TO_CHANGE_IP = True
 
 TOKEN_LENGTH = 20
 SALT_LENGTH = 20
-
-#only used while setting up db (for guest & admin account)
-#admin password should be changed directly after setting up db
-DEFAULT_PASSWORD = 'guest'
-
-# temporary (for development). the client will determine this in the future
-CURRENT_EVENT = 'wi'
+event = '2014ilch'
 
 ALLOWED_ORIGINS = (
     'http://localhost:1111',

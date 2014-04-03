@@ -5,25 +5,31 @@
     {% if field.errors %}
         <ul class="form-error">
         {% for error in field.errors %}
+            {% if error %}
             <li class="flash error">{{ error }}</li>
+            {% endif %}
         {% endfor %}
         </ul>
     {% endif %}
     </div>  
 {% endmacro %}
-{% macro render_split(field1, field2) %}
+{% macro render_split(field1, field2, text="out of") %}
     <div class="field" >
     <label for="{{field1.id}}">{{field1.label.text.split(" ")[:-1]|join(" ")}}</label> 
     {{ field1(class="split", title=field1.description, **kwargs)|safe }}
-    <label for="{{field2.id}}" class="split">out of</label>
+    <label for="{{field2.id}}" class="split">{{text}}</label>
     {{ field2(class="split", title=field2.description, **kwargs)|safe }}
     {% if field1.errors or field2.errors %}
         <ul class="form-error">
         {% for error in field1.errors %}
+            {% if error %}        
             <li class="flash error">{{ error }}</li>
+        {% endif %}            
         {% endfor %}
         {% for error in field2.errors %}
+            {% if error %}        
             <li class="flash error">{{ error }}</li>
+            {% endif %}
         {% endfor %}
         </ul>
     {% endif %}
@@ -35,12 +41,14 @@
 <head>
     <title>CORE Scouting—Commit Submission</title>
     <link rel="icon" href="/static/favicon.ico">
-    <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+    <script src="/static/jq.js"></script>
     <script type="text/javascript">
         $(function(){
-            setTimeout(function(){
-                $("#messages").fadeOut({duration: 700, queue: false}).delay(500).slideUp(300);
-            }, 2000)
+            $("#messages li").each(function(i, e){
+                setTimeout(function(){
+                    $(e).fadeOut({duration: 700, queue: false}).delay(500).slideUp(300);
+                }, 4000*(i+1))
+            })
         })
     </script>
     <style type="text/css" media="screen">
@@ -48,11 +56,14 @@
         #messages {
             list-style: none;
         }
+        #messages .flash {
+            margin-right: 15px;
+        }
         .flash {
             display:inline;
             min-width: 40px;
             background-color: #9EE0E0;
-            padding: 4px 15px;
+            padding: 4px 10px;
             border: solid 2px #48BFBF;
             border-radius: 8px;
             white-space: nowrap;
@@ -62,10 +73,16 @@
             margin-top: .5em;
             margin-bottom: 0;
         }
-        .flash.error {
+        .form-error .flash {
             font-size: 13px;
+        }
+        .flash.error {
             background-color: #FF7452;
             border: solid 2px #E33D3B;
+        }
+        .flash.warning {
+            background-color: #FFD552;
+            border: solid 2px #FFAD18;
         }
         body {
             font-family: Open Sans, Arial, sans-serif;
@@ -164,12 +181,12 @@
     <ul id="messages">
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% for category, message in messages -%}
-            <li class="flash {{category}}">{{ message }}</li>
+            <li class="flash {{category}}">{{ message|safe }}</li>
         {%- endfor %}
         {% endwith %}
     </ul>
     <hr />
-    <form method="post" action="/commit/submit/{{type}}">
+    <form method="post" action="{{furl}}">
         <fieldset id="general">
             {{form.event()}}
             <legend>General</legend>
@@ -208,6 +225,7 @@
             {{ render_split(form.pass_made, form.pass_total, tabindex=1) }}
             {{ render_split(form.inbound_made, form.inbound_total, tabindex=1) }}
             {{ render_field(form.defense, tabindex=1) }}
+            {{ render_split(form.hp_front, form.hp_back, "Back: ", tabindex=1) }}
         </fieldset>
         <fieldset id="robot">
             <legend>Robot</legend>

@@ -3,14 +3,14 @@
 <head>
     <title>CORE Scouting—Event Report</title>
     <link rel="icon" href="/static/favicon.ico">
-    <style type="text/css" media="screen">
+    <style type="text/css">
         @import url(/static/fonts.css);
         body {
             margin-top: 2.5em;
         }
         ul {
             display: block;
-            width: 60%;
+            width: 50%;
             margin: 1em auto;
         }
         li {
@@ -19,9 +19,21 @@
         #match_list > li {
             display: block;
             border:1px solid #ccc;
+            text-align: center;
         }
-        a {
-
+        li .score {
+            float: right;
+        }
+        li .id {
+            float: left;
+        }
+        li a {
+            font-size: 1.2em;
+            color: black;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
         }
         a.color.blue {
             color:#00B1FF;
@@ -46,13 +58,14 @@
         <span class="id">{{match.comp_level+(match.match_number|string)}}</span>  
         {% for team in match.red %}
         {% set is_commit = "color" if team.team_number in match.team_commits else "" %} 
-            <a class="red {{is_commit}}"> {{team.team_number}}  </a>
+            <a class="red {{is_commit}}" href="/commit/{{match.key + "_" + team.team_number|string}}">
+            {{team.team_number}}</a>  
         {% endfor %}
         {% for team in match.blue %}
         {% set is_commit = "color" if team.team_number in match.team_commits else "" %}
-            <a class="blue {{is_commit}}"> {{team.team_number}}  </a>
+            <a class="blue {{is_commit}}" href="/commit/{{match.key + "_" + team.team_number|string}}">{{team.team_number}}</a>  
         {% endfor %}
-        <strong class="score">{{match.red.score}} / {{match.blue.score}}</strong>
+        <strong class="score">{{match.red.score}} | {{match.blue.score}}</strong>
     </li>
     {% endfor %}
 </ul>

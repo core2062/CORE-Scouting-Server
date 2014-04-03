@@ -5,33 +5,44 @@ import os.path
 
 import config
 from model.db import database as db
+import types
+from mongoengine.fields import *
 from frc_fields import *
 
-class Commit(me.Document):
+class MatchCommit(me.Document):
     time = me.DateTimeField(default=datetime.now)
-    enabled = me.BooleanField(default=True)
-    user = me.StringField()
-    meta = {"allow_inheritance": True}
-
-class MatchCommit(Commit):
-    match_num = StringField(
-        regex=r"^(\d+|\d+\.[12345])$",
+    match_num = MatchField(
+        # regex=r"^(\d+|\d+\.[12345])$",
         verbose_name = "Match #",
         help_text = "The number of the match scouted",
-        max_length = 5,
+        # max_length = 5,
         required = True
     )
+
     match_type = StringField( 
-        choices=[("p", "Practice"),("q","Quals"),("qf","Quater Finals"),("sf","Semi Finals"),("f","Finals")],
+        choices=[("p", "Practice"),("q","Quals"),("qf","Quater Finals"),
+                 ("sf","Semi Finals"),("f","Finals")],
         verbose_name = "Match Type",
         help_text = "The type of match scouted",
-        default="q",
+        default="p",
         required = True,
     )
     event = StringField(
-        default = "2014wimi",
+        default = config.event,
         required= "true"
     )
+
+    key = StringField(
+        primary_key = True,
+        required = True,
+        unique = True
+    )
+    key.to_form_field = types.MethodType(lambda self, model, kwargs: None, key, StringField)
+
+    def clean(self):
+        self.key = "{}_{}m{}_{}".format(self.event, self.match_type,
+                                       self.match_num, self.team)
+
     scout = StringField(
         verbose_name = "Scout Name",
         help_text = "The name of the scout",
@@ -295,14 +306,42 @@ class MatchCommit(Commit):
         default = ""
     )
 
+    hp_front = StringField(
+        verbose_name =  "Human Player Front",
+        choices = (("",""),("+","+"),("-","-")),
+        default = ""
+    )
+    hp_back = StringField(
+        verbose_name =  "Human Player Back",
+        choices = (("",""),("+","+"),("-","-")),
+        default = ""
+    )
+
     @property
     def match(self):
         from model import fms
-        match_num = int(self.match_num.split('.')[0])
-        comp_level = "qm" if self.match_type == 'q' else self.match_type
-        return fms.Match.objects.get(event=self.event,
-            match_number=match_num, comp_level=comp_level)
-    
+        return fms.Match.objects.with_id("{}_{}m{}".format(
+                self.event, self.match_type, self.match_num))
+
+    @property
+    def n_hp_f(self):
+        return 1 if self.hp_front == "+" else -1 if self.hp_front == "-" else 0
+    @property
+    def n_hp_b(self):
+        return 1 if self.hp_back == "+" else -1 if self.hp_back == "-" else 0
+
+def parse_cid(cid):
+    cid = cid.split("_")
+    try:
+        e_key, match, team = cid
+        match_type, match_num = match.split("m")
+    except:
+        raise ValueError("Commit id malformated.")
+    return (e_key, match_type, match_num, team)
+
+def get_commit(cid):
+    # e_key, match_type, match_num, team = parse_cid(cid)
+    return MatchCommit.objects.with_id(cid)
 
 # ##############
 # # Validators for differnt types

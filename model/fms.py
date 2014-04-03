@@ -25,20 +25,14 @@ class Team(NiceDoc, mongoengine.Document):
     def calculate(self, event):
         self._event = event
         self.event = Event.objects.get(key=self._event)
-        #print list(self.event.matches[5].teams),  2062 in self.event.matches[5].teams
         self.matches = [i for i in self.event.matches if self in i.teams]
+        print self.matches
         self._objects = []
         for n in self.matches:
             x = [i for i in n.commits if i.team == self.team_number]
-            #print len(x), "results"
             if x:
                 self._objects.append(x.pop(0))
-        # for i in MatchCommit.objects(team=self.team_number, event=event, match_type="q").order_by("-time"):
-        #     match = i.match_type + i.match_num
-        #     if match in self.matches:
-        #         continue
-        #     self.matches.add(match)
-        #     self._objects.append(i)
+        for i in self._objects: print i.to_json() 
 
     @property
     def contrib(self):
@@ -96,7 +90,7 @@ class Team(NiceDoc, mongoengine.Document):
 
 class Alliance(NiceDoc, mongoengine.EmbeddedDocument):
     score = IntField(default=-1)
-    teams = SortedListField(ReferenceField(Team), required=True)
+    teams = ListField(ReferenceField(Team), required=True)
 
     @property
     def team_nums(self):
@@ -109,7 +103,7 @@ class Alliance(NiceDoc, mongoengine.EmbeddedDocument):
 class Match(mongoengine.Document):
     key = StringField(primary_key=True, required=True, unique=True)
     comp_level = StringField(required=True,
-        choices = ("p", "qm", "ef", "qf", "sf", "f"))
+        choices = ("p", "q", "ef", "qf", "sf", "f"))
     match_number = IntField(required=True)
     set_number = IntField(default=1)
     red = EmbeddedDocumentField(Alliance, required=True)
@@ -132,7 +126,7 @@ class Match(mongoengine.Document):
     @property
     def commits(self):
         return MatchCommit.objects(match_num=str(self.match_number), 
-            match_type="q" if self.comp_level == "qm" else self.comp_level).order_by("-time")
+            match_type=self.comp_level, event=self.event.key).order_by("-time")
 
     def is_winner(self, team):
         return (team in self.red.team_nums if self.winner=='red' 
@@ -153,24 +147,8 @@ class Event(mongoengine.Document):
         "CMP_FINALS": 4,
         "OFFSEASON": 99,
         "PRESEASON": 100,
-        "UNLABLED": -1
-    }
+        "UNLABLED": -1 }
     event_type = IntField(choices=event_types.values())
 
     teams = ListField(ReferenceField(Team), required=True)
     matches = ListField(ReferenceField(Match))
-
-def match_from_tba(tba_doc):
-    tba_doc['red'] = tba_doc['alliances']['red']
-    tba_doc['blue'] = tba_doc['alliances']['blue']
-    tba_doc['event'] = tba_doc['event_key']
-    del tba_doc['alliances']
-    return Match(**tba_doc)
-
-wimi2014_practice_sched = [
-    {'comp_level': 'p', 'match_number': 1, 'set_number': 1, 
-    'key': '2014wimi_qm13', 'alliances': 
-        {'blue': {'score': -1, 'teams': ['frc537', 'frc1622', 'frc3018']}, 
-        'red': {'score': -1, 'teams': ['frc4143', 'frc2062', 'frc3197']}},
-    'event_key': '2014wimi'},
-]
