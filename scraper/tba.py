@@ -85,9 +85,6 @@ def prct_mtch(num, red, blue):
         'event_key': '2014ilch'}
 
 practice_sched = [
-    prct_mtch(1, [2062,2022,1739],[3352,2451,2704]),
-    prct_mtch(2, [1739,2022,2062],[2704,2451,3352]),
-    prct_mtch(3, [1739,2022,2062],[2704,2451,3352])
 ]
 
 def scrp_prct():

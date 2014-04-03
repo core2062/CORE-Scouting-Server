@@ -28,10 +28,11 @@ class Team(NiceDoc, mongoengine.Document):
         self.matches = [i for i in self.event.matches if self in i.teams]
         print self.matches
         self._objects = []
-        for n in self.matches:
-            x = [i for i in n.commits if i.team == self.team_number]
-            if x:
-                self._objects.append(x.pop(0))
+        self._objects = [i for i in MatchCommit.objects(event=self.event.key, team=team_number)]
+        # for n in self.matches:
+        #     x = [i for i in n.commits if i.team == self.team_number]
+        #     if x:
+        #         self._objects.append(x.pop(0))
         for i in self._objects: print i.to_json() 
 
     @property
