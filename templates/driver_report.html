@@ -86,7 +86,7 @@
         <td class="left">Yellow Cards</td>
         <td class="right">{{team.avg_yellow}}</td>
         <td class="subtitle" colspan="2">Cycles</td>
-        <td class="title value_emph total" rowspan="2">{{team.contrib|round|int}}</td>
+        <td class="title value_emph total" rowspan="2">{{team.avg_contrib|round|int}}</td>
     </tr>
     <tr>
         <td class="left">Red Cards</td>
@@ -270,7 +270,7 @@
     <h1 id="header">Match {{match|upper}} Driver Report</h1>
     <span id="subtitle">Generated {{date}} with {{reports}} reports</span>
     <div id="score">
-        <span class="red">{{(red[0].contrib + red[1].contrib + red[2].contrib)|round|int}}</span><span class="blue">{{(blue[0].contrib + blue[1].contrib + blue[2].contrib)|round|int}}</span>
+        <span class="red">{{(red[0].avg_contrib + red[1].avg_contrib + red[2].avg_contrib)|round|int}}</span><span class="blue">{{(blue[0].avg_contrib + blue[1].avg_contrib + blue[2].avg_contrib)|round|int}}</span>
     </div>
     <ul id="messages">
         {% with messages = get_flashed_messages(with_categories=true) %}

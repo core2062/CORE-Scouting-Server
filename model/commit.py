@@ -322,7 +322,9 @@ class MatchCommit(me.Document):
         from model import fms
         return fms.Match.objects.with_id("{}_{}m{}".format(
                 self.event, self.match_type, self.match_num))
-
+    @property
+    def contrib(self):
+        return self.auto_contrib + self.tele_contrib
     @property
     def n_hp_f(self):
         return 1 if self.hp_front == "+" else -1 if self.hp_front == "-" else 0

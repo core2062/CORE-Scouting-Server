@@ -34,10 +34,6 @@ class Team(NiceDoc, mongoengine.Document):
         #     if x:
         #         self._objects.append(x.pop(0))
         # for i in self._objects: print i.to_json() 
-
-    @property
-    def contrib(self):
-        return self.avg_auto_contrib + self.avg_tele_contrib
     @property
     def win_record(self):
         return sum(.5 if (i.scored and i.is_winner(self.team_number) is None) 
@@ -86,7 +82,13 @@ class Team(NiceDoc, mongoengine.Document):
                 # if (made != 0) or (total != 0):
                 return made / float(total) if total != 0 else 0
             else:
-                return average((getattr(i, name) for i in self._objects if not i.no_show))
+                return average(getattr(i, name) for i in self._objects if not i.no_show)
+        elif op == "max":
+            return max(getattr(i, name) for i in self._objects if not i.no_show)
+        elif op=="tq": # Third quartile estimation
+            av = getattr(self, attr_str.replace("tq_", "avg_"))
+            mx = getattr(self, attr_str.replace("tq_", "max_"))
+            return (av+mx)/2.0
         return object.__getattribute__(self, attr_str)
 
 class Alliance(NiceDoc, mongoengine.EmbeddedDocument):

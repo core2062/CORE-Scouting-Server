@@ -47,6 +47,33 @@ def event_commits(e_key):
             n+= 6-len(match.team_commits)
     return flask.render_template("event.html", event=event, n=n)
 
+@blueprint.route("/<e_key>/teams")
+def team_data(e_key):
+    teams = []
+    event = fms.Event.objects.with_id(e_key)
+    columns = (
+        ("team_number", "Team"),
+        ("avg_contrib", "Contribution"),
+        ("avg_auto_contrib", "Autonomous Contrib"),
+        ("avg_high_made", "High Goals"),
+        ("avg_truss_made", "Truss Made"),
+        ("avg_inbound_made", "Inbounds"),
+        ("avg_team_cycles", "Team Cycles"),
+    )
+    print "Starting team calculations..."
+    for team in event.teams:
+        team.calculate(e_key)
+        teams.append([(name, getattr(team, key)) for key, name in columns])
+    output = ""
+    output+=", ".join(i[1] for i in columns)
+    output+="\n"
+    for team in teams:
+        output += ", ".join(str(i[1]) for i in team) + "\n"
+    response = flask.make_response(output)
+    response.headers["content-type"] = "text/plain"
+    return response
+
+
 other_teams_tmpl = """
 <h2> Regionals to watch results for {{event}} </h2>
 There are {{total}} teams at this regional.
