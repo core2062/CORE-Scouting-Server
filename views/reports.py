@@ -44,35 +44,45 @@ def event_commits(e_key):
             n+= 6-len(match.team_commits)
     return flask.render_template("event.html", event=event, n=n)
 
+team_columns = (
+    ("team_number", "Team"),
+    ("avg_contrib", "Contribution"),
+    ("avg_auto_contrib", "Autonomous Contrib"),
+    ("avg_high", "High Goals"),
+    ("avg_truss", "Truss Made"),
+    ("avg_inbound", "Inbounds"),
+    ("avg_team_cycles", "Team Cycles"),
+    ("sum_disabled", "Total Disabled Matches"),
+    ("sum_red", "Total Red Cards"),
+    ("avg_foul_contrib", "Foul Contribution")
+)
+
 @blueprint.route("/<e_key>/teams")
-def team_data(e_key):
+def team_list_data(e_key):
     teams = []
     event = fms.Event.objects.with_id(e_key)
-    columns = (
-        ("team_number", "Team"),
-        ("avg_contrib", "Contribution"),
-        ("avg_auto_contrib", "Autonomous Contrib"),
-        ("avg_high", "High Goals"),
-        ("avg_truss", "Truss Made"),
-        ("avg_inbound", "Inbounds"),
-        ("avg_team_cycles", "Team Cycles"),
-        ("sum_disabled", "Total Disabled Matches"),
-        ("sum_red", "Total Red Cards"),
-        ("avg_foul_contrib", "Foul Contribution")
-    )
     print "Starting team calculations..."
     for team in event.teams:
         team.calculate(e_key)
-        teams.append([(name, getattr(team, key)) for key, name in columns])
+        teams.append([(name, getattr(team, key)) for key, name in team_columns])
+    return csv((i[1] for i in team_columns), teams)
+
+@blueprint.route("/<e_key>/team/<team_number>")
+def team_data(e_key, team_number):
+    team = fms.Team.objects.get(team_number=team_number)
+    team.calculate(e_key)
+    data = ([(name, getattr(team, key)) for key, name in team_columns],)
+    return csv((i[1] for i in team_columns), data)
+
+def csv(columns, data):
     output = ""
-    output+=", ".join(i[1] for i in columns)
+    output+=", ".join(columns)
     output+="\n"
-    for team in teams:
-        output += ", ".join(str(i[1]) for i in team) + "\n"
+    for entry in data:
+        output += ", ".join(str(i[1]) for i in entry) + "\n"
     response = flask.make_response(output)
     response.headers["content-type"] = "text/plain"
     return response
-
 
 other_teams_tmpl = """
 <h2> Regionals to watch results for {{event}} </h2>
