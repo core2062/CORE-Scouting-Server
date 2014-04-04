@@ -65,7 +65,9 @@
         {% set is_commit = "color" if team.team_number in match.team_commits else "" %}
             <a class="blue {{is_commit}}" href="/commit/{{match.key + "_" + team.team_number|string}}">{{team.team_number}}</a>  
         {% endfor %}
+        {%if match.scored%}
         <strong class="score">{{match.red.score}} | {{match.blue.score}}</strong>
+        {%endif%}
     </li>
     {% endfor %}
 </ul>
