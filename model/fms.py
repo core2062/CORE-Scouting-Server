@@ -27,8 +27,9 @@ class Team(NiceDoc, mongoengine.Document):
         self.event = Event.objects.get(key=self._event)
         self.matches = [i for i in self.event.matches if self in i.teams]
         # print self.matches
-        self._objects = [i.get_commit(self) for i in self.matches]
+        self._objects = [i.get_commit(self) for i in self.matches if i.get_commit(self)]
         # self._objects = [i for i in MatchCommit.objects(event=self.event.key, team=self.team_number)]
+        print self._objects
     @property
     def win_record(self):
         return sum(.5 if (i.scored and i.is_winner(self.team_number) is None) 
@@ -36,7 +37,7 @@ class Team(NiceDoc, mongoengine.Document):
             else i.is_winner(self.team_number) for i in self.matches)
     @property
     def matches_scored(self):
-        return len(i for i in self.matches if i.scored)
+        return sum(1 for i in self.matches if i.scored)
     @property
     def matches_played(self):
         return len(filter(lambda x: not getattr(x, "no_show"), self._objects))
@@ -44,7 +45,7 @@ class Team(NiceDoc, mongoengine.Document):
     def drive(self):
         s = sum(i.drive_type == "strafe" for i in self._objects)
         t = sum(i.drive_type == "tank" for i in self._objects)
-        n = 1 if matches_played > 1 else 0
+        n = 1 if self.matches_played > 1 else 0
         if s > n: return "Strafe"
         if t > n: return "Tank"
         return None
@@ -75,7 +76,7 @@ class Team(NiceDoc, mongoengine.Document):
         name = "_".join(attr[1:])
         if op == "sum":
             return sum((getattr(i, name) for i in self._objects))
-        elif op=="avg": 
+        elif op=="avg":
             if attr[-1] == "made":
                 other = name.replace("_made", "_total")
                 made = sum(getattr(i, name) for i in self._objects)
@@ -140,7 +141,7 @@ class Match(mongoengine.Document):
             else team in self.blue.team_nums if self.winner=='blue'
             else None)
     def get_commit(self, team):
-        return MatchCommit.objects.with_id("{}_{}".format(self.key, team.key))
+        return MatchCommit.objects.with_id("{}_{}".format(self.key, team.team_number))
 
 class Event(mongoengine.Document):
     key = StringField(primary_key=True, unique=True, required=True)
