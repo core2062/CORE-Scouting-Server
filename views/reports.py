@@ -30,7 +30,6 @@ def driver_report(e_key, key):
 @blueprint.route("/<e_key>/commits")
 def event_commits(e_key):
     scraper.tba.matches(e_key)
-    scraper.tba.scrp_prct()
     event = fms.Event.objects.with_id(e_key)
     n = 0
     for match in event.matches:
