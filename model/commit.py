@@ -102,45 +102,63 @@ class MatchCommit(me.Document):
     ## Autonomous
     ###########
 
-    auto_high = BooleanField(
+    auto_high = IntField(
         verbose_name = "High Goal",
-        help_text= "Did the team scouted shoot in the high goal in autonomous?",
-        default = False
+        help_text= "How many balls did the team scouted shoot in the high goal in autonomous?",
+        max_value = 3,
+        min_value = 0,
+        default = 0
     )
-    auto_low = BooleanField(
+    @property
+    def auto_high_s(self):
+        return self.auto_high != 0
+    auto_low = IntField(
         verbose_name = "Low Goal",
-        help_text= "Did the team scouted score in the low goal in autonomous?",
-        default = False
+        help_text = "How many balls did the team scouted score in the low goal in autonomous?",
+        max_value = 3,
+        min_value = 0,
+        default = 0
     )
-    auto_hot = BooleanField(
+    @property
+    def auto_low_s(self):
+        return self.auto_low != 0
+    auto_hot = IntField(
         verbose_name = "Hot Goal",
-        help_text= "If the team scouted scored in autonomous, did they score in the hot goal?",
-        default = False
+        help_text = "How many hot scores did the team get in auto?",
+        max_value = 3,
+        min_value = 0,
+        default = 0
     )
+    @property
+    def auto_hot_s(self):
+        return self.auto_hot != 0
+    @property
+    def auto_balls(self):
+        return self.auto_low+self.auto_high
     auto_mobility = BooleanField(
         verbose_name = "Mobility",
-        help_text= "Did the team receive mobility points in autonomous?",
+        help_text = "Did the team receive mobility points in autonomous?",
         default = False
     )
     auto_goalie = BooleanField(
         verbose_name = "Goalie Zone",
-        help_text= "Did the team scouted start the match in the goalie zone?",
+        help_text = "Did the team scouted start the match in the goalie zone?",
         default = False
     )
-    auto_balls = IntField(
-        verbose_name = "Balls Scored",
-        help_text= "The number of balls scored by the team scouted in Autonomous",
-        max_value = 3,
-        min_value = 0,
-        default= 0
-    )
+    # auto_balls = IntField(
+    #     verbose_name = "Balls Scored",
+    #     help_text= "The number of balls scored by the team scouted in Autonomous",
+    #     max_value = 3,
+    #     min_value = 0,
+    #     default= 0
+    # )
 
     @property
     def auto_contrib(self):
         return sum((
             self.auto_hot*5,
-            self.auto_high*self.auto_balls*10,
-            self.auto_low*self.auto_balls*5,
+            self.auto_high*10,
+            self.auto_low*5,
             self.auto_mobility * 5
         ))
 

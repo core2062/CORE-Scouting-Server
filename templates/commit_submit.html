@@ -13,9 +13,9 @@
     {% endif %}
     </div>  
 {% endmacro %}
-{% macro render_split(field1, field2, text="out of") %}
+{% macro render_split(field1, field2, mangle=True, text="out of") %}
     <div class="field" >
-    <label for="{{field1.id}}">{{field1.label.text.split(" ")[:-1]|join(" ")}}</label> 
+    <label for="{{field1.id}}">{{(field1.label.text.split(" ")[:-1]|join(" ")) if mangle else field1.label.text}}</label> 
     {{ field1(class="split", title=field1.description, **kwargs)|safe }}
     <label for="{{field2.id}}" class="split">{{text}}</label>
     {{ field2(class="split", title=field2.description, **kwargs)|safe }}
@@ -211,7 +211,6 @@
             {{ render_field(form.auto_hot, tabindex=1) }}
             {{ render_field(form.auto_mobility, tabindex=1) }}
             {{ render_field(form.auto_goalie, tabindex=1) }}
-            {{ render_field(form.auto_balls, tabindex=1) }}
         </fieldset>
         <fieldset id="teleop">
             <legend>Teleop</legend>
@@ -225,7 +224,7 @@
             {{ render_split(form.pass_made, form.pass_total, tabindex=1) }}
             {{ render_split(form.inbound_made, form.inbound_total, tabindex=1) }}
             {{ render_field(form.defense, tabindex=1) }}
-            {{ render_split(form.hp_front, form.hp_back, "Back: ", tabindex=1) }}
+            {{ render_split(form.hp_front, form.hp_back, False, "Back: ", tabindex=1) }}
         </fieldset>
         <fieldset id="robot">
             <legend>Robot</legend>
