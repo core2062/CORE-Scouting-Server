@@ -70,27 +70,27 @@
     </tr>
     <tr>
         <td class="left">Fouls</td>
-        <td class="right">{{team.avg_fouls}}</td>
+        <td class="right">{{team.avg_fouls|round(2)}}</td>
         <td class="left">Defense</td>
         <td class="right">{{get_val(team, "defense")}} out of {{team.matches_played}}</td>
         <td><strong>Dead:</strong> {{get_val(team, "disabled")}} out of {{team.matches_played}}</td>
     </tr>
     <tr>
         <td class="left">Tech Fouls</td>
-        <td class="right">{{team.avg_tech_fouls}}</td>
+        <td class="right">{{team.avg_tech_fouls|round(2)}}</td>
         <td class="left title_emph">Tele Contrib</td>
         <td class="right value_emph">{{team.avg_tele_contrib|round|int}}</td>
         <td class="final subtitle title_emph">Predicted Score</td>
     </tr>
     <tr>
         <td class="left">Yellow Cards</td>
-        <td class="right">{{team.avg_yellow}}</td>
+        <td class="right">{{team.avg_yellow|round(2)}}</td>
         <td class="subtitle" colspan="2">Cycles</td>
         <td class="title value_emph total" rowspan="2">{{team.avg_contrib|round|int}}</td>
     </tr>
     <tr>
         <td class="left">Red Cards</td>
-        <td class="right">{{team.avg_red}}</td>
+        <td class="right">{{team.avg_red|round(2)}}</td>
         <td class="left">Participated</td>
         <td class="right">{{((team.sum_team_cycles / team.sum_alliance_cycles)
             if team.sum_alliance_cycles else 0) | percent}} out of {{team.sum_alliance_cycles}}</td>
@@ -105,6 +105,11 @@
     <style type="text/css">
         @import url(/static/fonts.css);
         @media print {
+            #score {
+                top: 0 !important;
+                right: 20px !important;
+           }
+
             #header {
                 margin: 0 !important;
                 margin-left: 1em;
@@ -248,7 +253,7 @@
             font-size: 2em;
             font-family: 'Orbitron';
             position: absolute;
-            top: 1em;
+            top: 25px;
             right: 4em;
         }
         #score span {
