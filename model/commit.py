@@ -24,7 +24,7 @@ class MatchCommit(me.Document):
                  ("sf","Semi Finals"),("f","Finals")],
         verbose_name = "Match Type",
         help_text = "The type of match scouted",
-        default="p",
+        default="q",
         required = True,
     )
     event = StringField(
