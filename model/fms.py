@@ -43,12 +43,16 @@ class Team(NiceDoc, mongoengine.Document):
     @property
     def drive(self):
         s = sum(i.drive_type == "strafe" for i in self._objects)
-        return "Strafe" if s > 1 else "Tank"
+        t = sum(i.drive_type == "tank" for i in self._objects)
+        n = 1 if matches_played > 1 else 0
+        if s > n: return "Strafe"
+        if t > n: return "Tank"
+        return None
     _info = None
     @property
     def info(self):
         if self._info is None:
-            self._info = [self.drive]
+            self._info = [self.drive] if self.drive else []
             for ob in MatchCommit.r_infos:
                 for i in self._objects:
                     if getattr(i, ob):
