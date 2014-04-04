@@ -25,7 +25,7 @@ def submit_commit():
 
 @blueprint.route('/', methods=["GET","POST"])
 def commit_search():
-    query = {"event":config.event, "match_type":'p'}
+    query = {"event":config.event, "match_type":'q'}
     errors = []
     if flask.request.method == "POST" and flask.request.form.get("query", None):
         try:
