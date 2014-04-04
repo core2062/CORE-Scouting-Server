@@ -82,6 +82,8 @@ class Team(NiceDoc, mongoengine.Document):
                 # if (made != 0) or (total != 0):
                 return made / float(total) if total != 0 else 0
             else:
+                if not hasattr(MatchCommit, name) and hasattr(MatchCommit, name+"_made"):
+                    name += "_made"
                 return average(getattr(i, name) for i in self._objects if not i.no_show)
         elif op == "max":
             return max(getattr(i, name) for i in self._objects if not i.no_show)

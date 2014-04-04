@@ -55,9 +55,9 @@ def team_data(e_key):
         ("team_number", "Team"),
         ("avg_contrib", "Contribution"),
         ("avg_auto_contrib", "Autonomous Contrib"),
-        ("avg_high_made", "High Goals"),
-        ("avg_truss_made", "Truss Made"),
-        ("avg_inbound_made", "Inbounds"),
+        ("avg_high", "High Goals"),
+        ("avg_truss", "Truss Made"),
+        ("avg_inbound", "Inbounds"),
         ("avg_team_cycles", "Team Cycles"),
     )
     print "Starting team calculations..."
