@@ -28,7 +28,7 @@ class Team(NiceDoc, mongoengine.Document):
         self.matches = [i for i in self.event.matches if self in i.teams]
         print self.matches
         self._objects = []
-        self._objects = [i for i in MatchCommit.objects(event=self.event.key, team=team_number)]
+        self._objects = [i for i in MatchCommit.objects(event=self.event.key, team=self.team_number)]
         # for n in self.matches:
         #     x = [i for i in n.commits if i.team == self.team_number]
         #     if x:
