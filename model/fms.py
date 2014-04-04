@@ -29,7 +29,6 @@ class Team(NiceDoc, mongoengine.Document):
         # print self.matches
         self._objects = [i.get_commit(self) for i in self.matches if i.get_commit(self)]
         # self._objects = [i for i in MatchCommit.objects(event=self.event.key, team=self.team_number)]
-        print self._objects
     @property
     def win_record(self):
         return sum(.5 if (i.scored and i.is_winner(self.team_number) is None) 

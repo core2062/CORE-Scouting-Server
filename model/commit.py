@@ -72,6 +72,10 @@ class MatchCommit(me.Document):
          min_value = 0,
          default = 0
     )
+    @property
+    def foul_contrib(self):
+        return -1*(self.fouls * 20 + self.tech_fouls * 50)
+
     yellow = BooleanField(
          verbose_name = "Yellow Card",
          help_text = "Yellow card received",
@@ -156,7 +160,7 @@ class MatchCommit(me.Document):
     @property
     def auto_contrib(self):
         return sum((
-            self.auto_hot*5,
+            self.auto_hot*15,
             self.auto_high*10,
             self.auto_low*5,
             self.auto_mobility * 5

@@ -17,15 +17,12 @@ def driver_report(e_key, key):
         key = ''.join(l)
     if 'f' in key and 'm' not in key:
         key+='m1'
-    print key
     match = fms.Match.objects.with_id(e_key+"_"+key)
-    print e_key
-    print match
     for i in match.teams:
         i.calculate(e_key)
     return flask.render_template("driver_report.html", 
         red=match.red.teams, blue=match.blue.teams, date=datetime.now().strftime("%a %H:%M"), match=key, 
-        reports=len(commit.MatchCommit.objects(event=e_key, match_type="p")))
+        reports=len(commit.MatchCommit.objects(event=e_key, match_type__ne="p")))
 
 @blueprint.route("/<e_key>/commits")
 def event_commits(e_key):
@@ -59,6 +56,9 @@ def team_data(e_key):
         ("avg_truss", "Truss Made"),
         ("avg_inbound", "Inbounds"),
         ("avg_team_cycles", "Team Cycles"),
+        ("sum_disabled", "Total Disabled Matches"),
+        ("sum_red", "Total Red Cards"),
+        ("avg_foul_contrib", "Foul Contribution")
     )
     print "Starting team calculations..."
     for team in event.teams:
