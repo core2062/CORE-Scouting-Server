@@ -20,7 +20,8 @@ def driver_report(e_key, key):
     match = fms.Match.objects.with_id(e_key+"_"+key)
     for i in match.teams:
         i.calculate(e_key)
-    return flask.render_template("driver_report.html", 
+    return flask.render_template("driver_report.html",
+        core_color = "blue" if 2062 in match.blue.team_nums else "red" if 2062 in match.red.team_nums else "",
         red=match.red.teams, blue=match.blue.teams, date=datetime.now().strftime("%a %H:%M"), match=key, 
         reports=len(commit.MatchCommit.objects(event=e_key, match_type__ne="p")))
 
