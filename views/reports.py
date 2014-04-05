@@ -55,7 +55,10 @@ team_columns = (
     ("avg_team_cycles", "Team Cycles"),
     ("sum_disabled", "Total Disabled Matches"),
     ("sum_red", "Total Red Cards"),
-    ("avg_foul_contrib", "Foul Contribution")
+    ("avg_foul_contrib", "Foul Contribution"),
+    ("avg_pickup", "Avg Pickup"),
+    ("sum_n_hp", "Sum HP"),
+    ("avg_n_hp", "Avg HP")
 )
 
 @blueprint.route("/<e_key>/teams")
@@ -72,8 +75,7 @@ def team_list_data(e_key):
 def team_data(e_key, team_number):
     team = fms.Team.objects.get(team_number=team_number)
     team.calculate(e_key)
-    data = ([(name, getattr(team, key)) for key, name in team_columns],)
-    return csv((i[1] for i in team_columns), data)
+    return flask.render_template("team.html", team=team)
 
 def csv(columns, data):
     output = ""

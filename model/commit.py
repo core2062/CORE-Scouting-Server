@@ -353,6 +353,9 @@ class MatchCommit(me.Document):
     @property
     def n_hp_b(self):
         return 1 if self.hp_back == "+" else -1 if self.hp_back == "-" else 0
+    @property
+    def n_hp(self):
+        return self.n_hp_f + self.n_hp_b
 
 def parse_cid(cid):
     cid = cid.split("_")
