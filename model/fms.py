@@ -22,11 +22,11 @@ class Team(NiceDoc, mongoengine.Document):
     country = StringField()
     location = StringField()
 
-    def calculate(self, event):
+    def calculate(self, event, match_ge=None):
         self._event = event
         self.event = Event.objects.get(key=self._event)
-        self.matches = [i for i in self.event.matches if self in i.teams]
-        # print self.matches
+        self.matches = [i for i in self.event.matches if (self in i.teams and
+                                (not match_ge or i.match_number >= match_ge))]
         self._objects = [i.get_commit(self) for i in self.matches if i.get_commit(self)]
         # self._objects = [i for i in MatchCommit.objects(event=self.event.key, team=self.team_number)]
     @property

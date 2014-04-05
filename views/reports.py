@@ -71,6 +71,16 @@ def team_list_data(e_key):
         teams.append([(name, getattr(team, key)) for key, name in team_columns])
     return csv((i[1] for i in team_columns), teams)
 
+@blueprint.route("/<e_key>/teams/today")
+def team_list_today(e_key):
+    teams = []
+    event = fms.Event.objects.with_id(e_key)
+    print "Starting team calculations..."
+    for team in event.teams:
+        team.calculate(e_key, match_ge=76)
+        teams.append([(name, getattr(team, key)) for key, name in team_columns])
+    return csv((i[1] for i in team_columns), teams)
+
 @blueprint.route("/<e_key>/team/<team_number>")
 def team_data(e_key, team_number):
     team = fms.Team.objects.get(team_number=team_number)
