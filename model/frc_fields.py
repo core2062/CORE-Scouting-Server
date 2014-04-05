@@ -53,13 +53,13 @@ class TeamValidator(object):
         try:
             match = fms.Match.objects.get(event=event, match_number=match_num, comp_level=comp_level)
         except me_errors.DoesNotExist:
-            if not form['match_num'].override:
-                flask.flash("Match {} not found. Prefix with _ if this is intentional".format(match_num),
-                            "warning")
-                raise wtf_ValidationError()
-            else:
-                flask.flash("Match Check Overridden", "warning")
-                return 
+            # if not form['match_num'].override:
+            flask.flash("Match {} not found.", "error")#" Prefix with _ if this is intentional".format(match_num),
+                        #"warning")
+            raise wtf_ValidationError()
+            # else:
+            #     flask.flash("Match Check Overridden", "warning")
+            #     return 
         if team_num not in match.team_nums:
             raise wtf_ValidationError('Team %s not in match %s. (teams: %s)'
                 % (team_num, match_num, ', '.join(str(i) for i in match.team_nums)) )
